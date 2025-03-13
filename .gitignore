@@ -1,3 +1,12 @@
+# Rider
+.idea/
+*.suo
+*.user
+*.userprefs
+
+# Riderlink 관련 파일
+.Plugins/Developer/RiderLink/
+
 # Visual Studio 2015 user specific files
 .vs/
 
