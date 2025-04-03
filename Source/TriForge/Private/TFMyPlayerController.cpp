@@ -40,6 +40,10 @@ void ATFMyPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFMyPlayerController::SprintStart);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFMyPlayerController::SprintEnd);
 
+	EnhancedInputComponent->BindAction(EquipActoin, ETriggerEvent::Started, this, &ThisClass::EquipWeapon);
+	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ThisClass::EquipWeapon);
+	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ThisClass::EquipWeapon);
+
 }
 
 
@@ -134,4 +138,26 @@ void ATFMyPlayerController::CrouchEnd(const FInputActionValue& InputActionValue)
 			MyCharacter->UpdateCrouchState(false);
 		}
 	}
+}
+
+
+//
+// Weapon 코드 시작 
+//
+void ATFMyPlayerController::EquipWeapon(const struct FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFMyCharacter* TFCharacter = Cast<ATFMyCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->EquipButtonPressed();
+		}
+	}
+}
+
+
+void ATFMyPlayerController::FireWeapon(const struct FInputActionValue& InputActionValue)
+{
+	
 }

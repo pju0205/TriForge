@@ -6,6 +6,11 @@
 #include "TFMyAnimInstance.h"
 #include "CharacterTrajectoryComponent.h"
 
+
+// WeaponInclude
+#include "Net/UnrealNetwork.h"
+#include "Weapon/TFWeaponComponent.h"
+
 ATFMyCharacter::ATFMyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -20,12 +25,16 @@ ATFMyCharacter::ATFMyCharacter()
 	CameraBoom->TargetArmLength = 300.0f;
 	CameraBoom->SetWorldRotation(FRotator(-30.0f, 0.0f, 0.0f));
 
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(CameraBoom);
+	/*Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(CameraBoom);*/
 
 	DefaultSpeed = 300.0f;
 	SprintSpeed = 900.0f;
 	MovementComponent->MaxWalkSpeed = DefaultSpeed;
+
+	// Weapon 코드 시작
+	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
+	WeaponComponent->SetIsReplicated(true);
 }
 
 void ATFMyCharacter::BeginPlay()
@@ -76,3 +85,69 @@ void ATFMyCharacter::UpdateCrouchState(bool bIsCrouch)
 		UnCrouch();
 	}
 }
+
+//
+// Weapon 코드 시작
+//
+
+void ATFMyCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (WeaponComponent)
+	{
+		WeaponComponent -> Character = this;
+	}
+}
+
+void ATFMyCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ATFMyCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
+
+void ATFMyCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
+{
+	OverlappingWeapon = Weapon;
+}
+
+void ATFMyCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		
+	}
+}
+
+bool ATFMyCharacter::bIsWeaponEquipped()
+{
+	return (WeaponComponent && WeaponComponent->EquippedWeapon);
+}
+
+void ATFMyCharacter::EquipButtonPressed()
+{
+	if (WeaponComponent)
+	{
+		ServerEquipButtonPressed();
+	}
+}
+
+void ATFMyCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (WeaponComponent)
+	{
+		MulticastEquipButtonPressed();
+	}
+}
+
+void ATFMyCharacter::MulticastEquipButtonPressed_Implementation()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+
+

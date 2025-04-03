@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "TFMyCharacter.generated.h"
 
+class UTFWeaponComponent;
+class ATFWeapon;
 class USpringArmComponent;
 class UCameraComponent;
 class UTFMyAnimInstance;
@@ -21,8 +23,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
-	TObjectPtr<UCameraComponent> Camera = nullptr;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
+	TObjectPtr<UCameraComponent> Camera = nullptr;*/
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	UTFMyAnimInstance* MyAnimInstance;
@@ -46,4 +48,38 @@ public:
 
 	TObjectPtr<UCharacterTrajectoryComponent> GetCharacterTrajectoryComponent() { return CharacterTrajectory; };
 	bool GetIsCrouching() { return IsCrouching; };
+
+
+//
+// Weapon 코드 시작
+//
+protected:
+public:
+	virtual void PostInitializeComponents() override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	void SetOverlappingWeapon(ATFWeapon* Weapon);
+
+	bool bIsWeaponEquipped();
+
+	void EquipButtonPressed();
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEquipButtonPressed();
+	
+	void FireButtonPressed();
+	void FireButtonReleased();
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	UTFWeaponComponent* WeaponComponent;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	ATFWeapon* OverlappingWeapon;
+
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);
 };

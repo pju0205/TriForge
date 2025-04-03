@@ -34,6 +34,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "input")
 	TObjectPtr<UInputAction> CrouchAction; // 앉기
 
+	// Weapon 관련 입력 처리
+	UPROPERTY(EditAnywhere, Category = "input")
+	TObjectPtr<UInputAction> EquipActoin;
+
+	UPROPERTY(EditAnywhere, Category = "input")
+	TObjectPtr<UInputAction> FireAction;
+
 	void Move(const struct FInputActionValue& InputActionValue); // 이동
 	void Rotation(const struct FInputActionValue& InputActionValue); // 회전
 	void CrouchStart(const struct FInputActionValue& InputActionValue); // 달리기
@@ -41,6 +48,16 @@ private:
 	void SprintStart(const struct FInputActionValue& InputActionValue); // 달리기
 	void SprintEnd(const struct FInputActionValue& InputActionValue); // 달리기
 	void Jump(const struct FInputActionValue& InputActionValue); // 점프
+
+	// Weapon 관련 입력 함수
+	void EquipWeapon(const struct FInputActionValue& InputActionValue); // 무기 장착
+	/*UFUNCTION(Server, Reliable)
+	void ServerEquipWeapon();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEquipWeapon();*/
+
+	void FireWeapon(const struct FInputActionValue& InputActionValue); // 무기 발사
 
 protected:
 	virtual void BeginPlay() override;
