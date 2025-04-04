@@ -32,13 +32,13 @@ void ATFMyPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATFMyPlayerController::Move);
+	/*EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATFMyPlayerController::Move);
 	EnhancedInputComponent->BindAction(RotationAction, ETriggerEvent::Triggered, this, &ATFMyPlayerController::Rotation);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATFMyPlayerController::Jump);
 	EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ATFMyPlayerController::CrouchStart);
 	EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ATFMyPlayerController::CrouchEnd);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFMyPlayerController::SprintStart);
-	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFMyPlayerController::SprintEnd);
+	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFMyPlayerController::SprintEnd);*/
 
 	EnhancedInputComponent->BindAction(EquipActoin, ETriggerEvent::Started, this, &ThisClass::EquipWeapon);
 	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ThisClass::EquipWeapon);
@@ -47,7 +47,7 @@ void ATFMyPlayerController::SetupInputComponent()
 }
 
 
-void ATFMyPlayerController::Move(const struct FInputActionValue& InputActionValue)
+/*void ATFMyPlayerController::Move(const struct FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	if (APawn* ControlledPawn = GetPawn<APawn>())
@@ -138,7 +138,7 @@ void ATFMyPlayerController::CrouchEnd(const FInputActionValue& InputActionValue)
 			MyCharacter->UpdateCrouchState(false);
 		}
 	}
-}
+}*/
 
 
 //

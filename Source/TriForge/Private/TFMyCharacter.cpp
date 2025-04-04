@@ -15,7 +15,7 @@ ATFMyCharacter::ATFMyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	/*UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	MovementComponent->bOrientRotationToMovement = false;
 	MovementComponent->RotationRate = FRotator(0.f, 300.f, 0.f);
 
@@ -26,11 +26,11 @@ ATFMyCharacter::ATFMyCharacter()
 	CameraBoom->SetWorldRotation(FRotator(-30.0f, 0.0f, 0.0f));
 
 	/*Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(CameraBoom);*/
+	Camera->SetupAttachment(CameraBoom);#1#
 
 	DefaultSpeed = 300.0f;
 	SprintSpeed = 900.0f;
-	MovementComponent->MaxWalkSpeed = DefaultSpeed;
+	MovementComponent->MaxWalkSpeed = DefaultSpeed;*/
 
 	// Weapon 코드 시작
 	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
@@ -45,7 +45,7 @@ void ATFMyCharacter::BeginPlay()
 void ATFMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	FVector Velocity = GetVelocity();
+	/*FVector Velocity = GetVelocity();
 	float Speed = Velocity.Size();
 
 	// 화면에 속도 출력
@@ -57,10 +57,10 @@ void ATFMyCharacter::Tick(float DeltaTime)
 			FColor::Green, // 글씨 색상
 			FString::Printf(TEXT("Speed: %.2f"), Speed) // 출력할 문자열
 		);
-	}
+	}*/
 }
 
-void ATFMyCharacter::UpdateSprintState(bool bIsSprint)
+/*void ATFMyCharacter::UpdateSprintState(bool bIsSprint)
 {
 	IsSprinting = bIsSprint;
 
@@ -84,7 +84,7 @@ void ATFMyCharacter::UpdateCrouchState(bool bIsCrouch)
 	{
 		UnCrouch();
 	}
-}
+}*/
 
 //
 // Weapon 코드 시작
@@ -116,7 +116,6 @@ void ATFMyCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
 	{
-		
 	}
 }
 

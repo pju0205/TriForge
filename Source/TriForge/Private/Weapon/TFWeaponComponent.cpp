@@ -53,4 +53,8 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 void UTFWeaponComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
+	if (bFireButtonPressed)
+	{
+		
+	}
 }

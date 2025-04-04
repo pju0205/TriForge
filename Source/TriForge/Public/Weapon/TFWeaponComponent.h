@@ -36,4 +36,5 @@ private:
 	ATFWeapon* EquippedWeapon;
 
 	bool bFireButtonPressed;
+	
 };
