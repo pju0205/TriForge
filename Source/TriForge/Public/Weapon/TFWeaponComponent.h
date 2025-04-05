@@ -19,7 +19,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	friend class ATFMyCharacter;
+	friend class ATFWeaponCharacter;
 
 	void EquipWeapon(ATFWeapon* WeaponToEquip);
 
@@ -30,7 +30,7 @@ protected:
 
 private:
 	UPROPERTY()
-	ATFMyCharacter* Character;
+	ATFWeaponCharacter* Character;
 
 	UPROPERTY(Replicated)
 	ATFWeapon* EquippedWeapon;
