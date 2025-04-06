@@ -40,6 +40,8 @@ void ATFWeaponPlayerController::SetupInputComponent()
 
 	
 	EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::EquipWeapon);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::WeaponAttackStarted);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ATFWeaponPlayerController::WeaponAttackReleased);
 }
 
 void ATFWeaponPlayerController::Move(const struct FInputActionValue& InputActionValue)
@@ -89,10 +91,30 @@ void ATFWeaponPlayerController::EquipWeapon(const struct FInputActionValue& Inpu
 		if (TFCharacter)
 		{
 			TFCharacter->EquipButtonPressed();
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Playercontroller")));
-			}
+		}
+	}
+}
+
+void ATFWeaponPlayerController::WeaponAttackStarted(const struct FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->AttackButtonPressed();
+		}
+	}
+}
+
+void ATFWeaponPlayerController::WeaponAttackReleased(const struct FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->AttackButtonReleased();
 		}
 	}
 }

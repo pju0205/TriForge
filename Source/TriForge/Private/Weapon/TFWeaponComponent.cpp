@@ -3,6 +3,7 @@
 #include "Weapon/TFWeaponComponent.h"
 
 #include "Character/TFWeaponCharacter.h"
+#include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/TFWeapon.h"
@@ -48,16 +49,12 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	}
 	
 	EquippedWeapon->SetOwner(Character);
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Equip")));
-	}
 }
 
-void UTFWeaponComponent::FireButtonPressed(bool bPressed)
+void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 {
-	bFireButtonPressed = bPressed;
-	if (bFireButtonPressed)
+	bAttackButtonPressed = bPressed;
+	if (bAttackButtonPressed)
 	{
 		
 	}

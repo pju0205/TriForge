@@ -34,7 +34,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> EquipAction;
-	
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AttackAction;
 
 	
 	void Move(const struct FInputActionValue& InputActionValue);
@@ -43,6 +45,8 @@ private:
 	//void Sprint(const struct FInputActionValue& InputActionValue);
 
 	void EquipWeapon(const struct FInputActionValue& InputActionValue);
+	void WeaponAttackStarted(const struct FInputActionValue& InputActionValue);
+	void WeaponAttackReleased(const struct FInputActionValue& InputActionValue);
 
 protected:
 	virtual void BeginPlay() override;

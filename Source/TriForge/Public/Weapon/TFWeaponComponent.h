@@ -23,7 +23,7 @@ public:
 
 	void EquipWeapon(ATFWeapon* WeaponToEquip);
 
-	void FireButtonPressed(bool bPressed);
+	void AttackButtonPressed(bool bPressed);
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,6 +35,6 @@ private:
 	UPROPERTY(Replicated)
 	ATFWeapon* EquippedWeapon;
 
-	bool bFireButtonPressed;
+	bool bAttackButtonPressed;
 	
 };

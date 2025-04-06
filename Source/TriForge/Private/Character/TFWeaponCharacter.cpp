@@ -64,12 +64,17 @@ void ATFWeaponCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME_CONDITION(ATFWeaponCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
+void ATFWeaponCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
+{
+	
+}
+
 void ATFWeaponCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
 {
 	OverlappingWeapon = Weapon;
 }
 
-bool ATFWeaponCharacter::bIsWeaponEquipped()
+bool ATFWeaponCharacter::IsWeaponEquipped()
 {
 	return (WeaponComponent && WeaponComponent->EquippedWeapon);
 }
@@ -79,30 +84,19 @@ void ATFWeaponCharacter::EquipButtonPressed()
 	if (WeaponComponent)
 	{
 		ServerEquipButtonPressed();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("ServerEquip")));
-		}
-	}
-	else
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString(TEXT("There's no WeaponComp")));
-		}
 	}
 }
+
 
 void ATFWeaponCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (WeaponComponent)
 	{
 		MulticastEquipButtonPressed();
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("MuliEquip")));
-		}
 	}
+	// 장착하는 기능에 대해서는 NetMulticast를 하지 않아도 된다.
+	// 이 코드에서 multicast를 사용하지 않으면 네트워크 트래픽이 줄어드는 장점이 있다.
+	// 하지만 즉각적인 재생이 필요한 애니메이션이나 피격효과, 사운드 등에서는 NetMulticast가 필요하다.
 }
 
 void ATFWeaponCharacter::MulticastEquipButtonPressed_Implementation()
@@ -110,16 +104,23 @@ void ATFWeaponCharacter::MulticastEquipButtonPressed_Implementation()
 	if (WeaponComponent)
 	{
 		WeaponComponent->EquipWeapon(OverlappingWeapon);
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Equip")));
-		}
 	}
 }
 
-
-void ATFWeaponCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
+void ATFWeaponCharacter::AttackButtonPressed()
 {
-	
+	if (WeaponComponent)
+	{
+		WeaponComponent->AttackButtonPressed(true);
+	}
 }
+
+void ATFWeaponCharacter::AttackButtonReleased()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->AttackButtonPressed(false);
+	}
+}
+
 

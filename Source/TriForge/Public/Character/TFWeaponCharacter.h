@@ -40,15 +40,12 @@ public:
 
 	void SetOverlappingWeapon(ATFWeapon* Weapon);
 
-	bool bIsWeaponEquipped();
+	bool IsWeaponEquipped();
 
 	void EquipButtonPressed();
+	void AttackButtonPressed();
+	void AttackButtonReleased();
 
-	UFUNCTION(Server, Reliable)
-	void ServerEquipButtonPressed();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastEquipButtonPressed();
 
 
 private:
@@ -60,4 +57,11 @@ private:
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEquipButtonPressed();
+	
 };

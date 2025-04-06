@@ -30,4 +30,6 @@ void UTFWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsInAir = TFCharacter->GetCharacterMovement()->IsFalling();
 
 	bIsSprint = TFCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0 ? true : false;
+
+	bWeaponEquipped = TFCharacter->IsWeaponEquipped();
 }

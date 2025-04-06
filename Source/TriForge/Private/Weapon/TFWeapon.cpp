@@ -4,6 +4,7 @@
 
 #include "Character/TFWeaponCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ATFWeapon::ATFWeapon()
 {
@@ -46,8 +47,52 @@ void ATFWeapon::Tick(float DeltaTime)
 
 }
 
+void ATFWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATFWeapon, WeaponState);
+}
+void ATFWeapon::SetWeaponState(EWeaponState State)
+{
+	WeaponState = State;
+
+	switch (WeaponState)
+	{
+	case EWeaponState::Ews_Equipped:
+		WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	}
+}
+
+void ATFWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState)
+	{
+	case EWeaponState::Ews_Equipped:
+		WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	}
+}
+
+void ATFWeapon::PlayAttackMontage()
+{
+	if (AttackMontage)
+	{
+		ATFWeaponCharacter* OwnerCharacter = Cast<ATFWeaponCharacter>(GetOwner());
+		if (OwnerCharacter)
+		{
+			UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(AttackMontage);
+			}
+		}
+	}
+}
+
 void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(OtherActor);
 	if (TFCharacter)
@@ -55,11 +100,7 @@ void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 		// WeaponSphere에 캐릭터가 Overlap이면 OveralppingWeapon 값을 Overlap되어있는 무기로 하여
 		// 현재 WeaponSphere에 캐릭터가 Overlap 되어있음을 알 수 있음
 		TFCharacter->SetOverlappingWeapon(this);
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Overlap")));
-		}
+		
 	}
 }
 

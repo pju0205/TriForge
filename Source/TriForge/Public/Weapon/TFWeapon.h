@@ -44,10 +44,20 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
+	virtual void Attack();
+	
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* AttackMontage;
+
+	void PlayAttackMontage();
+	
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	FORCEINLINE void SetWeaponState(EWeaponState State) {WeaponState = State;}
+	FORCEINLINE void SetWeaponState(EWeaponState State);
+	FORCEINLINE USphereComponent* GetWeaponSphere() const {return WeaponSphere;}
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
@@ -56,6 +66,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USphereComponent* WeaponSphere;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(ReplicatedUsing= OnRep_WeaponState, VisibleAnywhere)
 	EWeaponState WeaponState;
+
+	UFUNCTION()
+	void OnRep_WeaponState();
+
 };
