@@ -8,7 +8,7 @@ public class TriForge : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "MotionTrajectory", "AnimGraphRuntime" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "MotionTrajectory", "AnimGraphRuntime", "AnimationWarpingRuntime", "PoseSearch" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
