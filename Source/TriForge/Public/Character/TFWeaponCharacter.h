@@ -46,7 +46,7 @@ public:
 	void AttackButtonPressed();
 	void AttackButtonReleased();
 
-
+	UTFWeaponComponent* GetWeaponComponent();
 
 private:
 	UPROPERTY(VisibleAnywhere)

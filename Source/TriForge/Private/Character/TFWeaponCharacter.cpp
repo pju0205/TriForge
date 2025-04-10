@@ -123,4 +123,9 @@ void ATFWeaponCharacter::AttackButtonReleased()
 	}
 }
 
+UTFWeaponComponent* ATFWeaponCharacter::GetWeaponComponent()
+{
+	return WeaponComponent;
+}
+
 

@@ -5,6 +5,7 @@
 #include "Character/TFWeaponCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Weapon/TFWeaponComponent.h"
 
 ATFWeapon::ATFWeapon()
 {
@@ -61,6 +62,7 @@ void ATFWeapon::SetWeaponState(EWeaponState State)
 	{
 	case EWeaponState::Ews_Equipped:
 		WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// weapon에 있는 EWeaponType 을 캐릭터나 weaponcomp로 옮기고 Weapon.cpp에서는 WeaponType이 무엇인지 지정? 
 		break;
 	}
 }
@@ -75,21 +77,6 @@ void ATFWeapon::OnRep_WeaponState()
 	}
 }
 
-void ATFWeapon::PlayAttackMontage()
-{
-	if (AttackMontage)
-	{
-		ATFWeaponCharacter* OwnerCharacter = Cast<ATFWeaponCharacter>(GetOwner());
-		if (OwnerCharacter)
-		{
-			UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				AnimInstance->Montage_Play(AttackMontage);
-			}
-		}
-	}
-}
 
 void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -115,4 +102,34 @@ void ATFWeapon::SphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		TFCharacter->SetOverlappingWeapon(nullptr);
 	}
 }
+
+void ATFWeapon::PlayAttackMontage()
+{
+	if (AttackMontage)
+	{
+		ATFWeaponCharacter* OwnerCharacter = Cast<ATFWeaponCharacter>(GetOwner());
+		if (OwnerCharacter)
+		{
+			if (OwnerCharacter->GetWeaponComponent() == nullptr || OwnerCharacter->GetWeaponComponent()->GetEquippedWeapon() == nullptr)
+			{
+				return;
+			}
+			
+			UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
+			if (AnimInstance && AttackMontage)
+			{
+				AnimInstance->Montage_Play(AttackMontage);
+			}
+		}
+	}
+}
+
+void ATFWeapon::Attack(const FVector& HitTarget)
+{
+	if (RangedWeaponAnimation)
+	{
+		WeaponMesh->PlayAnimation(RangedWeaponAnimation, false);
+	}
+}
+
 

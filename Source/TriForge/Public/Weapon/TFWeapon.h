@@ -17,6 +17,17 @@ enum class EWeaponState : uint8
 	Ews_Max UMETA(DisplayName = "DefaultMax")
 };
 
+UENUM()
+enum class EWeaponType : uint8
+{
+	Ewt_Rifle UMETA(DisplayName = "Rifle"),
+	Ewt_ShotGun UMETA(DisplayName = "Rifle"),
+	Ewt_Knife UMETA(DisplayName = "Rifle"),
+	Ewt_Hammer UMETA(DisplayName = "Rifle"),
+
+	Ewt_Max UMETA(DisplayName = "DefaultMax")
+};
+
 UCLASS()
 class TRIFORGE_API ATFWeapon : public AActor
 {
@@ -44,12 +55,11 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
-	virtual void Attack();
-	
+
+	// 무기에 맞는 캐릭터 애니메이션 
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* AttackMontage;
 
-	void PlayAttackMontage();
 	
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -59,6 +69,10 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void Attack(const FVector& HitTarget);
+	void PlayAttackMontage();
+	
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() {return WeaponMesh;}
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -71,5 +85,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_WeaponState();
+
+	// 무기 자체의 애니메이션
+	UPROPERTY(EditAnywhere)
+	UAnimationAsset* RangedWeaponAnimation;
 
 };
