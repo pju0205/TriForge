@@ -28,10 +28,10 @@ public:
 	void AttackButtonPressed(bool bPressed);
 
 	UFUNCTION(Server, Reliable)
-	void ServerAttackButton();
+	void ServerAttackButton(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastAttackButton();
+	void MulticastAttackButton(const FVector_NetQuantize& TraceHitTarget);
 	
 	ATFWeapon* GetEquippedWeapon();
 
@@ -48,7 +48,5 @@ private:
 	ATFWeapon* EquippedWeapon;
 
 	bool bAttackButtonPressed;
-
-	FVector HitTarget;
 	
 };

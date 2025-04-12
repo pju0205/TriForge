@@ -26,8 +26,7 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FHitResult HitResult;
-	TraceEnemy(HitResult);
+	
 }
 
 void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -61,22 +60,25 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 	if (EquippedWeapon == nullptr) return;
 	if (bAttackButtonPressed)
 	{
-		ServerAttackButton();
+		FHitResult HitResult;
+		TraceEnemy(HitResult);
+		ServerAttackButton(HitResult.ImpactPoint);
 	}
 	
 	
 }
 
-void UTFWeaponComponent::ServerAttackButton_Implementation()
+void UTFWeaponComponent::ServerAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	MulticastAttackButton();
+	MulticastAttackButton(TraceHitTarget);
 }
 
 
-void UTFWeaponComponent::MulticastAttackButton_Implementation()
+void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
+	if (EquippedWeapon == nullptr) return;
 	EquippedWeapon->PlayAttackMontage();
-	EquippedWeapon->Attack(HitTarget);
+	EquippedWeapon->Attack(TraceHitTarget);
 	
 }
 
@@ -123,22 +125,6 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 			End,
 			ECC_Visibility
 		);
-		if (!TraceHitResult.bBlockingHit)
-		{
-			// 만약 Linetrace를 통해 부딪힌 물체가 없다면 ImpactPoint를 끝지점으로 지정
-			TraceHitResult.ImpactPoint = End;
-			HitTarget = End;
-		}
-		else
-		{
-			HitTarget = TraceHitResult.ImpactPoint;
-			DrawDebugSphere(
-				GetWorld(),
-				TraceHitResult.ImpactPoint,
-				15.f,
-				15,
-				FColor::Red
-			);
-		}
+		
 	}
 }

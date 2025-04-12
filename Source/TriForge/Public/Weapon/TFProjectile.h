@@ -19,6 +19,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	//OnComponentHit 선언부로 가서 Signature 확인하면 매개변수 알 수 있음
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	virtual void Destroyed() override;
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -34,4 +39,10 @@ private:
 
 	UPROPERTY()
 	UParticleSystemComponent* TracerComponent;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticle;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* ImpactSound;
 };

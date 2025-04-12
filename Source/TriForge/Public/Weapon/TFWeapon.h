@@ -85,7 +85,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_WeaponState();
-
+	
 	// 무기 자체의 애니메이션
 	UPROPERTY(EditAnywhere)
 	UAnimationAsset* RangedWeaponAnimation;

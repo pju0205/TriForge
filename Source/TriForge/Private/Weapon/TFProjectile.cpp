@@ -5,6 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 ATFProjectile::ATFProjectile()
 {
@@ -46,7 +47,13 @@ void ATFProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 		);
 	}
+	
+	if (HasAuthority())
+	{
+		CollisionBox->OnComponentHit.AddDynamic(this, &ThisClass::OnHit);
+	}
 }
+
 
 void ATFProjectile::Tick(float DeltaTime)
 {
@@ -54,3 +61,24 @@ void ATFProjectile::Tick(float DeltaTime)
 
 }
 
+void ATFProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	
+	Destroyed();
+}
+
+void ATFProjectile::Destroyed()
+{
+	Super::Destroyed();
+
+	// 소리와 이펙트에 대해서 RPC 처리를 하지 않아도 Destroyed 함수를 이용하면 클라이언트에도 동일한 효과를 제공 가능
+	if (ImpactParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle,GetActorTransform());
+	}
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+}
