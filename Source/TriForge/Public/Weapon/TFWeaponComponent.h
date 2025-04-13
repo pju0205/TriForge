@@ -7,6 +7,8 @@
 
 #define TRACE_LENGTH 80000.f
 
+class ATFHUD;
+class ATFWeaponPlayerController;
 class ATFWeapon;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -19,7 +21,6 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
 	
 	friend class ATFWeaponCharacter;
 
@@ -37,12 +38,20 @@ public:
 
 	void TraceEnemy(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
 	UPROPERTY()
 	ATFWeaponCharacter* Character;
+
+	UPROPERTY()
+	ATFWeaponPlayerController* Controller;
+
+	UPROPERTY()
+	ATFHUD* HUD;
 
 	UPROPERTY(Replicated)
 	ATFWeapon* EquippedWeapon;

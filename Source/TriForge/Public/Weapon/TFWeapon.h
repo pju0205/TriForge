@@ -36,6 +36,22 @@ class TRIFORGE_API ATFWeapon : public AActor
 public:	
 	ATFWeapon();
 
+	//Texture for Crosshair
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	UTexture2D* CrosshairsCenter;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	UTexture2D* CrosshairsLeft;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	UTexture2D* CrosshairsRight;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	UTexture2D* CrosshairsTop;
+
+	UPROPERTY(EditAnywhere, Category = "Crosshairs")
+	UTexture2D* CrosshairsBottom;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -89,5 +105,7 @@ private:
 	// 무기 자체의 애니메이션
 	UPROPERTY(EditAnywhere)
 	UAnimationAsset* RangedWeaponAnimation;
+
+	
 
 };
