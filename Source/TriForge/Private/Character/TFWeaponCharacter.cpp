@@ -128,4 +128,11 @@ UTFWeaponComponent* ATFWeaponCharacter::GetWeaponComponent()
 	return WeaponComponent;
 }
 
+FVector ATFWeaponCharacter::GetHitTarget() const
+{
+	if (WeaponComponent == nullptr) return FVector();
+	
+	return WeaponComponent->HitTarget;
+}
+
 

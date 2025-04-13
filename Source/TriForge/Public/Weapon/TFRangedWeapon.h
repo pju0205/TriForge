@@ -21,6 +21,7 @@ private:
 	TSubclassOf<ATFProjectile> ProjectileClass;
 
 public:
+	ATFRangedWeapon();
 	virtual void Attack(const FVector& HitTarget) override;
 
 };

@@ -48,6 +48,8 @@ public:
 
 	UTFWeaponComponent* GetWeaponComponent();
 
+	FVector GetHitTarget() const;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UTFWeaponComponent* WeaponComponent;

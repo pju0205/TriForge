@@ -9,6 +9,7 @@
 #include "HUD/TFHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 #include "Weapon/TFWeapon.h"
 
 UTFWeaponComponent::UTFWeaponComponent()
@@ -28,7 +29,16 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime);
+	
+	if (Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceEnemy(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+		
+		SetHUDCrosshairs(DeltaTime);
+	}
+	
 }
 
 void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -62,9 +72,7 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 	if (EquippedWeapon == nullptr) return;
 	if (bAttackButtonPressed)
 	{
-		FHitResult HitResult;
-		TraceEnemy(HitResult);
-		ServerAttackButton(HitResult.ImpactPoint);
+		Attacking();
 	}
 	
 	
@@ -81,6 +89,38 @@ void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQ
 	if (EquippedWeapon == nullptr) return;
 	EquippedWeapon->PlayAttackMontage();
 	EquippedWeapon->Attack(TraceHitTarget);
+	
+}
+
+void UTFWeaponComponent::StartAttackTimer()
+{
+	if (EquippedWeapon == nullptr || Character == nullptr) return;
+	Character->GetWorldTimerManager().SetTimer(
+		AttackTimer,
+		this,
+		&ThisClass::AttackTimerFinished,
+		EquippedWeapon->AttackDelay
+	);
+}
+
+void UTFWeaponComponent::AttackTimerFinished()
+{
+	if (EquippedWeapon == nullptr) return;
+	bCanFire = true;
+	if (bAttackButtonPressed && EquippedWeapon->bAutomatic)
+	{
+		Attacking();
+	}
+}
+
+void UTFWeaponComponent::Attacking()
+{
+	if (bCanFire)
+	{
+		bCanFire = false;
+		ServerAttackButton(HitTarget);
+		StartAttackTimer();
+	}
 	
 }
 
@@ -121,11 +161,23 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 		FVector Start = CrosshairWorldPosition;
 		// 끝지점 = 시작 지점 + WorldDirection 방향으로 곱한 값만큼의 좌표 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+
+		if (Character)
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+			DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
+		}
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(GetOwner());
+		
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
 			End,
-			ECC_Visibility
+			ECC_Visibility,
+			Params
 		);
 		
 	}

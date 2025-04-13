@@ -6,6 +6,11 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Weapon/TFProjectile.h"
 
+ATFRangedWeapon::ATFRangedWeapon()
+{
+
+}
+
 void ATFRangedWeapon::Attack(const FVector& HitTarget)
 {
 	Super::Attack(HitTarget);

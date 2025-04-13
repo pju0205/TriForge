@@ -89,6 +89,13 @@ public:
 	void PlayAttackMontage();
 	
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() {return WeaponMesh;}
+	
+	UPROPERTY(EditAnywhere)
+	float AttackDelay = .15;;
+	
+	UPROPERTY(EditAnywhere)
+	bool bAutomatic = false;;
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;

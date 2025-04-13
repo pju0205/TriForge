@@ -57,5 +57,15 @@ private:
 	ATFWeapon* EquippedWeapon;
 
 	bool bAttackButtonPressed;
+
+	FVector HitTarget;
+
+	FTimerHandle AttackTimer;
 	
+	bool bCanFire = true;
+	
+	void StartAttackTimer();
+	void AttackTimerFinished();
+
+	void Attacking();
 };
