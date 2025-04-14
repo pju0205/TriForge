@@ -3,9 +3,11 @@
 #include "Character/TFWeaponCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Character/TFWeaponPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "PlayerState/TFPlayerState.h"
 #include "Weapon/TFWeaponComponent.h"
 
 ATFWeaponCharacter::ATFWeaponCharacter()
@@ -32,7 +34,44 @@ ATFWeaponCharacter::ATFWeaponCharacter()
 void ATFWeaponCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	/*TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(Controller) : TFPlayerController;
+	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(GetPlayerState()) : TFPlayerState;*/
 	
+	/*if (TFPlayerController && TFPlayerState)
+	{
+		TFPlayerController->SetHUDHealth(TFPlayerState->CurrentHealth, TFPlayerState->MaxHealth);
+	}
+	else if (!TFPlayerState)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1,15.f, FColor::Red, FString(TEXT("NoState")));
+		}
+	}
+	else if (!TFPlayerController)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString(TEXT("NoController")));
+		}
+	}*/
+	
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
+	}
+	
+}
+
+void ATFWeaponCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
+	class AController* InstigatedBy, AActor* DamageCauser)
+{
+	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(GetPlayerState()) : TFPlayerState;
+	if (TFPlayerState)
+	{
+		TFPlayerState->CalcDamage(Damage);
+	}
 }
 
 void ATFWeaponCharacter::Tick(float DeltaTime)

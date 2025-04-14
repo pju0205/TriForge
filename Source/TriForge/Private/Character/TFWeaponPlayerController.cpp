@@ -5,6 +5,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Character/TFWeaponCharacter.h"
+#include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
+#include "HUD/TFHUD.h"
+#include "HUD/TFOverlay.h"
 
 ATFWeaponPlayerController::ATFWeaponPlayerController()
 {
@@ -21,11 +25,17 @@ void ATFWeaponPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(CharacterContext, 0);
 	}
 
+	TFHUD = Cast<ATFHUD>(GetHUD());
 }
 
 void ATFWeaponPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (TFHUD == nullptr)
+	{
+		TFHUD = Cast<ATFHUD>(GetHUD());
+	}
 	
 }
 
@@ -119,3 +129,19 @@ void ATFWeaponPlayerController::WeaponAttackReleased(const struct FInputActionVa
 	}
 }
 
+void ATFWeaponPlayerController::SetHUDHealth(float Health, float MaxHealth)
+{
+	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+	
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->HealthBar && TFHUD->CharacterOverlay->HealthText;
+	// 추후 디버깅 시 조건들 중 무엇이 false여서 bTFHUDValid가 false인지 정확히 파악하기 힘들지만
+	// 일단 코드 가독성을 위해 사용
+	if (bTFHUDValid)
+	{
+		const float HealthPercent = Health / MaxHealth;
+		TFHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
+
+		FString HealthText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
+		TFHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
+	}
+}

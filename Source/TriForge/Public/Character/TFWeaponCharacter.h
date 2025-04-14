@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "TFWeaponCharacter.generated.h"
 
+class ATFPlayerState;
+class ATFWeaponPlayerController;
 class UTFWeaponComponent;
 class ATFWeapon;
 class UCameraComponent;
@@ -21,6 +23,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -56,6 +60,11 @@ private:
 
 	UPROPERTY(ReplicatedUsing= OnRep_OverlappingWeapon)
 	ATFWeapon* OverlappingWeapon;
+
+	UPROPERTY()
+	ATFWeaponPlayerController* TFPlayerController;
+	UPROPERTY()
+	ATFPlayerState* TFPlayerState;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);

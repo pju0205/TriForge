@@ -3,6 +3,9 @@
 
 #include "HUD/TFHUD.h"
 
+#include "Blueprint/UserWidget.h"
+#include "HUD/TFOverlay.h"
+
 void ATFHUD::DrawHUD()
 {
 	Super::DrawHUD();
@@ -33,6 +36,24 @@ void ATFHUD::DrawHUD()
 		{
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter);
 		}
+	}
+}
+
+void ATFHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+}
+
+void ATFHUD::AddCharacterOverlay()
+{
+	APlayerController* PlayerController =  GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UTFOverlay>(PlayerController, CharacterOverlayClass);
+		
+		CharacterOverlay->AddToViewport();
 	}
 }
 

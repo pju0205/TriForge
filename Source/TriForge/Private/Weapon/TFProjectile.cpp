@@ -65,7 +65,7 @@ void ATFProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	
-	Destroyed();
+	Destroy();
 }
 
 void ATFProjectile::Destroyed()

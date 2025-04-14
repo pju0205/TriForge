@@ -6,6 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "TFHUD.generated.h"
 
+class UTFOverlay;
+
 USTRUCT(BlueprintType)
 struct FHUDPackage
 {
@@ -30,6 +32,17 @@ class TRIFORGE_API ATFHUD : public AHUD
 public:
 	virtual void DrawHUD() override;
 
+	UPROPERTY(EditAnywhere, Category = "PlayerState")
+	TSubclassOf<UUserWidget> CharacterOverlayClass;
+	
+	UPROPERTY()
+	UTFOverlay* CharacterOverlay;
+
+protected:
+	virtual void BeginPlay() override;
+
+	void AddCharacterOverlay();
+	
 private:
 	FHUDPackage HUDPackage;
 

@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "TFWeaponPlayerController.generated.h"
 
+class ATFHUD;
 class UInputAction;
 class UInputMappingContext;
 /**
@@ -55,5 +56,12 @@ protected:
 public:
 	ATFWeaponPlayerController();
 	virtual void Tick(float DeltaTime) override;
+
+	void SetHUDHealth(float Health, float MaxHealth);
+
+private:
+	UPROPERTY()
+	ATFHUD* TFHUD;
+
 	
 };
