@@ -32,15 +32,18 @@ private:
 	TObjectPtr<UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, Category = "input")
-	TObjectPtr<UInputAction> CrouchAction; 
+	TObjectPtr<UInputAction> SlideAction; 
 
+	FVector2d MoveDir = FVector2d::ZeroVector;
+	
 	void Move(const struct FInputActionValue& InputActionValue);
 	void Rotation(const struct FInputActionValue& InputActionValue);
-	void CrouchStart(const struct FInputActionValue& InputActionValue);
-	void CrouchEnd(const struct FInputActionValue& InputActionValue);
+	// void CrouchStart(const struct FInputActionValue& InputActionValue);
+	// void CrouchEnd(const struct FInputActionValue& InputActionValue);
 	void SprintStart(const struct FInputActionValue& InputActionValue);
 	void SprintEnd(const struct FInputActionValue& InputActionValue);
 	void Jump(const struct FInputActionValue& InputActionValue);
+	void Slide(const struct FInputActionValue& InputActionValue);
 
 protected:
 	virtual void BeginPlay() override;

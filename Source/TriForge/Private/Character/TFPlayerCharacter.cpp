@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
 
 ATFPlayerCharacter::ATFPlayerCharacter()
@@ -30,7 +31,9 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	ECurrentGait = E_Gait::Walk;
 	bSprinting = false;
 	bWalking = true;
-	
+	bJustLanded = false;
+	LandVelocity = FVector(0.0f, 0.0f, 0.0f);
+	SlideMontage = nullptr;
 }
 
 void ATFPlayerCharacter::Tick(float DeltaTime)
@@ -95,4 +98,96 @@ void ATFPlayerCharacter::UpdateMovement()
 
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	MovementComponent->MaxWalkSpeed = CurrentSpeed;
+}
+
+void ATFPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+
+	LandVelocity = MovementComponent->Velocity;
+
+	bJustLanded = true;
+
+	FLatentActionInfo LatentActionInfo;
+	LatentActionInfo.CallbackTarget = this;
+	LatentActionInfo.ExecutionFunction = FName("OnDelayComplete");
+	LatentActionInfo.Linkage = 0;
+	LatentActionInfo.UUID = __LINE__; // 각 지연 액션마다 고유 ID 필요
+	
+	UKismetSystemLibrary::RetriggerableDelay(this, 0.3f, LatentActionInfo);
+
+}
+
+void ATFPlayerCharacter::OnDelayComplete()
+{
+	// 0.3초 후에 Just Landed를 false로 설정
+	bJustLanded = false;
+}
+
+
+void ATFPlayerCharacter::UpdateSprintState(bool isSprint)
+{
+	bSprinting = isSprint;
+	bWalking = !isSprint;
+}
+
+void ATFPlayerCharacter::isPlayingSlideMontage(float Forward, float Right)
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
+	
+	if (Velocity > 1.0f)
+	{
+		SetSlideDir(Forward, Right);
+		PlaySlidMontage();
+	}
+}
+
+void ATFPlayerCharacter::PlaySlidMontage()
+{
+	if (SlideMontage)
+	{
+		PlayAnimMontage(SlideMontage);
+	}
+}
+
+void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
+{
+	SlideMontage = nullptr;
+
+	if (Forward == 0)
+	{
+		if (Right)
+		{
+			if (Right > 0)
+			{
+				SlideMontage = RightSlide_Montage;
+				if (GEngine)
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Right"));
+			}
+			else
+			{
+				SlideMontage = LeftSlide_Montage;
+				if (GEngine)
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Left"));
+			}
+		}
+	}
+	else
+	{
+		if (Forward > 0)
+		{
+			SlideMontage = ForwardSlide_Montage;
+			if (GEngine)
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Forward"));
+		}
+		else
+		{
+			SlideMontage = BackSlide_Montage;
+			if (GEngine)
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Backward"));
+		}
+	}
 }

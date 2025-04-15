@@ -16,7 +16,7 @@ class TRIFORGE_API ATFCharacter : public ACharacter
 protected:
 
 	virtual void BeginPlay() override;
-
+	virtual void Landed(const FHitResult& Hit) override;
 public:
 
 	ATFCharacter();

@@ -10,3 +10,8 @@ void ATFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 }
+
+void ATFCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+}

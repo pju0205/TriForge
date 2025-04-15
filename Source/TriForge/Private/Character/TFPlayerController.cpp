@@ -33,11 +33,12 @@ void ATFPlayerController::SetupInputComponent()
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ATFPlayerController::Move);
 	EnhancedInputComponent->BindAction(RotationAction, ETriggerEvent::Triggered, this, &ATFPlayerController::Rotation);
-	// EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATFPlayerController::Jump);
+	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATFPlayerController::Jump);
+	EnhancedInputComponent->BindAction(SlideAction, ETriggerEvent::Started, this, &ATFPlayerController::Slide);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ATFPlayerController::CrouchStart);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ATFPlayerController::CrouchEnd);
-	// EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
-	// EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
+	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
+	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
 
 }
 
@@ -56,6 +57,8 @@ void ATFPlayerController::Move(const struct FInputActionValue& InputActionValue)
 
 		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
+
+		MoveDir = InputAxisVector;
 	}
 }
 
@@ -73,43 +76,54 @@ void ATFPlayerController::Rotation(const FInputActionValue& InputActionValue)
 
 	}
 }
-//
-// void ATFPlayerController::SprintStart(const FInputActionValue& InputActionValue)
-// {
-// 	if (APawn* ControlledPawn = GetPawn<APawn>())
-// 	{
-// 		ATFCharacter* MyCharacter = Cast<ATFCharacter>(ControlledPawn);
-// 		if (MyCharacter)
-// 		{
-// 			MyCharacter->UpdateSprintState(true);
-// 		}
-// 	}
-// }
-//
-// void ATFPlayerController::SprintEnd(const FInputActionValue& InputActionValue)
-// {
-// 	if (APawn* ControlledPawn = GetPawn<APawn>())
-// 	{
-// 		ATFCharacter* MyCharacter = Cast<ATFCharacter>(ControlledPawn);
-// 		if (MyCharacter)
-// 		{
-// 			MyCharacter->UpdateSprintState(false);
-// 		}
-// 	}
-// }
-//
-//
-// void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
-// {
-// 	if (APawn* ControlledPawn = GetPawn<APawn>())
-// 	{
-// 		ATFCharacter* MyCharacter = Cast<ATFCharacter>(ControlledPawn);
-// 		if (MyCharacter)
-// 		{
-// 			MyCharacter->Jump();
-// 		}
-// 	}
-// }
+
+void ATFPlayerController::SprintStart(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->UpdateSprintState(true);
+		}
+	}
+}
+
+void ATFPlayerController::SprintEnd(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->UpdateSprintState(false);
+		}
+	}
+}
+
+void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->Jump();
+		}
+	}
+}
+
+void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->isPlayingSlideMontage(MoveDir.Y, MoveDir.X);
+		}
+	}
+}
 //
 //
 // void ATFPlayerController::CrouchStart(const FInputActionValue& InputActionValue)

@@ -34,12 +34,27 @@ enum class E_MovementState : uint8
 	Moving	UMETA(DisplayName = "Moving")
 };
 
+USTRUCT(BlueprintType)
+struct FChooserTableIn
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bisStarting;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bisPivoting;
+};
+
+
 UCLASS()
 class TRIFORGE_API UTFAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
 private:
+	float HeayLandSpeedThreshold;
+	
 	void SetRootTransform();
 	void SetAcceleration();
 	void SetVelocity();
@@ -48,7 +63,6 @@ private:
 	void GenerateTrajectory(float DeltaTime);
 
 	void UpdateStates();
-	bool isMoving();
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
@@ -60,6 +74,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FTransform CharacterTransform;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
+	bool OffsetRootBoneEnabled;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FTransform RootTransform;
 
@@ -90,11 +107,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	bool bHasVelocity;
 
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
-	// UPoseSearchDatabase* CurrentSelectedDatabase;
-	//
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
-	// TArray<FName> CurrentDatabaseTags;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
+	UPoseSearchDatabase* CurrentSelectedDatabase;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
+	TArray<FName> CurrentDatabaseTags;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PoseSearch")
 	FPoseSearchTrajectoryData TrajectoryGenerationDataIdle;
@@ -137,6 +154,27 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait GaitLastFrame;
+	
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool isMoving();
+	
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool isStarting();
+
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool isPivoting();
+
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool ShouldTurnInPlace();
+
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool ShouldSpinTransition();
+
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool JustLandedLight();
+	
+	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
+	bool JustLandedHeavy();
 	
 public:
 	UTFAnimInstance();

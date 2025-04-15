@@ -9,6 +9,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UCurveFloat;
+class UAnimMontage;
 // class UTFAnimInstance;
 
 UENUM(BlueprintType)
@@ -27,6 +28,12 @@ private:
 	void GetDesiredGait();
 	float CalculateMaxSpeed(float& StrafeSpeedMap);
 	void UpdateMovement();
+	
+	virtual void Landed(const FHitResult& Hit) override;
+	UFUNCTION()
+	void OnDelayComplete();
+
+	void SetSlideMontage(bool bisSlideDir);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -57,11 +64,41 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCurveFloat* StrafeSpeedMapCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	bool bJustLanded;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	FVector LandVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* SlideMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* ForwardSlide_Montage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* BackSlide_Montage; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* RightSlide_Montage; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* LeftSlide_Montage; 
 	
 public:
 	ATFPlayerCharacter();
-	
 	virtual void Tick(float DeltaTime) override;
+	
+	void UpdateSprintState(bool isSprint);
 
+	void SetSlideDir(float Forward, float Right); 
+	void isPlayingSlideMontage(float Forward, float Right); 
+	void PlaySlidMontage();
+	
 	E_Gait GetGait() const {return ECurrentGait;};
+	bool GetJustLanded() const {return bJustLanded;};
+	FVector GetLandVelocity() {return LandVelocity;};
+	
 };
+

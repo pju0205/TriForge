@@ -6,8 +6,11 @@
 #include "AnimationWarpingLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "PoseSearch/PoseSearchTrajectoryTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryLibrary.h"
+#include "PoseSearch/PoseSearchDatabase.h"
+
 
 UTFAnimInstance::UTFAnimInstance()
 {
@@ -21,6 +24,7 @@ UTFAnimInstance::UTFAnimInstance()
 	bHasVelocity = false;
 	AccelerationAmount = 0.0f;
 	Speed2D = 0.0f;
+	HeayLandSpeedThreshold = 700.0f;
 }
 
 void UTFAnimInstance::NativeInitializeAnimation()
@@ -44,34 +48,54 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		if (TFPlayerCharacter)
 		{
 			TFCharacterMovement = TFPlayerCharacter->GetCharacterMovement();
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("TFCharacterMovement"));
 		}
 	}
-
-	// 디버깅 메시지 조건부 출력
-	if (!TFCharacterMovement && GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("TFCharacterMovement is null"));
-		return; // 이 시점에서 로직 중단하는 게 안정적
-	}
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("TFCharacterMovement okokokokokokoko"));
+	
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
 	UpdateStates();
+
+	if (CurrentSelectedDatabase != nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1, 1.5f, FColor::Yellow,
+			FString::Printf(TEXT("Tag Count: %d"), CurrentSelectedDatabase->Tags.Num())
+		);
+		
+		GEngine->AddOnScreenDebugMessage(2, 1.5f, FColor::Red, FString::Printf(TEXT("Database: %s"), *CurrentSelectedDatabase->GetName()));
+
+		for (const auto& Tag : CurrentSelectedDatabase->Tags)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				3, // -1이면 새로운 메시지로 출력
+				1.5f,
+				FColor::Blue,
+				FString::Printf(TEXT("Database: %s | Tag: %s"), *CurrentSelectedDatabase->GetName(), *Tag.ToString())
+			);
+		}
+	}
 }
 
 void UTFAnimInstance::SetRootTransform()
 {
-	SetOffsetRootNode();
+	OffsetRootBoneEnabled = UKismetSystemLibrary::GetConsoleVariableBoolValue(FString("a.animnode.offsetrootbone.enable"));
 
-	FTransform OffsetRootNodeTransform = UAnimationWarpingLibrary::GetOffsetRootTransform(OffsetRootNode);
+	if (OffsetRootBoneEnabled)
+	{
+		RootTransform = CharacterTransform;
+	}
+	else
+	{
+		SetOffsetRootNode();
+
+		FTransform OffsetRootNodeTransform = UAnimationWarpingLibrary::GetOffsetRootTransform(OffsetRootNode);
 	
-	FVector OffsetRootNode_Location = OffsetRootNodeTransform.GetLocation();
-	FRotator OffsetRootNode_Rotation = OffsetRootNodeTransform.Rotator();
-	FRotator Make_OffsetRootNode_Rotation = FRotator(OffsetRootNode_Rotation.Pitch, OffsetRootNode_Rotation.Yaw, OffsetRootNode_Rotation.Roll + 90.0f);
+		FVector OffsetRootNode_Location = OffsetRootNodeTransform.GetLocation();
+		FRotator OffsetRootNode_Rotation = OffsetRootNodeTransform.Rotator();
+		FRotator Make_OffsetRootNode_Rotation = FRotator(OffsetRootNode_Rotation.Pitch, OffsetRootNode_Rotation.Yaw, OffsetRootNode_Rotation.Roll + 90.0f);
 
-	RootTransform = UKismetMathLibrary::MakeTransform(OffsetRootNode_Location, Make_OffsetRootNode_Rotation);
+		RootTransform = UKismetMathLibrary::MakeTransform(OffsetRootNode_Location, Make_OffsetRootNode_Rotation);
+	}
 }
 
 void UTFAnimInstance::SetAcceleration()
@@ -115,22 +139,18 @@ void UTFAnimInstance::SetVelocity()
 
 void UTFAnimInstance::UpdateEssentialValues()
 {
-	if (TFPlayerCharacter)
+	if (TFCharacterMovement && TFPlayerCharacter)
 	{
 		CharacterTransform = TFPlayerCharacter->GetActorTransform();
-		UE_LOG(LogTemp, Warning, TEXT("TFPlayerCharacter okokokokokokokokokokokokokokokokokokokokokokokokokok"));
-	}
-	else
-		UE_LOG(LogTemp, Warning, TEXT("TFPlayerCharacter is nullnullnullnullnullnullnullnullnullnullnullnullnull"));
-	SetRootTransform();
 	
-	if (TFCharacterMovement)
-	{
+		SetRootTransform();
 		SetAcceleration();
 		SetVelocity();
+		if (CurrentSelectedDatabase)
+		{
+			CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
+		}
 	}
-	
-	// CurrentDatabaseTags = CurrentSelectedDatabase->Tags;
 }
 
 void UTFAnimInstance::GenerateTrajectory(float DeltaTime)
@@ -263,6 +283,147 @@ bool UTFAnimInstance::isMoving()
 	UKismetMathLibrary::NotEqual_VectorVector(FutureVelocity, FVector(0.0f, 0.0f, 0.0f), 0.1f))
 	{
 		return true;	
+	}
+	return false;
+}
+
+bool UTFAnimInstance::isStarting()
+{
+	bool bisMoving = isMoving();
+	bool bHasPivotTag = !CurrentDatabaseTags.Contains("Pivots");
+	bool bisStarting = false;
+	if (UKismetMathLibrary::VSizeXY(FutureVelocity) >= UKismetMathLibrary::VSizeXY(Velocity) + 100.0f)
+	{
+		bisStarting = true;
+	}
+
+	GEngine->AddOnScreenDebugMessage(4, 1, FColor::Green,bisMoving ? TEXT("bisMoving : true") : TEXT("bisMoving : false"));
+	GEngine->AddOnScreenDebugMessage(5, 1, FColor::Green,bHasPivotTag ? TEXT("bHasPivotTag : true") : TEXT("bHasPivotTag : false"));
+	GEngine->AddOnScreenDebugMessage(6, 1, FColor::Green,bisStarting ? TEXT("bisStarting : true") : TEXT("bisStarting : false"));
+	return bisMoving && bHasPivotTag && bisStarting;
+}
+
+bool UTFAnimInstance::isPivoting()
+{
+	FRotator FutureRot = UKismetMathLibrary::MakeRotFromX(FutureVelocity);
+	FRotator CurrentRot = UKismetMathLibrary::MakeRotFromX(Velocity);
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(FutureRot, CurrentRot);
+
+	float AbsYawDelta = FMath::Abs(DeltaRot.Yaw);
+	
+	float RotationValue = 0.0f;
+	switch (RotationMode)
+	{
+	case E_RotationMode::OrientToMovement:
+		RotationValue = 60.0f;
+		break;
+	case E_RotationMode::Strafe:
+		RotationValue = 40.0f;
+		break;
+	default:
+		RotationValue = 0.0f;
+		break;
+	}
+
+	if (AbsYawDelta >= RotationValue)
+	{
+		return true;
+	}
+	return false;
+	
+}
+
+bool UTFAnimInstance::ShouldTurnInPlace()
+{
+	float RootYawDelta = FMath::Abs(
+	UKismetMathLibrary::NormalizedDeltaRotator(
+		CharacterTransform.GetRotation().Rotator(),
+		RootTransform.GetRotation().Rotator()
+	).Yaw);
+
+	bool bisStop = false;
+	if (MovementState == E_MovementState::Idle && MovementStateLastFrame == E_MovementState::Moving)
+	{
+		bisStop = true;
+	}
+
+	bool bTurnInPlace = false;
+	if (RootYawDelta >= 50.0f && bisStop)
+	{
+		bTurnInPlace = true;
+	}
+
+	return bTurnInPlace;
+}
+
+
+bool UTFAnimInstance::ShouldSpinTransition()
+{
+	float RootYawDelta = FMath::Abs(
+	UKismetMathLibrary::NormalizedDeltaRotator(
+		CharacterTransform.GetRotation().Rotator(),
+		RootTransform.GetRotation().Rotator()
+	).Yaw);
+	bool bisTurn = false;
+	if (RootYawDelta >= 130.0f)
+	{
+		bisTurn = true;
+	}
+	
+
+	bool bisMoving = false;
+	if (Speed2D >= 150.0f)
+	{
+		bisMoving = true;
+	}
+
+	bool bHasPivotTag = !CurrentDatabaseTags.Contains("Pivots");
+
+	return bisTurn && bisMoving && bHasPivotTag;
+}
+
+bool UTFAnimInstance::JustLandedLight()
+{
+	if (TFPlayerCharacter)
+	{
+		bool bJustLanded = false;
+		if (TFPlayerCharacter->GetJustLanded())
+		{
+			bJustLanded = true;
+		}
+
+		bool bLandSpeed = false;
+		float LandVelocity_Z = FMath::Abs(TFPlayerCharacter->GetLandVelocity().Z);
+		float HeayLandSpeed = FMath::Abs(HeayLandSpeedThreshold);
+		if (LandVelocity_Z < HeayLandSpeed)
+		{
+			bLandSpeed = true;
+		}
+
+		return bJustLanded && bLandSpeed;
+	}
+	return false;
+}
+
+bool UTFAnimInstance::JustLandedHeavy()
+{
+	if (TFPlayerCharacter)
+	{
+		bool bJustLanded = false;
+		if (TFPlayerCharacter->GetJustLanded())
+		{
+			bJustLanded = true;
+		}
+
+		bool bLandSpeed = false;
+		float LandVelocity_Z = FMath::Abs(TFPlayerCharacter->GetLandVelocity().Z);
+		float HeayLandSpeed = FMath::Abs(HeayLandSpeedThreshold);
+		if (LandVelocity_Z >= HeayLandSpeed)
+		{
+			bLandSpeed = true;
+		}
+
+		return bJustLanded && bLandSpeed;
 	}
 	return false;
 }
