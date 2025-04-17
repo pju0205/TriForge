@@ -2,20 +2,67 @@
 
 #include "PlayerState/TFPlayerState.h"
 
+#include "Character/TFWeaponCharacter.h"
 #include "Character/TFWeaponPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
 ATFPlayerState::ATFPlayerState()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	NetUpdateFrequency = 10.f;
 }
 
 void ATFPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(GetPlayerController()) : TFPlayerController;
+	if (TFPlayerController)
+	{
+		TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
+	
+}
+
+
+void ATFPlayerState::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
 
 	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(GetPlayerController()) : TFPlayerController;
-	TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	if (TFPlayerController)
+	{
+		TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
+	
+	/*if (TFPlayerController == nullptr)
+	{
+		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			APlayerController* PC = Iterator->Get();
+
+			APlayerState* PS = Cast<ATFPlayerState>(PC->PlayerState);
+		
+			if (PC && PS == this)
+			{
+				TFPlayerController = Cast<ATFWeaponPlayerController>(PC);
+			
+			}
+		}
+		if (TFPlayerController !=nullptr)
+		{
+			TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+		}
+		else
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Cyan, FString(TEXT("aaaa")));
+			}
+		}
+	}*/
+
+	
 }
 
 void ATFPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -27,10 +74,14 @@ void ATFPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>&
 
 void ATFPlayerState::OnRep_Health()
 {
-	ATFWeaponPlayerController* PlayerController = Cast<ATFWeaponPlayerController>(GetPlayerController());
-	if (PlayerController)
+	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(GetPlayerController()) : TFPlayerController;
+	if (TFPlayerController)
 	{
-		PlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+		TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
+	}
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("OnRep_Health")));
 	}
 }
 

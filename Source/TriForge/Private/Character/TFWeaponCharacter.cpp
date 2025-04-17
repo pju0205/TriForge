@@ -4,10 +4,12 @@
 
 #include "Camera/CameraComponent.h"
 #include "Character/TFWeaponPlayerController.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "PlayerState/TFPlayerState.h"
+#include "TriForge/TriForge.h"
 #include "Weapon/TFWeaponComponent.h"
 
 ATFWeaponCharacter::ATFWeaponCharacter()
@@ -29,6 +31,12 @@ ATFWeaponCharacter::ATFWeaponCharacter()
 
 	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
 	WeaponComponent->SetIsReplicated(true);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	
 }
 
 void ATFWeaponCharacter::BeginPlay()
@@ -67,10 +75,23 @@ void ATFWeaponCharacter::BeginPlay()
 void ATFWeaponCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
-	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(GetPlayerState()) : TFPlayerState;
+	ATFWeaponCharacter* DamagedCharacter =  Cast<ATFWeaponCharacter>(DamagedActor);
+	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(DamagedCharacter->GetPlayerState()) : TFPlayerState;
 	if (TFPlayerState)
 	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("Receive Damage")));
+		}
 		TFPlayerState->CalcDamage(Damage);
+	}
+	else
+	{
+		
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("NoPlayerstate Damage")));
+		}
 	}
 }
 

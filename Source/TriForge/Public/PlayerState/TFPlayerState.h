@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerState.h"
 #include "TFPlayerState.generated.h"
 
+class ATFWeaponCharacter;
 class ATFWeaponPlayerController;
 /**
  * 
@@ -18,6 +19,7 @@ public:
 	ATFPlayerState();
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -32,7 +34,11 @@ public:
 
 	void CalcDamage(float Damage);
 
+
 private:
+	UPROPERTY()
+	ATFWeaponCharacter* TFCharacter;
+	
 	UPROPERTY()
 	ATFWeaponPlayerController* TFPlayerController;
 	

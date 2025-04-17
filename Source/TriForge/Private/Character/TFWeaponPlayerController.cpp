@@ -31,11 +31,7 @@ void ATFWeaponPlayerController::BeginPlay()
 void ATFWeaponPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (TFHUD == nullptr)
-	{
-		TFHUD = Cast<ATFHUD>(GetHUD());
-	}
+	
 	
 }
 
@@ -144,4 +140,5 @@ void ATFWeaponPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		FString HealthText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		TFHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+
 }
