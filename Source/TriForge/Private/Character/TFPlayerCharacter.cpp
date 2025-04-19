@@ -9,6 +9,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
+#include "Net/UnrealNetwork.h"
 
 ATFPlayerCharacter::ATFPlayerCharacter()
 {
@@ -40,6 +41,13 @@ void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateMovement();
+}
+
+void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
+	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
 }
 
 
@@ -126,11 +134,18 @@ void ATFPlayerCharacter::OnDelayComplete()
 	bJustLanded = false;
 }
 
-
-void ATFPlayerCharacter::UpdateSprintState(bool isSprint)
+void ATFPlayerCharacter::UpdateSprintState(bool bSprint)
 {
-	bSprinting = isSprint;
-	bWalking = !isSprint;
+	if (IsLocallyControlled())
+	{
+		ServerUpdateSprintState(bSprint);
+	}
+}
+
+void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
+{
+	bSprinting = bSprint;
+	bWalking = !bSprint;
 }
 
 void ATFPlayerCharacter::isPlayingSlideMontage(float Forward, float Right)

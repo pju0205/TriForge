@@ -56,10 +56,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	FVector SprintSpeed;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bSprinting;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bWalking;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -89,9 +89,12 @@ protected:
 public:
 	ATFPlayerCharacter();
 	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	void UpdateSprintState(bool isSprint);
-
+	UFUNCTION(Server, Reliable)
+	void ServerUpdateSprintState(bool isSprint);
+	
 	void SetSlideDir(float Forward, float Right); 
 	void isPlayingSlideMontage(float Forward, float Right); 
 	void PlaySlidMontage();
