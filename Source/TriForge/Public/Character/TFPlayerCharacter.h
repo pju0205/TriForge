@@ -37,9 +37,6 @@ private:
 	
 protected:
 	virtual void BeginPlay() override;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
-	TObjectPtr<USpringArmComponent> CameraBoom = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
 	TObjectPtr<UCameraComponent> Camera = nullptr;

@@ -18,15 +18,13 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	MovementComponent->bOrientRotationToMovement = false;
 	MovementComponent->RotationRate = FRotator(0.f, 300.f, 0.f);
-	
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetRootComponent());
-	CameraBoom->TargetArmLength = 300.0f;
-	CameraBoom->SetWorldRotation(FRotator(-30.0f, 0.0f, 0.0f));
 
+	// 1인칭 카메라 설정
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(CameraBoom);
+	Camera->SetupAttachment(GetMesh(), FName("head"));
+	Camera->bUsePawnControlRotation = true;
 
+	
 	WalkSpeed = FVector(300.0f, 275.0f, 250.0f);
 	SprintSpeed = FVector(700.0f, 575.0f, 550.0f);
 	ECurrentGait = E_Gait::Walk;
