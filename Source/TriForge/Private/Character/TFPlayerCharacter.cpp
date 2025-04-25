@@ -1,0 +1,206 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Character/TFPlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+#include "KismetAnimationLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Curves/CurveFloat.h"
+#include "Net/UnrealNetwork.h"
+
+ATFPlayerCharacter::ATFPlayerCharacter()
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	MovementComponent->bOrientRotationToMovement = false;
+	MovementComponent->RotationRate = FRotator(0.f, 300.f, 0.f);
+
+	// 1인칭 카메라 설정
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(GetMesh(), FName("head"));
+	Camera->bUsePawnControlRotation = true;
+
+	
+	WalkSpeed = FVector(300.0f, 275.0f, 250.0f);
+	SprintSpeed = FVector(700.0f, 575.0f, 550.0f);
+	ECurrentGait = E_Gait::Walk;
+	bSprinting = false;
+	bWalking = true;
+	bJustLanded = false;
+	LandVelocity = FVector(0.0f, 0.0f, 0.0f);
+	SlideMontage = nullptr;
+}
+
+void ATFPlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	UpdateMovement();
+}
+
+void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
+	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
+}
+
+
+void ATFPlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void ATFPlayerCharacter::GetDesiredGait()
+{
+	if (bSprinting)
+	{
+		ECurrentGait = E_Gait::Sprint;
+	}
+	else
+	{
+		if (bWalking)
+		{
+			ECurrentGait = E_Gait::Walk;
+		}
+	}
+}
+
+float ATFPlayerCharacter::CalculateMaxSpeed(float& StrafeSpeedMap)
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float MovementDirection = UKismetAnimationLibrary::CalculateDirection(MovementComponent->Velocity, GetActorRotation());
+	MovementDirection = FMath::Abs(MovementDirection);
+	if (StrafeSpeedMapCurve)
+	{
+		StrafeSpeedMap = StrafeSpeedMapCurve->GetFloatValue(MovementDirection);
+	}
+
+	FVector CurrentSpeed = FVector::ZeroVector;
+	if (ECurrentGait == E_Gait::Walk)
+	{
+		CurrentSpeed = WalkSpeed;
+	}
+	else if (ECurrentGait == E_Gait::Sprint)
+	{
+		CurrentSpeed = SprintSpeed;
+	}
+	float FrontSpeed = UKismetMathLibrary::MapRangeClamped(StrafeSpeedMap, 0.0f, 1.0f, CurrentSpeed.X, CurrentSpeed.Y);
+	float BackSpeed = UKismetMathLibrary::MapRangeClamped(StrafeSpeedMap, 1.0f, 2.0f, CurrentSpeed.Y, CurrentSpeed.Z);
+	float FinalSpeed = UKismetMathLibrary::SelectFloat(FrontSpeed, BackSpeed, StrafeSpeedMap < 1.0);
+
+	return FinalSpeed;
+}
+
+void ATFPlayerCharacter::UpdateMovement()
+{
+	float StrafeSpeedMap = 0.0f;
+	
+	GetDesiredGait();
+	float CurrentSpeed = CalculateMaxSpeed(StrafeSpeedMap);
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	MovementComponent->MaxWalkSpeed = CurrentSpeed;
+}
+
+void ATFPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+
+	LandVelocity = MovementComponent->Velocity;
+
+	bJustLanded = true;
+
+	FLatentActionInfo LatentActionInfo;
+	LatentActionInfo.CallbackTarget = this;
+	LatentActionInfo.ExecutionFunction = FName("OnDelayComplete");
+	LatentActionInfo.Linkage = 0;
+	LatentActionInfo.UUID = __LINE__; // 각 지연 액션마다 고유 ID 필요
+	
+	UKismetSystemLibrary::RetriggerableDelay(this, 0.3f, LatentActionInfo);
+
+}
+
+void ATFPlayerCharacter::OnDelayComplete()
+{
+	// 0.3초 후에 Just Landed를 false로 설정
+	bJustLanded = false;
+}
+
+void ATFPlayerCharacter::UpdateSprintState(bool bSprint)
+{
+	if (IsLocallyControlled())
+	{
+		ServerUpdateSprintState(bSprint);
+	}
+}
+
+void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
+{
+	bSprinting = bSprint;
+	bWalking = !bSprint;
+}
+
+void ATFPlayerCharacter::isPlayingSlideMontage(float Forward, float Right)
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
+	
+	if (Velocity > 1.0f)
+	{
+		SetSlideDir(Forward, Right);
+		PlaySlidMontage();
+	}
+}
+
+void ATFPlayerCharacter::PlaySlidMontage()
+{
+	if (SlideMontage)
+	{
+		PlayAnimMontage(SlideMontage);
+	}
+}
+
+void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
+{
+	SlideMontage = nullptr;
+
+	if (Forward == 0)
+	{
+		if (Right)
+		{
+			if (Right > 0)
+			{
+				SlideMontage = RightSlide_Montage;
+				if (GEngine)
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Right"));
+			}
+			else
+			{
+				SlideMontage = LeftSlide_Montage;
+				if (GEngine)
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Left"));
+			}
+		}
+	}
+	else
+	{
+		if (Forward > 0)
+		{
+			SlideMontage = ForwardSlide_Montage;
+			if (GEngine)
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Forward"));
+		}
+		else
+		{
+			SlideMontage = BackSlide_Montage;
+			if (GEngine)
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Backward"));
+		}
+	}
+}
