@@ -59,6 +59,10 @@ public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
 
+	void SetHUDAmmo(int32 Ammo);
+
+	virtual void OnPossess(APawn* InPawn) override;
+
 private:
 	UPROPERTY()
 	ATFHUD* TFHUD;

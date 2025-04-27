@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Weapon/TFWeapon.h"
 
 UTFWeaponComponent::UTFWeaponComponent()
@@ -50,8 +51,16 @@ void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 
 void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 {
-	// Character == nullptr OR OverlappingWeapon == nullptr
-	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (Character == nullptr) return;
+	// 무기를 들고 있고 WeaponToEquip != nullptr 이면 무기 교체
+	// 무기를 들고 있고 WeaponToEquip == nullptr 이면 무기 드랍
+	if (EquippedWeapon != nullptr)
+	{
+		EquippedWeapon->Dropped();
+		EquippedWeapon = nullptr;
+	}
+
+	if (WeaponToEquip == nullptr) return;
 	
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::Ews_Equipped);
@@ -63,6 +72,24 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	}
 	
 	EquippedWeapon->SetOwner(Character);
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+}
+
+void UTFWeaponComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && Character)
+	{
+		EquippedWeapon->SetWeaponState(EWeaponState::Ews_Equipped);
+
+		const USkeletalMeshSocket* WeaponSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (WeaponSocket)
+		{
+			WeaponSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
 }
 
 void UTFWeaponComponent::AttackButtonPressed(bool bPressed)

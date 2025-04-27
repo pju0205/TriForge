@@ -9,6 +9,7 @@
 #include "Components/TextBlock.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
+#include "PlayerState/TFPlayerState.h"
 
 ATFWeaponPlayerController::ATFWeaponPlayerController()
 {
@@ -26,6 +27,17 @@ void ATFWeaponPlayerController::BeginPlay()
 	}
 
 	TFHUD = Cast<ATFHUD>(GetHUD());
+}
+
+void ATFWeaponPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	ATFPlayerState* TFPlayerState = Cast<ATFPlayerState>(InPawn->GetPlayerState());
+	if (TFPlayerState)
+	{
+		SetHUDHealth(TFPlayerState->GetCurrentHealth(), TFPlayerState->GetMaxHealth());
+	}
 }
 
 void ATFWeaponPlayerController::Tick(float DeltaTime)
@@ -142,3 +154,18 @@ void ATFWeaponPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 
 }
+
+void ATFWeaponPlayerController::SetHUDAmmo(int32 Ammo)
+{
+	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+	
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->AmmoAmount;
+
+	if (bTFHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		TFHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+

@@ -42,28 +42,6 @@ ATFWeaponCharacter::ATFWeaponCharacter()
 void ATFWeaponCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	/*TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(Controller) : TFPlayerController;
-	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(GetPlayerState()) : TFPlayerState;*/
-	
-	/*if (TFPlayerController && TFPlayerState)
-	{
-		TFPlayerController->SetHUDHealth(TFPlayerState->CurrentHealth, TFPlayerState->MaxHealth);
-	}
-	else if (!TFPlayerState)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1,15.f, FColor::Red, FString(TEXT("NoState")));
-		}
-	}
-	else if (!TFPlayerController)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString(TEXT("NoController")));
-		}
-	}*/
 	
 	if (HasAuthority())
 	{
@@ -76,23 +54,16 @@ void ATFWeaponCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
 	ATFWeaponCharacter* DamagedCharacter =  Cast<ATFWeaponCharacter>(DamagedActor);
-	TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(DamagedCharacter->GetPlayerState()) : TFPlayerState;
-	if (TFPlayerState)
+	if (DamagedCharacter)
 	{
-		if (GEngine)
+		TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(DamagedCharacter->GetPlayerState()) : TFPlayerState;
+
+		if (TFPlayerState)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("Receive Damage")));
-		}
-		TFPlayerState->CalcDamage(Damage);
-	}
-	else
-	{
-		
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Black, FString::Printf(TEXT("NoPlayerstate Damage")));
+			TFPlayerState->CalcDamage(Damage);
 		}
 	}
+	
 }
 
 void ATFWeaponCharacter::Tick(float DeltaTime)

@@ -3,8 +3,12 @@
 
 #include "Weapon/TFRangedWeapon.h"
 
+#include "Character/TFWeaponCharacter.h"
+#include "Character/TFWeaponPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Net/UnrealNetwork.h"
 #include "Weapon/TFProjectile.h"
+
 
 ATFRangedWeapon::ATFRangedWeapon()
 {
@@ -45,5 +49,43 @@ void ATFRangedWeapon::Attack(const FVector& HitTarget)
 			}
 		}
 	}
+
+	SpendAmmo();
 }
 
+void ATFRangedWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATFRangedWeapon, Ammo);
+}
+
+void ATFRangedWeapon::OnRep_Ammo()
+{
+	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFWeaponCharacter>(GetOwner()) : TFOwnerCharacter;
+	if (TFOwnerCharacter)
+	{
+		TFOwnerController = TFOwnerController == nullptr ? Cast<ATFWeaponPlayerController>(TFOwnerCharacter->GetController()) : TFOwnerController;
+
+		if (TFOwnerController)
+		{
+			TFOwnerController->SetHUDAmmo(Ammo);
+		}
+	}
+}
+
+void ATFRangedWeapon::SpendAmmo()
+{
+	--Ammo;
+
+	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFWeaponCharacter>(GetOwner()) : TFOwnerCharacter;
+	if (TFOwnerCharacter)
+	{
+		TFOwnerController = TFOwnerController == nullptr ? Cast<ATFWeaponPlayerController>(TFOwnerCharacter->GetController()) : TFOwnerController;
+
+		if (TFOwnerController)
+		{
+			TFOwnerController->SetHUDAmmo(Ammo);
+		}
+	}
+}

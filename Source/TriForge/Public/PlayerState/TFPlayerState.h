@@ -22,24 +22,22 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UPROPERTY(EditAnywhere, Category="PlayerState")
-	float MaxHealth = 100.f;
-
-	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category="PlayerState")
-	float CurrentHealth = 100.f;
-
+	
 	UFUNCTION()
 	void OnRep_Health();
 
 	void CalcDamage(float Damage);
 
+	FORCEINLINE float GetCurrentHealth() const {return CurrentHealth; }
+	FORCEINLINE float GetMaxHealth() const {return MaxHealth; }
 
 private:
 	UPROPERTY()
-	ATFWeaponCharacter* TFCharacter;
-	
-	UPROPERTY()
 	ATFWeaponPlayerController* TFPlayerController;
 	
+	UPROPERTY(EditAnywhere, Category="PlayerState")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category="PlayerState")
+	float CurrentHealth = 100.f;
 };

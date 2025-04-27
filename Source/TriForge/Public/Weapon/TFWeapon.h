@@ -87,6 +87,8 @@ public:
 
 	virtual void Attack(const FVector& HitTarget);
 	void PlayAttackMontage();
+
+	void Dropped();
 	
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() {return WeaponMesh;}
 	
@@ -95,6 +97,7 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	bool bAutomatic = false;;
+
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")

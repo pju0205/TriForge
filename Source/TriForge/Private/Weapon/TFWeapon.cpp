@@ -62,7 +62,18 @@ void ATFWeapon::SetWeaponState(EWeaponState State)
 	{
 	case EWeaponState::Ews_Equipped:
 		WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		// weapon에 있는 EWeaponType 을 캐릭터나 weaponcomp로 옮기고 Weapon.cpp에서는 WeaponType이 무엇인지 지정? 
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	case EWeaponState::Ews_Dropped:
+		if (HasAuthority())
+		{
+			WeaponSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+		WeaponMesh->SetSimulatePhysics(true);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 	}
 }
@@ -73,6 +84,14 @@ void ATFWeapon::OnRep_WeaponState()
 	{
 	case EWeaponState::Ews_Equipped:
 		WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	case EWeaponState::Ews_Dropped:
+		WeaponMesh->SetSimulatePhysics(true);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 	}
 }
@@ -122,6 +141,15 @@ void ATFWeapon::PlayAttackMontage()
 			}
 		}
 	}
+}
+
+void ATFWeapon::Dropped()
+{
+	SetWeaponState(EWeaponState::Ews_Dropped);
+	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+	WeaponMesh->DetachFromComponent(DetachRules);
+	SetOwner(nullptr);
+	
 }
 
 void ATFWeapon::Attack(const FVector& HitTarget)

@@ -53,8 +53,11 @@ private:
 	UPROPERTY()
 	ATFHUD* HUD;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	ATFWeapon* EquippedWeapon;
+
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 
 	bool bAttackButtonPressed;
 
