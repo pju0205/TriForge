@@ -3,11 +3,11 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class TriForgeEditorTarget : TargetRules
+public class TriForgeServerTarget : TargetRules
 {
-	public TriForgeEditorTarget(TargetInfo Target) : base(Target)
+	public TriForgeServerTarget(TargetInfo Target) : base(Target)
 	{
-		Type = TargetType.Editor;
+		Type = TargetType.Server;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
         ExtraModuleNames.Add("TriForge");
