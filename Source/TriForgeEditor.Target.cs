@@ -10,6 +10,6 @@ public class TriForgeEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-        ExtraModuleNames.Add("TriForge");
+        ExtraModuleNames.AddRange(new string[] { "TriForge", "DedicatedServers" });
     }
 }

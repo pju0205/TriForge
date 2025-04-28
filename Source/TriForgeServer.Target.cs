@@ -10,6 +10,6 @@ public class TriForgeServerTarget : TargetRules
 		Type = TargetType.Server;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-        ExtraModuleNames.Add("TriForge");
+        ExtraModuleNames.AddRange(new string[] { "TriForge", "DedicatedServers" });
     }
 }
