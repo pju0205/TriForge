@@ -18,7 +18,6 @@ public class TriForge : ModuleRules
 			"AnimGraphRuntime", 
 			"AnimationWarpingRuntime", 
 			"PoseSearch",
-            "GameLiftServerSDK",
             "DedicatedServers"
         });
 
