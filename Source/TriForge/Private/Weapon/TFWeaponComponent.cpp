@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapon/TFRangedWeapon.h"
 #include "Weapon/TFWeapon.h"
 
 UTFWeaponComponent::UTFWeaponComponent()
@@ -54,9 +55,11 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (Character == nullptr) return;
 	// 무기를 들고 있고 WeaponToEquip != nullptr 이면 무기 교체
 	// 무기를 들고 있고 WeaponToEquip == nullptr 이면 무기 드랍
-	if (EquippedWeapon != nullptr)
+	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
+		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
+		bCanFire = true; 
 		EquippedWeapon = nullptr;
 	}
 
@@ -72,6 +75,17 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	}
 	
 	EquippedWeapon->SetOwner(Character);
+
+	// 만약 무기가 원거리 무기라면 HUD에 잔탄 수 보이게 하기
+	if (EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon)
+	{
+		ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
+		if (RangedWeapon)
+		{
+			RangedWeapon->SetHUDRangedWeaponAmmo();
+		}
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }

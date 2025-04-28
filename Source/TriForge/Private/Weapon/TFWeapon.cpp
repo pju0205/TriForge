@@ -54,6 +54,7 @@ void ATFWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(ATFWeapon, WeaponState);
 }
+
 void ATFWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
@@ -149,7 +150,6 @@ void ATFWeapon::Dropped()
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
-	
 }
 
 void ATFWeapon::Attack(const FVector& HitTarget)

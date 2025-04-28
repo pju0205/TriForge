@@ -45,4 +45,9 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void OnRep_Owner() override;
+
+	virtual void Dropped() override;
+
+	void SetHUDRangedWeaponAmmo();
 };

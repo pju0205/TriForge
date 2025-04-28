@@ -12,7 +12,7 @@
 
 ATFRangedWeapon::ATFRangedWeapon()
 {
-
+	SetWeaponClass(EWeaponClass::Ewc_RangedWeapon);
 }
 
 void ATFRangedWeapon::Attack(const FVector& HitTarget)
@@ -60,7 +60,7 @@ void ATFRangedWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	DOREPLIFETIME(ATFRangedWeapon, Ammo);
 }
 
-void ATFRangedWeapon::OnRep_Ammo()
+void ATFRangedWeapon::SetHUDRangedWeaponAmmo()
 {
 	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFWeaponCharacter>(GetOwner()) : TFOwnerCharacter;
 	if (TFOwnerCharacter)
@@ -76,16 +76,37 @@ void ATFRangedWeapon::OnRep_Ammo()
 
 void ATFRangedWeapon::SpendAmmo()
 {
-	--Ammo;
+	// TODO: Ammo 값이 0 미만일 때 발사가 되지 않게 변경해야 한다.
+	Ammo = FMath::Clamp(Ammo - 1 , 0, Ammo);
 
-	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFWeaponCharacter>(GetOwner()) : TFOwnerCharacter;
-	if (TFOwnerCharacter)
-	{
-		TFOwnerController = TFOwnerController == nullptr ? Cast<ATFWeaponPlayerController>(TFOwnerCharacter->GetController()) : TFOwnerController;
-
-		if (TFOwnerController)
-		{
-			TFOwnerController->SetHUDAmmo(Ammo);
-		}
-	}
+	SetHUDRangedWeaponAmmo();
 }
+
+void ATFRangedWeapon::OnRep_Ammo()
+{
+	SetHUDRangedWeaponAmmo();
+}
+
+void ATFRangedWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr)
+	{
+		TFOwnerCharacter = nullptr;
+		TFOwnerController = nullptr;
+	}
+	else
+	{
+		SetHUDRangedWeaponAmmo();
+	}
+
+}
+
+void ATFRangedWeapon::Dropped()
+{
+	TFOwnerCharacter = nullptr;
+	TFOwnerController = nullptr;
+
+	Super::Dropped();
+}
+

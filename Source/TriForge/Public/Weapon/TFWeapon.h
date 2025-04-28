@@ -18,12 +18,21 @@ enum class EWeaponState : uint8
 };
 
 UENUM()
+enum class EWeaponClass : uint8
+{
+	Ewc_RangedWeapon UMETA(DisplayNmae = "RangedWeapon"),
+	Ewc_MeleeWeapon UMETA(DisplayName = "MeleeWeapon"),
+
+	Ewt_Max UMETA(DisplayName = "DefaultMax")
+};
+
+UENUM()
 enum class EWeaponType : uint8
 {
 	Ewt_Rifle UMETA(DisplayName = "Rifle"),
-	Ewt_ShotGun UMETA(DisplayName = "Rifle"),
-	Ewt_Knife UMETA(DisplayName = "Rifle"),
-	Ewt_Hammer UMETA(DisplayName = "Rifle"),
+	Ewt_ShotGun UMETA(DisplayName = "ShotGun"),
+	Ewt_Knife UMETA(DisplayName = "Knife"),
+	Ewt_Hammer UMETA(DisplayName = "Hammer"),
 
 	Ewt_Max UMETA(DisplayName = "DefaultMax")
 };
@@ -80,7 +89,13 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	FORCEINLINE void SetWeaponState(EWeaponState State);
+	
+	void SetWeaponState(EWeaponState State);
+	FORCEINLINE void SetWeaponClass(EWeaponClass Class) { WeaponClass = Class; }
+	FORCEINLINE void SetWeaponType(EWeaponType Type) { WeaponType = Type; }
+	FORCEINLINE EWeaponClass GetWeaponClass() const {return WeaponClass;}
+	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	
 	FORCEINLINE USphereComponent* GetWeaponSphere() const {return WeaponSphere;}
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -88,7 +103,7 @@ public:
 	virtual void Attack(const FVector& HitTarget);
 	void PlayAttackMontage();
 
-	void Dropped();
+	virtual void Dropped();
 	
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() {return WeaponMesh;}
 	
@@ -109,13 +124,17 @@ private:
 	UPROPERTY(ReplicatedUsing= OnRep_WeaponState, VisibleAnywhere)
 	EWeaponState WeaponState;
 
+	UPROPERTY(VisibleAnywhere)
+	EWeaponClass WeaponClass;
+
+	UPROPERTY(VisibleAnywhere)
+	EWeaponType WeaponType;
+	
 	UFUNCTION()
 	void OnRep_WeaponState();
 	
 	// 무기 자체의 애니메이션
 	UPROPERTY(EditAnywhere)
 	UAnimationAsset* RangedWeaponAnimation;
-
 	
-
 };
