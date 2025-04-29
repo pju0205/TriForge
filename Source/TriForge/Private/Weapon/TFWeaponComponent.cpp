@@ -59,7 +59,7 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	{
 		EquippedWeapon->Dropped();
 		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
-		bCanFire = true; 
+		bCanAttack = true; 
 		EquippedWeapon = nullptr;
 	}
 
@@ -116,7 +116,6 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 		Attacking();
 	}
 	
-	
 }
 
 void UTFWeaponComponent::ServerAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -133,6 +132,20 @@ void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQ
 	
 }
 
+bool UTFWeaponComponent::CanAttack()
+{
+	if (EquippedWeapon == nullptr) return false;
+	if (EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon)
+	{
+		ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
+		if (RangedWeapon)
+		{
+			return !RangedWeapon->IsAmmoEmpty() || !bCanAttack;
+		}
+	}
+	return bCanAttack;
+}
+
 void UTFWeaponComponent::StartAttackTimer()
 {
 	if (EquippedWeapon == nullptr || Character == nullptr) return;
@@ -147,7 +160,7 @@ void UTFWeaponComponent::StartAttackTimer()
 void UTFWeaponComponent::AttackTimerFinished()
 {
 	if (EquippedWeapon == nullptr) return;
-	bCanFire = true;
+	bCanAttack = true;
 	if (bAttackButtonPressed && EquippedWeapon->bAutomatic)
 	{
 		Attacking();
@@ -156,9 +169,9 @@ void UTFWeaponComponent::AttackTimerFinished()
 
 void UTFWeaponComponent::Attacking()
 {
-	if (bCanFire)
+	if (CanAttack())
 	{
-		bCanFire = false;
+		bCanAttack = false;
 		ServerAttackButton(HitTarget);
 		StartAttackTimer();
 	}

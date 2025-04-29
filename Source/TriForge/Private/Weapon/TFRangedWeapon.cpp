@@ -74,10 +74,14 @@ void ATFRangedWeapon::SetHUDRangedWeaponAmmo()
 	}
 }
 
+bool ATFRangedWeapon::IsAmmoEmpty()
+{
+	return Ammo <= 0;
+}
+
 void ATFRangedWeapon::SpendAmmo()
 {
-	// TODO: Ammo 값이 0 미만일 때 발사가 되지 않게 변경해야 한다.
-	Ammo = FMath::Clamp(Ammo - 1 , 0, Ammo);
+	Ammo = FMath::Clamp(Ammo - 1 , 0, MagCapacity);
 
 	SetHUDRangedWeaponAmmo();
 }

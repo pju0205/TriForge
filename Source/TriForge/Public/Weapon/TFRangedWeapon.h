@@ -41,6 +41,7 @@ private:
 	
 public:
 	ATFRangedWeapon();
+	
 	virtual void Attack(const FVector& HitTarget) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
@@ -50,4 +51,6 @@ public:
 	virtual void Dropped() override;
 
 	void SetHUDRangedWeaponAmmo();
+
+	bool IsAmmoEmpty();
 };

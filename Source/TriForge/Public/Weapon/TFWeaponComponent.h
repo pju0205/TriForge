@@ -65,7 +65,9 @@ private:
 
 	FTimerHandle AttackTimer;
 	
-	bool bCanFire = true;
+	bool bCanAttack = true;
+
+	bool CanAttack();
 	
 	void StartAttackTimer();
 	void AttackTimerFinished();
