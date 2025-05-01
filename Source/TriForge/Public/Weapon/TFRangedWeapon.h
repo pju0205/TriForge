@@ -42,7 +42,7 @@ private:
 public:
 	ATFRangedWeapon();
 	
-	virtual void Attack(const FVector& HitTarget) override;
+	virtual void Attack(const FVector& HitTarget, const FHitResult& HitResult) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 

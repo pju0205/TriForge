@@ -34,9 +34,10 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	
 	if (Character && Character->IsLocallyControlled())
 	{
-		FHitResult HitResult;
-		TraceEnemy(HitResult);
-		HitTarget = HitResult.ImpactPoint;
+		FHitResult Hit;
+		TraceEnemy(Hit);
+		HitTarget = Hit.ImpactPoint;
+		HitResult = Hit;
 		
 		SetHUDCrosshairs(DeltaTime);
 	}
@@ -118,17 +119,28 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 	
 }
 
-void UTFWeaponComponent::ServerAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget)
+void UTFWeaponComponent::Attacking()
 {
-	MulticastAttackButton(TraceHitTarget);
+	if (CanAttack())
+	{
+		bCanAttack = false;
+		ServerAttackButton(HitTarget, HitResult);
+		StartAttackTimer();
+	}
+	
+}
+
+void UTFWeaponComponent::ServerAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult)
+{
+	MulticastAttackButton(TraceHitTarget, TraceHitResult);
 }
 
 
-void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget)
+void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult)
 {
 	if (EquippedWeapon == nullptr) return;
 	EquippedWeapon->PlayAttackMontage();
-	EquippedWeapon->Attack(TraceHitTarget);
+	EquippedWeapon->Attack(TraceHitTarget, TraceHitResult);
 	
 }
 
@@ -167,16 +179,6 @@ void UTFWeaponComponent::AttackTimerFinished()
 	}
 }
 
-void UTFWeaponComponent::Attacking()
-{
-	if (CanAttack())
-	{
-		bCanAttack = false;
-		ServerAttackButton(HitTarget);
-		StartAttackTimer();
-	}
-	
-}
 
 ATFWeapon* UTFWeaponComponent::GetEquippedWeapon()
 {

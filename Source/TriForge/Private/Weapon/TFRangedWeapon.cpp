@@ -15,9 +15,9 @@ ATFRangedWeapon::ATFRangedWeapon()
 	SetWeaponClass(EWeaponClass::Ewc_RangedWeapon);
 }
 
-void ATFRangedWeapon::Attack(const FVector& HitTarget)
+void ATFRangedWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResult)
 {
-	Super::Attack(HitTarget);
+	Super::Attack(HitTarget, HitResult);
 
 	//if (!HasAuthority()) return;
 

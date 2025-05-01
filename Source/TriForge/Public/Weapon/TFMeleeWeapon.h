@@ -6,6 +6,7 @@
 #include "Weapon/TFWeapon.h"
 #include "TFMeleeWeapon.generated.h"
 
+class UBoxComponent;
 /**
  * 
  */
@@ -17,5 +18,17 @@ class TRIFORGE_API ATFMeleeWeapon : public ATFWeapon
 public:
 	ATFMeleeWeapon();
 
-	virtual void Attack(const FVector& HitTarget) override;
+	virtual void Attack(const FVector& HitTarget, const FHitResult& HitResult) override;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* CollisionBox;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 10.f;
+
+protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };

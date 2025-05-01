@@ -152,7 +152,7 @@ void ATFWeapon::Dropped()
 	SetOwner(nullptr);
 }
 
-void ATFWeapon::Attack(const FVector& HitTarget)
+void ATFWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResult)
 {
 	if (RangedWeaponAnimation)
 	{
