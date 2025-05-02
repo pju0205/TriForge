@@ -4,12 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "PortalManagement.generated.h"
+#include "HUDManagement.generated.h"
 
-// Portal의 기능을 관리하기 위해 만든 인터페이스
 // This class does not need to be modified.
 UINTERFACE()
-class UPortalManagement : public UInterface
+class UHUDManagement : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -17,11 +16,12 @@ class UPortalManagement : public UInterface
 /**
  * 
  */
-class DEDICATEDSERVERS_API IPortalManagement
+class DEDICATEDSERVERS_API IHUDManagement
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void RefreshTokens(const FString& RefreshToken) = 0;
+	virtual void OnSignIn() = 0;
+	virtual void OnSignOut() = 0;
 };

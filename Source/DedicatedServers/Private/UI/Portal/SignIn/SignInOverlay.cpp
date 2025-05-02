@@ -9,10 +9,10 @@
 #include "Components/TextBlock.h"
 #include "UI/Portal/PortalManager.h"
 #include "Components/WidgetSwitcher.h"
-/*#include "UI/Portal/SignIn/SignInPage.h"
+#include "UI/Portal/SignIn/SignInPage.h"
 #include "UI/Portal/SignIn/SignUpPage.h"
 #include "UI/Portal/SignIn/ConfirmSignUpPage.h"
-#include "UI/Portal/SignIn/SuccessConfirmedPage.h"*/
+#include "UI/Portal/SignIn/SuccessConfirmedPage.h"
 
 
 void USignInOverlay::NativeConstruct()
@@ -24,7 +24,7 @@ void USignInOverlay::NativeConstruct()
 	PortalManager = NewObject<UPortalManager>(this, PortalManagerClass);
 
 	
-	/*// Sign In Page
+	// Sign In Page
 	SignInPage->Button_SignIn->OnClicked.AddDynamic(this, &USignInOverlay::SignInButtonClicked);
 	SignInPage->Button_SignUp->OnClicked.AddDynamic(this, &USignInOverlay::ShowSignUpPage);
 	SignInPage->Button_Quit->OnClicked.AddDynamic(PortalManager, &UPortalManager::QuitGame);
@@ -43,10 +43,10 @@ void USignInOverlay::NativeConstruct()
 	PortalManager->ConfirmStatusMessageDelegate.AddDynamic(ConfirmSignUpPage, &UConfirmSignUpPage::UpdateStatusMessage);
 
 	// Success Confirmed Page
-	SuccessConfirmedPage->Button_Ok->OnClicked.AddDynamic(this, &USignInOverlay::ShowSignInPage);*/
+	SuccessConfirmedPage->Button_Ok->OnClicked.AddDynamic(this, &USignInOverlay::ShowSignInPage);
 }
 
-/*void USignInOverlay::ShowSignInPage()
+void USignInOverlay::ShowSignInPage()
 {
 	WidgetSwitcher->SetActiveWidget(SignInPage);
 }
@@ -72,7 +72,7 @@ void USignInOverlay::SignInButtonClicked()
 {
 	const FString Username = SignInPage->TextBox_UserName->GetText().ToString();
 	const FString Password = SignInPage->TextBox_Password->GetText().ToString();
-	PortalManager->SignIn(Username, Password);		// Portal Manager 함수로 데이터 보내기
+	PortalManager->SignIn(Username, Password);				// Portal Manager 함수로 데이터 보내기
 }
 
 void USignInOverlay::SignUpButtonClicked()
@@ -87,7 +87,7 @@ void USignInOverlay::ConfirmButtonClicked()
 {
 	const FString ConfirmationCode = ConfirmSignUpPage->TextBox_ConfirmationCode->GetText().ToString();
 	ConfirmSignUpPage->Button_Confirm->SetIsEnabled(false);
-	PortalManager->Confirm(ConfirmationCode);			// Portal Manager 함수로 데이터 보내기
+	PortalManager->Confirm(ConfirmationCode);				// Portal Manager 함수로 데이터 보내기
 }
 
 
@@ -103,4 +103,4 @@ void USignInOverlay::OnConfirmSucceeded()
 {
 	ConfirmSignUpPage->ClearTextBoxes();
 	ShowSuccessConfirmedPage();
-}*/
+}

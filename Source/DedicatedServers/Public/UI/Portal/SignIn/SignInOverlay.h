@@ -53,8 +53,8 @@ private:
 	TObjectPtr<UPortalManager> PortalManager;
 	
 	
-	// Sign Page
-	/*UFUNCTION()
+	// Show Sign Page
+	UFUNCTION()
 	void ShowSignInPage();
  
 	UFUNCTION()
@@ -81,5 +81,5 @@ private:
 	void OnSignUpSucceeded();
  
 	UFUNCTION()
-	void OnConfirmSucceeded();*/
+	void OnConfirmSucceeded();
 };

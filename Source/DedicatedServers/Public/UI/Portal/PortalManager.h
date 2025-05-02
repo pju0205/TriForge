@@ -41,7 +41,7 @@ public:
 	void SignOut(const FString& AccessToken);
 	
 	// IPortalManagement
-	/*virtual void RefreshTokens(const FString& RefreshToken) override;*/
+	virtual void RefreshTokens(const FString& RefreshToken) override;
 
 	UFUNCTION()
 	void QuitGame();

@@ -9,8 +9,8 @@
 #include "GameplayTags/DedicatedServersTags.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Kismet/GameplayStatics.h"
-/*#include "Player/DSLocalPlayerSubsystem.h"
-#include "UI/Interfaces/HUDManagement.h"*/
+#include "Player/DSLocalPlayerSubsystem.h"
+#include "UI/Interfaces/HUDManagement.h"
 #include "GameFramework/HUD.h"
 
 
@@ -19,10 +19,15 @@
 // Sign In Button
 void UPortalManager::SignIn(const FString& Username, const FString& Password)
 {
-	/*SignInStatusMessageDelegate.Broadcast(TEXT("Signing in..."), false);
+	// 로그인 상태 출력
+	SignInStatusMessageDelegate.Broadcast(TEXT("Signing in..."), false);
+
+	// 유효성 검사
 	check(APIData);
+	
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UPortalManager::SignIn_Response);
+	
 	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::PortalAPI::SignIn);
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
@@ -35,16 +40,18 @@ void UPortalManager::SignIn(const FString& Username, const FString& Password)
 	};
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
-	Request->ProcessRequest();*/
+	Request->ProcessRequest();
 }
  
 void UPortalManager::SignIn_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful)
+	// 성공 여부 확인
+	if (!bWasSuccessful)
 	{
 		SignInStatusMessageDelegate.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
- 
+
+	
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
@@ -69,22 +76,23 @@ void UPortalManager::SignIn_Response(FHttpRequestPtr Request, FHttpResponsePtr R
 		}
 
 
+		// 최종적으로
 		APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
 		if (IsValid(LocalPlayerController))
 		{
 			if (IHUDManagement* HUDManagementInterface = Cast<IHUDManagement>(LocalPlayerController->GetHUD()))
 			{
-				HUDManagementInterface->OnSignIn();
+				HUDManagementInterface->OnSignIn();		// HUD manager Interface 에서 SignIn 요청 (토큰 관련 초기화 명목)
 			}
 		}
-	}*/
+	}
 }
 
 
 // Sign Up Button
 void UPortalManager::SignUp(const FString& Username, const FString& Password, const FString& Email)
 {
-	/*SignUpStatusMessageDelegate.Broadcast(TEXT("Creating a new account..."), false);
+	SignUpStatusMessageDelegate.Broadcast(TEXT("Creating a new account..."), false);
 	
 	check(APIData);
 
@@ -109,12 +117,12 @@ void UPortalManager::SignUp(const FString& Username, const FString& Password, co
 	// JSON 문자열로 직렬화
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);	// 요청에 JSON 문자열 본문으로 설정
-	Request->ProcessRequest();				// 요청 전송*/
+	Request->ProcessRequest();				// 요청 전송
 }
 
 void UPortalManager::SignUp_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful) // 요철 실패시 에러 메시지
+	if (!bWasSuccessful) // 요철 실패시 에러 메시지
 	{
 		SignUpStatusMessageDelegate.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
@@ -135,14 +143,14 @@ void UPortalManager::SignUp_Response(FHttpRequestPtr Request, FHttpResponsePtr R
 		// JSON 데이터를 FDSSignUpResponse 구조체로 변환
 		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &LastSignUpResponse);
 		OnSignUpSucceeded.Broadcast();
-	}*/
+	}
 }
 
 
 // Confirm Button
 void UPortalManager::Confirm(const FString& ConfirmationCode)
 {
-	/*check(APIData);
+	check(APIData);
 	ConfirmStatusMessageDelegate.Broadcast(TEXT("Checking verification code..."), false);
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UPortalManager::Confirm_Response);
@@ -157,12 +165,12 @@ void UPortalManager::Confirm(const FString& ConfirmationCode)
 	};
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
-	Request->ProcessRequest();*/
+	Request->ProcessRequest();
 }
 
 void UPortalManager::Confirm_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful)
+	if (!bWasSuccessful)
 	{
 		ConfirmStatusMessageDelegate.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
@@ -186,23 +194,23 @@ void UPortalManager::Confirm_Response(FHttpRequestPtr Request, FHttpResponsePtr 
 			return;
 		}
 	}
-	OnConfirmSucceeded.Broadcast();*/
+	OnConfirmSucceeded.Broadcast();
 }
 
 
 // Quit Button
 void UPortalManager::QuitGame()
 {
-	/*APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
+	APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
 	if (IsValid(LocalPlayerController))
 	{
 		// 게임 자체를 종료 시키도록 바인딩
 		UKismetSystemLibrary::QuitGame(this, LocalPlayerController, EQuitPreference::Quit, false);
-	}*/
+	}
 }
 
 
-/*void UPortalManager::RefreshTokens(const FString& RefreshToken)
+void UPortalManager::RefreshTokens(const FString& RefreshToken)
 {
 	check(APIData);
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
@@ -218,12 +226,12 @@ void UPortalManager::QuitGame()
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
 	Request->ProcessRequest();
-}*/
+}
 
 
 void UPortalManager::RefreshTokens_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful) return;
+	if (!bWasSuccessful) return;
  
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
@@ -242,14 +250,14 @@ void UPortalManager::RefreshTokens_Response(FHttpRequestPtr Request, FHttpRespon
 				InitiateAuthResponse.AuthenticationResult.IdToken
 				);
 		}
-	}*/
+	}
 }
 
 
 
 void UPortalManager::SignOut(const FString& AccessToken)
 {
-	/*check(APIData);
+	check(APIData);
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UPortalManager::SignOut_Response);
 	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::PortalAPI::SignOut);
@@ -262,12 +270,12 @@ void UPortalManager::SignOut(const FString& AccessToken)
 	};
 	const FString Content = SerializeJsonContent(Params);
 	Request->SetContentAsString(Content);
-	Request->ProcessRequest();*/
+	Request->ProcessRequest();
 }
  
 void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	/*if (!bWasSuccessful)
+	if (!bWasSuccessful)
 	{
 		return;
 	}
@@ -289,5 +297,5 @@ void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr 
 		{
 			HUDManagementInterface->OnSignOut();
 		}
-	}*/
+	}
 }

@@ -5,11 +5,11 @@
 #include "JsonObjectConverter.h"
 #include "DedicatedServers/DedicatedServers.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
-/*#include "Player/DSLocalPlayerSubsystem.h"*/
+#include "Player/DSLocalPlayerSubsystem.h"
 
 
 // Player 정보 관리 함수
-/*UDSLocalPlayerSubsystem* UHTTPRequestManager::GetDSLocalPlayerSubsystem() const
+UDSLocalPlayerSubsystem* UHTTPRequestManager::GetDSLocalPlayerSubsystem() const
 {
  	APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
  	if (IsValid(LocalPlayerController))
@@ -21,7 +21,7 @@
  		}
  	}
  	return nullptr;
-}*/
+}
 
 
 // Manager 관련해서 에러 떳을 때 처리하는 함수
