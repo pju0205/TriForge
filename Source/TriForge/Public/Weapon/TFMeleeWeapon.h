@@ -18,7 +18,7 @@ class TRIFORGE_API ATFMeleeWeapon : public ATFWeapon
 public:
 	ATFMeleeWeapon();
 
-	virtual void Attack(const FVector& HitTarget, const FHitResult& HitResult) override;
+	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation) override;
 
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;

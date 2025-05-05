@@ -5,7 +5,6 @@
 
 #include "Character/TFWeaponCharacter.h"
 #include "Character/TFWeaponPlayerController.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/TFProjectile.h"
 
@@ -15,23 +14,28 @@ ATFRangedWeapon::ATFRangedWeapon()
 	SetWeaponClass(EWeaponClass::Ewc_RangedWeapon);
 }
 
-void ATFRangedWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResult)
+void ATFRangedWeapon::Attack_Implementation(const FHitResult& HitResult, const FVector& SocketLocation)
 {
-	Super::Attack(HitTarget, HitResult);
+	Super::Attack(HitResult, SocketLocation);
 
 	//if (!HasAuthority()) return;
-
-	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
-	
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-	if (MuzzleFlashSocket)
+	// 디버깅용 코드
+	/*if (GEngine)
 	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-
-		// muzzle flash 소켓에서 hit location 까지의 백터
-		FVector ToTarget = HitTarget - SocketTransform.GetLocation();
-		FRotator TargetRotation = ToTarget.Rotation();
-		
+		FVector aa = HitResult.ImpactPoint;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
+			FString::Printf(TEXT("%f, %f, %f"), aa.X, aa.Y, aa.Z));
+		GEngine->AddOnScreenDebugMessage(-1,5.f, FColor::Cyan,
+			FString::Printf(TEXT("%f, %f, %f"),HitResult.TraceEnd.X, HitResult.TraceEnd.Y, HitResult.TraceEnd.Z));
+	}
+	DrawDebugSphere(GetWorld(), SocketLocation, 12.f, 5, FColor::Green, false);
+	DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 12.f, 5, FColor::Blue, false);
+	DrawDebugLine(GetWorld(), SocketLocation, HitResult.ImpactPoint, FColor::Red, false, 3.f);
+	DrawDebugLine(GetWorld(), SocketLocation, HitResult.TraceEnd, FColor::Yellow, false, 3.f);*/
+	
+	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+	if (HitResult.bBlockingHit)
+	{
 		if (ProjectileClass && InstigatorPawn)
 		{
 			FActorSpawnParameters SpawnParams;
@@ -42,17 +46,42 @@ void ATFRangedWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResu
 			{
 				World->SpawnActor<ATFProjectile>(
 					ProjectileClass,
-					SocketTransform.GetLocation(),
-					TargetRotation,
+					SocketLocation,
+					(HitResult.ImpactPoint-SocketLocation).Rotation(),
 					SpawnParams
 				);
 			}
 		}
 	}
+	else
+	{
+		if (ProjectileClass && InstigatorPawn)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = GetOwner();
+			SpawnParams.Instigator = InstigatorPawn;
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				World->SpawnActor<ATFProjectile>(
+					ProjectileClass,
+					SocketLocation,
+					(HitResult.TraceEnd - SocketLocation).Rotation(),
+					SpawnParams
+				);
+			}
+		}
+	}
+	AttackEffects();
 
 	SpendAmmo();
 }
 
+void ATFRangedWeapon::AttackEffects_Implementation()
+{
+	PlayAttackMontage();
+	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
+}
 void ATFRangedWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

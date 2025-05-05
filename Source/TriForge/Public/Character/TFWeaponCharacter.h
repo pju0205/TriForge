@@ -32,13 +32,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* FollowCamera;
 
 public:
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* FollowCamera;
+	UPROPERTY(VisibleAnywhere)
+	USpringArmComponent* CameraBoom;
 	virtual void PostInitializeComponents() override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -52,7 +52,6 @@ public:
 
 	UTFWeaponComponent* GetWeaponComponent();
 
-	FVector GetHitTarget() const;
 
 private:
 	UPROPERTY(VisibleAnywhere)

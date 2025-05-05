@@ -4,7 +4,6 @@
 
 #include "Character/TFWeaponCharacter.h"
 #include "Character/TFWeaponPlayerController.h"
-#include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "HUD/TFHUD.h"
 #include "Kismet/GameplayStatics.h"
@@ -34,11 +33,6 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	
 	if (Character && Character->IsLocallyControlled())
 	{
-		FHitResult Hit;
-		TraceEnemy(Hit);
-		HitTarget = Hit.ImpactPoint;
-		HitResult = Hit;
-		
 		SetHUDCrosshairs(DeltaTime);
 	}
 	
@@ -124,23 +118,24 @@ void UTFWeaponComponent::Attacking()
 	if (CanAttack())
 	{
 		bCanAttack = false;
-		ServerAttackButton(HitTarget, HitResult);
+		
+		EWeaponClass EquippedWeaponClass = EquippedWeapon->GetWeaponClass();
+		switch (EquippedWeaponClass)
+		{
+		case EWeaponClass::Ewc_RangedWeapon :
+			FHitResult Result;
+			TraceEnemy(Result);
+			
+			const USkeletalMeshSocket* MuzzleFlashSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
+			FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
+			FVector SocketLocation = SocketTransform.GetLocation();
+			
+			EquippedWeapon->Attack(Result, SocketLocation);
+			break;
+		}
+		
 		StartAttackTimer();
 	}
-	
-}
-
-void UTFWeaponComponent::ServerAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult)
-{
-	MulticastAttackButton(TraceHitTarget, TraceHitResult);
-}
-
-
-void UTFWeaponComponent::MulticastAttackButton_Implementation(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult)
-{
-	if (EquippedWeapon == nullptr) return;
-	EquippedWeapon->PlayAttackMontage();
-	EquippedWeapon->Attack(TraceHitTarget, TraceHitResult);
 	
 }
 
@@ -224,7 +219,6 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 			DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
 		}
-
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());
 		
@@ -235,8 +229,10 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 			ECC_Visibility,
 			Params
 		);
-		
+		End = TraceHitResult.bBlockingHit ? TraceHitResult.ImpactPoint : End;
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Black, false, 3.f);
 	}
+	
 }
 
 void UTFWeaponComponent::SetHUDCrosshairs(float DeltaTime)

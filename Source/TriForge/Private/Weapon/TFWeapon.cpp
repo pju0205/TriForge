@@ -15,6 +15,7 @@ ATFWeapon::ATFWeapon()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
 
+	//WeaponMesh->SetIsReplicated(true);
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -152,12 +153,12 @@ void ATFWeapon::Dropped()
 	SetOwner(nullptr);
 }
 
-void ATFWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResult)
+void ATFWeapon::Attack(const FHitResult& HitResult, const FVector& SocketLocation)
 {
-	if (RangedWeaponAnimation)
+	/*if (RangedWeaponAnimation)
 	{
 		WeaponMesh->PlayAnimation(RangedWeaponAnimation, false);
-	}
+	}*/
 }
 
 

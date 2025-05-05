@@ -27,12 +27,6 @@ public:
 	void EquipWeapon(ATFWeapon* WeaponToEquip);
 
 	void AttackButtonPressed(bool bPressed);
-
-	UFUNCTION(Server, Reliable)
-	void ServerAttackButton(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastAttackButton(const FVector_NetQuantize& TraceHitTarget, const FHitResult& TraceHitResult);
 	
 	ATFWeapon* GetEquippedWeapon();
 
@@ -60,11 +54,7 @@ private:
 	void OnRep_EquippedWeapon();
 
 	bool bAttackButtonPressed;
-
-	FVector HitTarget;
-
-	FHitResult HitResult;
-
+	
 	FTimerHandle AttackTimer;
 	
 	bool bCanAttack = true;

@@ -24,9 +24,9 @@ ATFMeleeWeapon::ATFMeleeWeapon()
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
 }
 
-void ATFMeleeWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResult)
+void ATFMeleeWeapon::Attack(const FHitResult& HitResult, const FVector& SocketLocation)
 {
-	Super::Attack(HitTarget, HitResult);
+	Super::Attack(HitResult, SocketLocation);
 
 	AActor* DamagedActor = HitResult.GetActor();
 
@@ -39,7 +39,6 @@ void ATFMeleeWeapon::Attack(const FVector& HitTarget, const FHitResult& HitResul
 			if (OwnerController)
 			{
 				UGameplayStatics::ApplyDamage(DamagedActor, Damage, OwnerController, this, UDamageType::StaticClass());
-				
 			}
 		}
 	}

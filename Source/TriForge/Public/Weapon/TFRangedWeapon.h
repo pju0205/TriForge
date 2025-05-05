@@ -41,8 +41,12 @@ private:
 	
 public:
 	ATFRangedWeapon();
-	
-	virtual void Attack(const FVector& HitTarget, const FHitResult& HitResult) override;
+
+	UFUNCTION(Server, Reliable)
+	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void AttackEffects();
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 

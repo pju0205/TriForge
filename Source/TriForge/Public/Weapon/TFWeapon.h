@@ -100,7 +100,7 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void Attack(const FVector& HitTarget, const FHitResult& HitResult);
+	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation);
 	void PlayAttackMontage();
 
 	virtual void Dropped();
@@ -112,8 +112,10 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	bool bAutomatic = false;;
-
 	
+	// 무기 자체의 애니메이션
+	UPROPERTY(EditAnywhere)
+	UAnimationAsset* RangedWeaponAnimation;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -133,8 +135,6 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponState();
 	
-	// 무기 자체의 애니메이션
-	UPROPERTY(EditAnywhere)
-	UAnimationAsset* RangedWeaponAnimation;
+	
 	
 };
