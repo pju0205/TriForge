@@ -85,12 +85,14 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* AttackMontage;
 
-	
+	UFUNCTION()
+	virtual void OnRep_WeaponState();
 public:	
 	virtual void Tick(float DeltaTime) override;
 
 	
 	void SetWeaponState(EWeaponState State);
+	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
 	FORCEINLINE void SetWeaponClass(EWeaponClass Class) { WeaponClass = Class; }
 	FORCEINLINE void SetWeaponType(EWeaponType Type) { WeaponType = Type; }
 	FORCEINLINE EWeaponClass GetWeaponClass() const {return WeaponClass;}
@@ -132,8 +134,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	EWeaponType WeaponType;
 	
-	UFUNCTION()
-	void OnRep_WeaponState();
+	
 	
 	
 	

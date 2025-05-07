@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapon/TFMeleeWeapon.h"
 #include "Weapon/TFRangedWeapon.h"
 #include "Weapon/TFWeapon.h"
 
@@ -123,14 +124,28 @@ void UTFWeaponComponent::Attacking()
 		switch (EquippedWeaponClass)
 		{
 		case EWeaponClass::Ewc_RangedWeapon :
-			FHitResult Result;
-			TraceEnemy(Result);
+			{
+			    FHitResult Result;
+			    TraceEnemy(Result);
+			    const USkeletalMeshSocket* MuzzleFlashSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
+			    FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
+			    FVector SocketLocation = SocketTransform.GetLocation();
+			    EquippedWeapon->Attack(Result, SocketLocation);
+			}
+			break;
 			
-			const USkeletalMeshSocket* MuzzleFlashSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-			FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
-			FVector SocketLocation = SocketTransform.GetLocation();
-			
-			EquippedWeapon->Attack(Result, SocketLocation);
+		case EWeaponClass::Ewc_MeleeWeapon :
+			{
+			    FHitResult HitResult;
+			    FVector Location (0,0,0);
+			    //EquippedWeapon->Attack(HitResult, Location);
+				ATFMeleeWeapon* Melee = Cast<ATFMeleeWeapon>(EquippedWeapon);
+				if (Melee)
+				{
+					Melee->AttackEffects();
+				}
+				
+			}
 			break;
 		}
 		
