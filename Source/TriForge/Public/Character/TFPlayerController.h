@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerController.h"
+#include "Player/DSPlayerController.h"
 #include "TFPlayerController.generated.h"
 
 class UInputMappingContext;
@@ -11,7 +11,7 @@ class UInputAction;
 struct FInputActionValue;
 
 UCLASS()
-class TRIFORGE_API ATFPlayerController : public APlayerController
+class TRIFORGE_API ATFPlayerController : public ADSPlayerController
 {
 	GENERATED_BODY()
 

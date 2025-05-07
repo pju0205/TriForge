@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DSGameModeBase.h"
 #include "GameLiftServerSDK.h"
-#include "GameFramework/GameMode.h"
 #include "DSGameMode.generated.h"
 
 
@@ -13,7 +13,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogDS_GameMode, Log, All);
  * 
  */
 UCLASS()
-class DEDICATEDSERVERS_API ADSGameMode : public AGameMode
+class DEDICATEDSERVERS_API ADSGameMode : public ADSGameModeBase
 {
 	GENERATED_BODY()
 
