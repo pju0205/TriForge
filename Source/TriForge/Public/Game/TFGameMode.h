@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Game/DSGameMode.h"
+#include "Game/DSMatchGameMode.h"
 #include "TFGameMode.generated.h"
 
 
@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class TRIFORGE_API ATFGameMode : public ADSGameMode
+class TRIFORGE_API ATFGameMode : public ADSMatchGameMode
 {
 	GENERATED_BODY()
 };
