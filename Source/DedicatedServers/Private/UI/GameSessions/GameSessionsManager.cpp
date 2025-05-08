@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/GameSessions/GameSessionsManager.h"
+#include "DedicatedServers/Public/UI/GameSessions/GameSessionsManager.h"
 
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
@@ -13,7 +13,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
 #include "Player/DSLocalPlayerSubsystem.h"
-
 
 
 void UGameSessionsManager::JoinGameSession()
@@ -43,8 +42,8 @@ void UGameSessionsManager::JoinGameSession()
 	}
 }
  
-void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
+ void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+ {
 	// 요청 실패 시
 	if (!bWasSuccessful)
 	{
@@ -68,11 +67,10 @@ void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Requ
 		const FString GameSessionStatus = GameSession.Status;
 		HandleGameSessionStatus(GameSessionStatus, GameSessionId);
 	}
-}
+ }
  
-
-void UGameSessionsManager::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
-{
+ void UGameSessionsManager::CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+ {
 	if (!bWasSuccessful)	// 통신 실패시
 	{
 		BroadcastJoinGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
@@ -99,24 +97,25 @@ void UGameSessionsManager::CreatePlayerSession_Response(FHttpRequestPtr Request,
 			LocalPlayerController->SetInputMode(InputModeData);		// 입력을 게임에만 적용되도록 설정
 			LocalPlayerController->SetShowMouseCursor(false);		// 커서 비활성화
 		}
- 
+		
+		const FString Options = "?PlayerSessionId=" + PlayerSession.PlayerSessionId + "?Username=" + PlayerSession.PlayerId; // SessionID, PlayerID 가져오기
 		const FString IpAndPort = PlayerSession.IpAddress + TEXT(":") + FString::FromInt(PlayerSession.Port);	// IP와 Port를 합쳐서 "127.0.0.1:7777" 같은 문자열 생성
 		const FName Address(*IpAndPort);		// 위 IpAndPort를 FString -> FName 형변환
 		UE_LOG(LogTemp, Warning, TEXT("Connecting to address: %s"), *IpAndPort);
-
 		
-		/*클라이언트를 해당 Game Session 서버에 접속시키는 핵심 함수
+		/* 클라이언트를 해당 Game Session 서버에 접속시키는 핵심 함수
 		내부적으로 open 127.0.0.1:7777 콘솔 명령을 실행한 것과 같음
 		이제 클라이언트는 해당 Dedicated Server와 연결돼서 멀티플레이 게임에 참가함
-		Server Map을 프로젝트 세팅에서 설정해뒀기 때문에 서버에 접속하면 자동으로 그 맵으로 이동함*/
-		UGameplayStatics::OpenLevel(this, Address);	// world context, level Name 넣기
+		Server Map을 프로젝트 세팅에서 설정해뒀기 때문에 서버에 접속하면 자동으로 그 맵으로 이동함
+		option을 통해서 정보 제공(SessionID, PlayerID) */
+		UGameplayStatics::OpenLevel(this, Address, true, Options); // world context, level Name, SessionID, PlayerID 넣기
 	}
-}
+ }
 
 
 
-FString UGameSessionsManager::GetUniquePlayerId() const
-{
+ FString UGameSessionsManager::GetUniquePlayerId() const
+ {
 	APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());	// 월드에서 플레이어 컨트롤러 가져오기
 	if (IsValid(LocalPlayerController))	// 유효성 검사
 	{
@@ -130,7 +129,7 @@ FString UGameSessionsManager::GetUniquePlayerId() const
 	}
 	
 	return FString();	// 위 조건 만족 못하면 빈 문자열 반환
-}
+ }
 
 
 void UGameSessionsManager::HandleGameSessionStatus(const FString& Status, const FString& SessionId)
@@ -140,7 +139,13 @@ void UGameSessionsManager::HandleGameSessionStatus(const FString& Status, const 
 		// 활성화 된 상태라면 델리게이트 호출
 		// 유저의 고유 ID와 세션 ID를 바탕으로 플레이어 세션을 생성 시도
 		BroadcastJoinGameSessionMessage.Broadcast(TEXT("Found active Game Session. Creating a Player Session..."), false);
-		TryCreatePlayerSession(GetUniquePlayerId(), SessionId);
+
+		// LocalplayerSubsystem 유효성 검사 후
+		if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
+		{
+			// DSLocalPlayerSubsystem에 있는 Username과 SessionId를 사용해서 PlayerSession 만들기
+			TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, SessionId);
+		}
 	}
 	else if (Status.Equals(TEXT("ACTIVATING")))		// GameSession을 초기화 중이라면
 	{
@@ -167,7 +172,6 @@ void UGameSessionsManager::TryCreatePlayerSession(const FString& PlayerId, const
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UGameSessionsManager::CreatePlayerSession_Response);
 	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::GameSessionsAPI::CreatePlayerSession);
-
 	
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));

@@ -11,7 +11,7 @@ class UInputAction;
 struct FInputActionValue;
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuitMenuOpen, bool, bOpen);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuitMenuOpen, bool, bOpen);		// Server
 UCLASS()
 class TRIFORGE_API ATFPlayerController : public ADSPlayerController
 {
@@ -51,8 +51,8 @@ private:
 	void Slide(const struct FInputActionValue& InputActionValue);
 
 	// Quit 버튼 관련
-	void Input_Quit();		// 여기
-	bool bQuitMenuOpen;		// 여기
+	void Input_Quit();		// Server
+	bool bQuitMenuOpen;		// Server
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -60,7 +60,7 @@ protected:
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
-
+	
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
 };

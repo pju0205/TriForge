@@ -13,7 +13,8 @@ using UnrealBuildTool;
             "Engine" ,
             "GameLiftServerSDK",
             "GameplayTags",
-            "HTTP"
+            "HTTP",
+            "NetCore"
         });
  
  		PrivateDependencyModuleNames.AddRange(new string[] 

@@ -92,8 +92,7 @@ void ADSGameModeBase::TrySeamlessTravel(TSoftObjectPtr<UWorld> DestinationMap)
 	}
 }
 
-
-
+// playerSession 제거 함수
 void ADSGameModeBase::RemovePlayerSession(AController* Exiting)
 {
 	ADSPlayerController* DSPlayerController = Cast<ADSPlayerController>(Exiting);

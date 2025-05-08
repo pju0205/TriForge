@@ -8,7 +8,6 @@
 #include "DSLobbyGamemode.generated.h"
 
 
-DECLARE_LOG_CATEGORY_EXTERN(LogDSGameMode, Log, All);
 class UDSGameInstanceSubsystem;
 /**
  *
@@ -20,22 +19,28 @@ class DEDICATEDSERVERS_API ADSLobbyGameMode : public ADSGameModeBase
 
 public:
 	ADSLobbyGameMode();
+	void CheckAndStartLobbyCountdown();
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 protected:
 	virtual void BeginPlay() override;
     
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
-	void CancelCountdown();
+	void CheckAndStopLobbyCountdown();
 	virtual void Logout(AController* Exiting) override;
 	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
- 
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+	virtual FString InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal = L"") override;
+    
+	// 로비 상태
 	UPROPERTY()
 	ELobbyStatus LobbyStatus;
- 
+
+	// 최소 인원 설정
 	UPROPERTY(EditDefaultsOnly)
 	int32 MinPlayers;
- 
+
+	// 이동 할 맵 설정
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> MapToTravelTo;
 
@@ -49,4 +54,7 @@ private:
 
 	void InitGameLift();
 	void SetServerParameters(FServerParameters& OutServerParameters);
+	void TryAcceptPlayerSession(const FString& PlayerSessionId, const FString& Username, FString& OutErrorMessage);
+	void AddPlayerInfoToLobbyState(AController* Player) const;
+	void RemovePlayerInfoFromLobbyState(AController* Player) const;
 };
