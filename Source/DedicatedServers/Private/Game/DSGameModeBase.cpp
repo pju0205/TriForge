@@ -78,7 +78,7 @@ void ADSGameModeBase::OnCountdownTimerFinished(ECountdownTimerType Type)
  	
 }
 
-
+// Map 이동 함수
 void ADSGameModeBase::TrySeamlessTravel(TSoftObjectPtr<UWorld> DestinationMap)
 {
 	const FString MapName = DestinationMap.ToSoftObjectPath().GetAssetName();

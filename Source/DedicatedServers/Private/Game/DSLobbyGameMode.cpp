@@ -44,7 +44,7 @@ void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
     if (Type == ECountdownTimerType::LobbyCountdown)
     {
         LobbyStatus = ELobbyStatus::SeamlessTravelling;                  // 상태 변경: Seamless Travel 중
-        GetWorld()->ServerTravel(MapToTravelTo->GetMapName());     // 대상 맵으로 서버 이동
+        TrySeamlessTravel(MapToTravelTo);                             // 대상 맵으로 서버 이동
     }
 }
 

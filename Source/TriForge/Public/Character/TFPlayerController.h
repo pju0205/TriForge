@@ -10,6 +10,8 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuitMenuOpen, bool, bOpen);
 UCLASS()
 class TRIFORGE_API ATFPlayerController : public ADSPlayerController
 {
@@ -34,6 +36,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "input")
 	TObjectPtr<UInputAction> SlideAction; 
 
+	UPROPERTY(EditAnywhere, Category="Input") // Quit 버튼 설정
+	TObjectPtr<UInputAction> QuitAction;
+	
 	FVector2d MoveDir = FVector2d::ZeroVector;
 	
 	void Move(const struct FInputActionValue& InputActionValue);
@@ -45,6 +50,9 @@ private:
 	void Jump(const struct FInputActionValue& InputActionValue);
 	void Slide(const struct FInputActionValue& InputActionValue);
 
+	// Quit 버튼 관련
+	void Input_Quit();		// 여기
+	bool bQuitMenuOpen;		// 여기
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -52,4 +60,7 @@ protected:
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
+	FOnQuitMenuOpen OnQuitMenuOpen;
 };
