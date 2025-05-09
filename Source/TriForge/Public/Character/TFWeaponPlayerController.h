@@ -34,6 +34,9 @@ private:
 	TObjectPtr<UInputAction> SprintAction;*/
 
 	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> AimAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> EquipAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -45,6 +48,8 @@ private:
 	void Jump(const struct FInputActionValue& InputActionValue);
 	//void Sprint(const struct FInputActionValue& InputActionValue);
 
+	void AimingStarted(const struct FInputActionValue& AimActionValue);
+	void AimingReleased(const struct FInputActionValue& AimActionValue);
 	void EquipWeapon(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackStarted(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackReleased(const struct FInputActionValue& InputActionValue);

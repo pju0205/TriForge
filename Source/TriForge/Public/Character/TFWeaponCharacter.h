@@ -45,11 +45,14 @@ public:
 	void SetOverlappingWeapon(ATFWeapon* Weapon);
 
 	bool IsWeaponEquipped();
+	bool IsAiming();
 
+	void AimButtonPressed();
+	void AimButtonReleased();
 	void EquipButtonPressed();
 	void AttackButtonPressed();
 	void AttackButtonReleased();
-
+	
 	UTFWeaponComponent* GetWeaponComponent();
 
 

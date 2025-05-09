@@ -32,4 +32,6 @@ void UTFWeaponAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsSprint = TFCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0 ? true : false;
 
 	bWeaponEquipped = TFCharacter->IsWeaponEquipped();
+
+	bAiming = TFCharacter->IsAiming();
 }

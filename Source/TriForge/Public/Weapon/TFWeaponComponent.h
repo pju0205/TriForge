@@ -24,6 +24,7 @@ public:
 	
 	friend class ATFWeaponCharacter;
 
+	
 	void EquipWeapon(ATFWeapon* WeaponToEquip);
 
 	void AttackButtonPressed(bool bPressed);
@@ -37,6 +38,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void SetAiming(bool bIsAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bIsAiming);
 private:
 	UPROPERTY()
 	ATFWeaponCharacter* Character;
@@ -46,6 +51,9 @@ private:
 
 	UPROPERTY()
 	ATFHUD* HUD;
+
+	UPROPERTY(Replicated)
+	bool bAiming;
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	ATFWeapon* EquippedWeapon;

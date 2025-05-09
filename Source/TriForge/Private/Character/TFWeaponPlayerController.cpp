@@ -56,7 +56,9 @@ void ATFWeaponPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(RotationAction, ETriggerEvent::Triggered, this, &ATFWeaponPlayerController::Rotation);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::Jump);
 
-	
+
+	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::AimingStarted);	
+	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ATFWeaponPlayerController::AimingReleased);	
 	EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::EquipWeapon);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATFWeaponPlayerController::WeaponAttackStarted);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ATFWeaponPlayerController::WeaponAttackReleased);
@@ -97,6 +99,30 @@ void ATFWeaponPlayerController::Jump(const struct FInputActionValue& InputAction
 		if (TFCharacter)
 		{
 			TFCharacter->Jump();
+		}
+	}
+}
+
+void ATFWeaponPlayerController::AimingStarted(const struct FInputActionValue& AimActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->AimButtonPressed();
+		}
+	}
+}
+
+void ATFWeaponPlayerController::AimingReleased(const struct FInputActionValue& AimActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(ControlledPawn);
+		if (TFCharacter)
+		{
+			TFCharacter->AimButtonReleased();
 		}
 	}
 }

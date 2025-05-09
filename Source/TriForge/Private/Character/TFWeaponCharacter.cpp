@@ -110,6 +110,27 @@ bool ATFWeaponCharacter::IsWeaponEquipped()
 	return (WeaponComponent && WeaponComponent->EquippedWeapon);
 }
 
+bool ATFWeaponCharacter::IsAiming()
+{
+	return (WeaponComponent && WeaponComponent->bAiming);
+}
+
+void ATFWeaponCharacter::AimButtonPressed()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAiming(true);
+	}
+}
+
+void ATFWeaponCharacter::AimButtonReleased()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAiming(false);
+	}
+}
+
 void ATFWeaponCharacter::EquipButtonPressed()
 {
 	if (WeaponComponent)

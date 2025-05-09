@@ -44,6 +44,18 @@ void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UTFWeaponComponent, EquippedWeapon);
+	DOREPLIFETIME(UTFWeaponComponent, bAiming);
+}
+
+void UTFWeaponComponent::SetAiming(bool bIsAiming)
+{
+	bAiming = bIsAiming;
+	ServerSetAiming(bIsAiming);
+}
+
+void UTFWeaponComponent::ServerSetAiming_Implementation(bool bIsAiming)
+{
+	bAiming = bIsAiming;
 }
 
 void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
