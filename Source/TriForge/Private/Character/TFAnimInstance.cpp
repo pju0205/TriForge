@@ -1,0 +1,429 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Character/TFAnimInstance.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "AnimationWarpingLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "PoseSearch/PoseSearchTrajectoryTypes.h"
+#include "PoseSearch/PoseSearchTrajectoryLibrary.h"
+#include "PoseSearch/PoseSearchDatabase.h"
+
+
+UTFAnimInstance::UTFAnimInstance()
+{
+	TFPlayerCharacter = nullptr;
+	TFCharacterMovement = nullptr;
+	MovementMode = E_MovementMode::OnGorund;
+	RotationMode = E_RotationMode::Strafe;
+	MovementState = E_MovementState::Idle;
+	Gait = E_Gait::Walk;
+	bHasAcceleration = false;
+	bHasVelocity = false;
+	AccelerationAmount = 0.0f;
+	Speed2D = 0.0f;
+	HeayLandSpeedThreshold = 700.0f;
+}
+
+void UTFAnimInstance::NativeInitializeAnimation()
+{
+	Super::NativeInitializeAnimation();
+	
+	TFPlayerCharacter = Cast<ATFPlayerCharacter>(TryGetPawnOwner());
+	if (TFPlayerCharacter != nullptr)
+	{
+		TFCharacterMovement = TFPlayerCharacter->GetCharacterMovement();
+	}
+}
+
+void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
+{
+	Super::NativeUpdateAnimation(DeltaTime);
+
+	if (!TFPlayerCharacter)
+	{
+		TFPlayerCharacter = Cast<ATFPlayerCharacter>(TryGetPawnOwner());
+		if (TFPlayerCharacter)
+		{
+			TFCharacterMovement = TFPlayerCharacter->GetCharacterMovement();
+		}
+	}
+	
+	UpdateEssentialValues();
+	GenerateTrajectory(DeltaTime);
+	UpdateStates();
+
+	if (CurrentSelectedDatabase != nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1, 1.5f, FColor::Yellow,
+			FString::Printf(TEXT("Tag Count: %d"), CurrentSelectedDatabase->Tags.Num())
+		);
+		
+		GEngine->AddOnScreenDebugMessage(2, 1.5f, FColor::Red, FString::Printf(TEXT("Database: %s"), *CurrentSelectedDatabase->GetName()));
+
+		for (const auto& Tag : CurrentSelectedDatabase->Tags)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				3, // -1이면 새로운 메시지로 출력
+				1.5f,
+				FColor::Blue,
+				FString::Printf(TEXT("Database: %s | Tag: %s"), *CurrentSelectedDatabase->GetName(), *Tag.ToString())
+			);
+		}
+	}
+}
+
+void UTFAnimInstance::SetRootTransform()
+{
+	OffsetRootBoneEnabled = UKismetSystemLibrary::GetConsoleVariableBoolValue(FString("a.animnode.offsetrootbone.enable"));
+
+	if (OffsetRootBoneEnabled)
+	{
+		RootTransform = CharacterTransform;
+	}
+	else
+	{
+		SetOffsetRootNode();
+
+		FTransform OffsetRootNodeTransform = UAnimationWarpingLibrary::GetOffsetRootTransform(OffsetRootNode);
+	
+		FVector OffsetRootNode_Location = OffsetRootNodeTransform.GetLocation();
+		FRotator OffsetRootNode_Rotation = OffsetRootNodeTransform.Rotator();
+		FRotator Make_OffsetRootNode_Rotation = FRotator(OffsetRootNode_Rotation.Pitch, OffsetRootNode_Rotation.Yaw, OffsetRootNode_Rotation.Roll + 90.0f);
+
+		RootTransform = UKismetMathLibrary::MakeTransform(OffsetRootNode_Location, Make_OffsetRootNode_Rotation);
+	}
+}
+
+void UTFAnimInstance::SetAcceleration()
+{
+	Acceleration = TFCharacterMovement->GetCurrentAcceleration();
+	AccelerationAmount = UKismetMathLibrary::VSize(Acceleration) / TFCharacterMovement->GetMaxAcceleration();
+	if (AccelerationAmount > 0.0f)
+	{
+		bHasAcceleration = true;
+	}
+	else
+	{
+		bHasAcceleration = false;
+	}
+}
+
+void UTFAnimInstance::SetVelocity()
+{
+	VelocityLastFrame = Velocity;
+	Velocity = TFCharacterMovement->Velocity;
+
+	Speed2D = UKismetMathLibrary::VSizeXY(Velocity);
+	if (Speed2D > 5.0f)
+	{
+		bHasVelocity = true;
+	}
+	else
+	{
+		bHasVelocity = false;
+	}
+
+	float DeltaSeconds = UGameplayStatics::GetWorldDeltaSeconds(GetWorld());
+	FVector DeltaVelocity = Velocity - VelocityLastFrame;
+	VelocityAcceleration = DeltaVelocity / UKismetMathLibrary::FMax(DeltaSeconds, 0.001f);
+
+	if (bHasVelocity)
+	{
+		LastNonZeroVelocity = Velocity;
+	}
+}
+
+void UTFAnimInstance::UpdateEssentialValues()
+{
+	if (TFCharacterMovement && TFPlayerCharacter)
+	{
+		CharacterTransform = TFPlayerCharacter->GetActorTransform();
+	
+		SetRootTransform();
+		SetAcceleration();
+		SetVelocity();
+		if (CurrentSelectedDatabase)
+		{
+			CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
+		}
+	}
+}
+
+void UTFAnimInstance::GenerateTrajectory(float DeltaTime)
+{
+	USkeletalMeshComponent* MeshComp = GetSkelMeshComponent();
+	UAnimInstance* AnimInst = nullptr;
+		
+	if (MeshComp)
+	{
+		AnimInst = MeshComp->GetAnimInstance();
+		if (AnimInst)
+		{
+			FPoseSearchTrajectoryData InTrajectoryData;
+			if (Speed2D > 0.0f)
+			{
+				InTrajectoryData = TrajectoryGenerationDataMoving;
+			}
+			else
+			{
+				InTrajectoryData = TrajectoryGenerationDataMoving;
+			}
+			UPoseSearchTrajectoryLibrary::PoseSearchGenerateTrajectory(
+				AnimInst,
+				InTrajectoryData,
+				DeltaTime,
+				Trajectory,
+				 PreviousDesiredControllerYaw,
+				 Trajectory,
+				 -1.0f,
+				 30,
+				 0.1f,
+				 15
+				 );
+		}
+	
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(TFPlayerCharacter);
+		UPoseSearchTrajectoryLibrary::HandleTrajectoryWorldCollisions(
+			this,
+			this,
+			Trajectory,
+			true,
+			0.01f,
+			Trajectory,
+			TrajectoryCollision,
+			ETraceTypeQuery::TraceTypeQuery1,
+			false,
+			ActorsToIgnore,
+			EDrawDebugTrace::None,
+			true,
+			150.0f
+			);
+
+		FPoseSearchQueryTrajectorySample FirstOutTrajectorySample;
+		FPoseSearchQueryTrajectorySample SecondsOutTrajectorySample;
+		UPoseSearchTrajectoryLibrary::GetTrajectorySampleAtTime(
+			Trajectory,          // InTrajectory
+			0.5f,                // Time
+			FirstOutTrajectorySample, // OutTrajectorySample (ref 파라미터로 넘겨야 함)
+			false                // bExtrapolate
+		);
+		UPoseSearchTrajectoryLibrary::GetTrajectorySampleAtTime(
+		Trajectory,          // InTrajectory
+		0.4f,                // Time
+		SecondsOutTrajectorySample, // OutTrajectorySample (ref 파라미터로 넘겨야 함)
+		false                // bExtrapolate
+		);
+		FutureVelocity = (FirstOutTrajectorySample.Position - SecondsOutTrajectorySample.Position) * 10.0f;
+	}
+}
+
+void UTFAnimInstance::UpdateStates()
+{
+	if (TFCharacterMovement)
+	{
+		MovementModeLastFrame = MovementMode;
+		EMovementMode CurrentMovementMode = TFCharacterMovement->MovementMode;
+		switch(CurrentMovementMode)
+		{
+		case EMovementMode::MOVE_None:
+		case EMovementMode::MOVE_Walking:
+		case EMovementMode::MOVE_NavWalking:
+				MovementMode = E_MovementMode::OnGorund;
+			break;
+
+		case EMovementMode::MOVE_Falling:
+			MovementMode = E_MovementMode::InAir;
+			break;
+
+		default:
+			break;
+		}
+
+		RotationModeLastFrame = RotationMode;
+		if (TFCharacterMovement->bOrientRotationToMovement)
+		{
+			RotationMode = E_RotationMode::OrientToMovement;
+		}
+		else if (!TFCharacterMovement->bOrientRotationToMovement)
+		{
+			RotationMode = E_RotationMode::Strafe;
+		}
+	
+		MovementStateLastFrame = MovementState;
+		bool bisMoving = isMoving();
+		if (bisMoving)
+		{
+			MovementState = E_MovementState::Moving;
+		}
+		else
+		{
+			MovementState = E_MovementState::Idle;
+		}
+
+		GaitLastFrame = Gait;
+		if (TFPlayerCharacter->GetGait() == E_Gait::Walk)
+		{
+			Gait = E_Gait::Walk;
+		}
+		else if (TFPlayerCharacter->GetGait() == E_Gait::Sprint)
+		{
+			Gait = E_Gait::Sprint;
+		}
+	}
+}
+
+bool UTFAnimInstance::isMoving()
+{
+	if (UKismetMathLibrary::NotEqual_VectorVector(Velocity, FVector(0.0f, 0.0f, 0.0f), 0.1f) &&
+	UKismetMathLibrary::NotEqual_VectorVector(FutureVelocity, FVector(0.0f, 0.0f, 0.0f), 0.1f))
+	{
+		return true;	
+	}
+	return false;
+}
+
+bool UTFAnimInstance::isStarting()
+{
+	bool bisMoving = isMoving();
+	bool bHasPivotTag = !CurrentDatabaseTags.Contains("Pivots");
+	bool bisStarting = false;
+	if (UKismetMathLibrary::VSizeXY(FutureVelocity) >= UKismetMathLibrary::VSizeXY(Velocity) + 100.0f)
+	{
+		bisStarting = true;
+	}
+
+	GEngine->AddOnScreenDebugMessage(4, 1, FColor::Green,bisMoving ? TEXT("bisMoving : true") : TEXT("bisMoving : false"));
+	GEngine->AddOnScreenDebugMessage(5, 1, FColor::Green,bHasPivotTag ? TEXT("bHasPivotTag : true") : TEXT("bHasPivotTag : false"));
+	GEngine->AddOnScreenDebugMessage(6, 1, FColor::Green,bisStarting ? TEXT("bisStarting : true") : TEXT("bisStarting : false"));
+	return bisMoving && bHasPivotTag && bisStarting;
+}
+
+bool UTFAnimInstance::isPivoting()
+{
+	FRotator FutureRot = UKismetMathLibrary::MakeRotFromX(FutureVelocity);
+	FRotator CurrentRot = UKismetMathLibrary::MakeRotFromX(Velocity);
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(FutureRot, CurrentRot);
+
+	float AbsYawDelta = FMath::Abs(DeltaRot.Yaw);
+	
+	float RotationValue = 0.0f;
+	switch (RotationMode)
+	{
+	case E_RotationMode::OrientToMovement:
+		RotationValue = 60.0f;
+		break;
+	case E_RotationMode::Strafe:
+		RotationValue = 40.0f;
+		break;
+	default:
+		RotationValue = 0.0f;
+		break;
+	}
+
+	if (AbsYawDelta >= RotationValue)
+	{
+		return true;
+	}
+	return false;
+	
+}
+
+bool UTFAnimInstance::ShouldTurnInPlace()
+{
+	float RootYawDelta = FMath::Abs(
+	UKismetMathLibrary::NormalizedDeltaRotator(
+		CharacterTransform.GetRotation().Rotator(),
+		RootTransform.GetRotation().Rotator()
+	).Yaw);
+
+	bool bisStop = false;
+	if (MovementState == E_MovementState::Idle && MovementStateLastFrame == E_MovementState::Moving)
+	{
+		bisStop = true;
+	}
+
+	bool bTurnInPlace = false;
+	if (RootYawDelta >= 50.0f && bisStop)
+	{
+		bTurnInPlace = true;
+	}
+
+	return bTurnInPlace;
+}
+
+
+bool UTFAnimInstance::ShouldSpinTransition()
+{
+	float RootYawDelta = FMath::Abs(
+	UKismetMathLibrary::NormalizedDeltaRotator(
+		CharacterTransform.GetRotation().Rotator(),
+		RootTransform.GetRotation().Rotator()
+	).Yaw);
+	bool bisTurn = false;
+	if (RootYawDelta >= 130.0f)
+	{
+		bisTurn = true;
+	}
+	
+
+	bool bisMoving = false;
+	if (Speed2D >= 150.0f)
+	{
+		bisMoving = true;
+	}
+
+	bool bHasPivotTag = !CurrentDatabaseTags.Contains("Pivots");
+
+	return bisTurn && bisMoving && bHasPivotTag;
+}
+
+bool UTFAnimInstance::JustLandedLight()
+{
+	if (TFPlayerCharacter)
+	{
+		bool bJustLanded = false;
+		if (TFPlayerCharacter->GetJustLanded())
+		{
+			bJustLanded = true;
+		}
+
+		bool bLandSpeed = false;
+		float LandVelocity_Z = FMath::Abs(TFPlayerCharacter->GetLandVelocity().Z);
+		float HeayLandSpeed = FMath::Abs(HeayLandSpeedThreshold);
+		if (LandVelocity_Z < HeayLandSpeed)
+		{
+			bLandSpeed = true;
+		}
+
+		return bJustLanded && bLandSpeed;
+	}
+	return false;
+}
+
+bool UTFAnimInstance::JustLandedHeavy()
+{
+	if (TFPlayerCharacter)
+	{
+		bool bJustLanded = false;
+		if (TFPlayerCharacter->GetJustLanded())
+		{
+			bJustLanded = true;
+		}
+
+		bool bLandSpeed = false;
+		float LandVelocity_Z = FMath::Abs(TFPlayerCharacter->GetLandVelocity().Z);
+		float HeayLandSpeed = FMath::Abs(HeayLandSpeedThreshold);
+		if (LandVelocity_Z >= HeayLandSpeed)
+		{
+			bLandSpeed = true;
+		}
+
+		return bJustLanded && bLandSpeed;
+	}
+	return false;
+}
