@@ -9,6 +9,8 @@ public class TriForgeServerTarget : TargetRules
 	{
 		Type = TargetType.Server;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
+		bUseAdaptiveUnityBuild = false;
 
         ExtraModuleNames.AddRange(new string[] { "TriForge", "DedicatedServers" });
     }
