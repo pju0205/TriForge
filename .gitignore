@@ -81,3 +81,14 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+
+# Server 관련 (확실히 파일들 거르기 위해)
+DerivedDataCache
+Intermediate
+Saved
+Build
+Plugins
+Content/Effects
+InstallBat
+OpenSSLBinaries

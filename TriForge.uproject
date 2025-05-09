@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.4",
+	"EngineAssociation": "{28991394-47DE-3F45-336A-598BADB4960A}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -13,6 +13,11 @@
 				"UMG",
 				"CoreUObject"
 			]
+		},
+		{
+			"Name": "DedicatedServers",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
@@ -41,6 +46,10 @@
 		},
 		{
 			"Name": "MotionWarping",
+			"Enabled": true
+		},
+		{
+			"Name": "GameLiftPlugin",
 			"Enabled": true
 		}
 	]

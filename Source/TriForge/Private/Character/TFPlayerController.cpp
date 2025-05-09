@@ -9,7 +9,7 @@
 
 ATFPlayerController::ATFPlayerController()
 {
-
+	bQuitMenuOpen = false;	// Quit 버튼 상태
 }
 
 void ATFPlayerController::BeginPlay()
@@ -39,6 +39,7 @@ void ATFPlayerController::SetupInputComponent()
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ATFPlayerController::CrouchEnd);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
+	EnhancedInputComponent->BindAction(QuitAction, ETriggerEvent::Started, this, &ATFPlayerController::Input_Quit);	// Quit 버튼
 
 }
 
@@ -151,3 +152,25 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 // 		}
 // 	}
 // }
+
+
+
+
+void ATFPlayerController::Input_Quit()
+{
+	bQuitMenuOpen = !bQuitMenuOpen;
+	if (bQuitMenuOpen)
+	{
+		FInputModeGameAndUI InputMode;
+		SetInputMode(InputMode);
+		SetShowMouseCursor(true);
+		OnQuitMenuOpen.Broadcast(true);
+	}
+	else
+	{
+		FInputModeGameOnly InputMode;
+		SetInputMode(InputMode);
+		SetShowMouseCursor(false);
+		OnQuitMenuOpen.Broadcast(false);
+	}
+}
