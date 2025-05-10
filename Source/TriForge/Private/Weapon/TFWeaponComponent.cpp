@@ -9,6 +9,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "Character/TFPlayerCharacter.h"
+#include "Character/TFPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Weapon/TFMeleeWeapon.h"
 #include "Weapon/TFRangedWeapon.h"
@@ -32,7 +34,7 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	
-	if (Character && Character->IsLocallyControlled())
+	if (PlayerCharacter && PlayerCharacter->IsLocallyControlled())
 	{
 		SetHUDCrosshairs(DeltaTime);
 	}
@@ -60,7 +62,7 @@ void UTFWeaponComponent::ServerSetAiming_Implementation(bool bIsAiming)
 
 void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 {
-	if (Character == nullptr) return;
+	if (PlayerCharacter == nullptr) return;
 	// 무기를 들고 있고 WeaponToEquip != nullptr 이면 무기 교체
 	// 무기를 들고 있고 WeaponToEquip == nullptr 이면 무기 드랍
 	if (EquippedWeapon)
@@ -76,13 +78,13 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::Ews_Equipped);
 
-	const USkeletalMeshSocket* WeaponSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (WeaponSocket)
 	{
-		WeaponSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
 	}
 	
-	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetOwner(PlayerCharacter);
 
 	// 만약 무기가 원거리 무기라면 HUD에 잔탄 수 보이게 하기
 	if (EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon)
@@ -94,23 +96,23 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 		}
 	}
 	
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
+	/*PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	PlayerCharacter->bUseControllerRotationYaw = true;*/
 }
 
 void UTFWeaponComponent::OnRep_EquippedWeapon()
 {
-	if (EquippedWeapon && Character)
+	if (EquippedWeapon && PlayerCharacter)
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::Ews_Equipped);
 
-		const USkeletalMeshSocket* WeaponSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (WeaponSocket)
 		{
-			WeaponSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+			WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
 		}
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
+		/*PlayerCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+		PlayerCharacter->bUseControllerRotationYaw = true;*/
 	}
 }
 
@@ -182,8 +184,8 @@ bool UTFWeaponComponent::CanAttack()
 
 void UTFWeaponComponent::StartAttackTimer()
 {
-	if (EquippedWeapon == nullptr || Character == nullptr) return;
-	Character->GetWorldTimerManager().SetTimer(
+	if (EquippedWeapon == nullptr || PlayerCharacter == nullptr) return;
+	PlayerCharacter->GetWorldTimerManager().SetTimer(
 		AttackTimer,
 		this,
 		&ThisClass::AttackTimerFinished,
@@ -240,9 +242,9 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 		// 끝지점 = 시작 지점 + WorldDirection 방향으로 곱한 값만큼의 좌표 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
-		if (Character)
+		if (PlayerCharacter)
 		{
-			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			float DistanceToCharacter = (PlayerCharacter->GetActorLocation() - Start).Size();
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 			DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
 		}
@@ -264,12 +266,12 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 
 void UTFWeaponComponent::SetHUDCrosshairs(float DeltaTime)
 {
-	if (Character == nullptr || Character->Controller == nullptr) return;
+	if (PlayerCharacter == nullptr || PlayerCharacter->Controller == nullptr) return;
 
-	Controller = Controller == nullptr ? Cast<ATFWeaponPlayerController>(Character->Controller) : Controller;
-	if (Controller)
+	PlayerController = PlayerController == nullptr ? Cast<ATFPlayerController>(PlayerCharacter->Controller) : PlayerController;
+	if (PlayerController)
 	{
-		HUD = HUD == nullptr ? Cast<ATFHUD>(Controller->GetHUD()) : HUD;
+		HUD = HUD == nullptr ? Cast<ATFHUD>(PlayerController->GetHUD()) : HUD;
 
 		if (HUD)
 		{

@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerState.h"
 #include "TFPlayerState.generated.h"
 
+class ATFPlayerController;
 class ATFWeaponCharacter;
 class ATFWeaponPlayerController;
 /**
@@ -33,7 +34,7 @@ public:
 
 private:
 	UPROPERTY()
-	ATFWeaponPlayerController* TFPlayerController;
+	ATFPlayerController* TFPlayerController;
 	
 	UPROPERTY(EditAnywhere, Category="PlayerState")
 	float MaxHealth = 100.f;

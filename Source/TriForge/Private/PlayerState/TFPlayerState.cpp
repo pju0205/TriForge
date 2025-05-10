@@ -2,6 +2,7 @@
 
 #include "PlayerState/TFPlayerState.h"
 
+#include "Character/TFPlayerController.h"
 #include "Character/TFWeaponCharacter.h"
 #include "Character/TFWeaponPlayerController.h"
 #include "Net/UnrealNetwork.h"
@@ -16,7 +17,7 @@ void ATFPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(GetPlayerController()) : TFPlayerController;
+	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFPlayerController>(GetPlayerController()) : TFPlayerController;
 	if (TFPlayerController)
 	{
 		TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);
@@ -45,7 +46,7 @@ void ATFPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>&
 
 void ATFPlayerState::OnRep_Health()
 {
-	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFWeaponPlayerController>(GetPlayerController()) : TFPlayerController;
+	TFPlayerController = TFPlayerController == nullptr ? Cast<ATFPlayerController>(GetPlayerController()) : TFPlayerController;
 	if (TFPlayerController)
 	{
 		TFPlayerController->SetHUDHealth(CurrentHealth, MaxHealth);

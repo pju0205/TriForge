@@ -51,10 +51,10 @@ void ADSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
  
-	if (GetNetMode() == NM_Standalone)
+	/*if (GetNetMode() == NM_Standalone)
 	{
 		DisableInput(this);
-	}
+	}*/
 }
  
 void ADSPlayerController::Client_SetInputEnabled_Implementation(bool bEnabled)

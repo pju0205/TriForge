@@ -2,6 +2,7 @@
 
 #include "Weapon/TFWeapon.h"
 
+#include "Character/TFPlayerCharacter.h"
 #include "Character/TFWeaponCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -102,7 +103,7 @@ void ATFWeapon::OnRep_WeaponState()
 void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(OtherActor);
+	ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(OtherActor);
 	if (TFCharacter)
 	{
 		// WeaponSphere에 캐릭터가 Overlap이면 OveralppingWeapon 값을 Overlap되어있는 무기로 하여
@@ -115,7 +116,7 @@ void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 void ATFWeapon::SphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	ATFWeaponCharacter* TFCharacter = Cast<ATFWeaponCharacter>(OtherActor);
+	ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(OtherActor);
 	if (TFCharacter)
 	{
 		// Sphere 범위 밖으로 나가면 Overlapping Weapon = nullptr로 해줌으로써
@@ -128,7 +129,7 @@ void ATFWeapon::PlayAttackMontage()
 {
 	if (AttackMontage)
 	{
-		ATFWeaponCharacter* OwnerCharacter = Cast<ATFWeaponCharacter>(GetOwner());
+		ATFPlayerCharacter* OwnerCharacter = Cast<ATFPlayerCharacter>(GetOwner());
 		if (OwnerCharacter)
 		{
 			if (OwnerCharacter->GetWeaponComponent() == nullptr || OwnerCharacter->GetWeaponComponent()->GetEquippedWeapon() == nullptr)

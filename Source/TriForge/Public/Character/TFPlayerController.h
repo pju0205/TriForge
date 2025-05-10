@@ -6,6 +6,7 @@
 #include "Player/DSPlayerController.h"
 #include "TFPlayerController.generated.h"
 
+class ATFHUD;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
@@ -38,6 +39,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Input") // Quit 버튼 설정
 	TObjectPtr<UInputAction> QuitAction;
+
+	UPROPERTY(EditAnywhere, Category="Input") 
+	TObjectPtr<UInputAction> AimAction;
+
+	UPROPERTY(EditAnywhere, Category="Input") 
+	TObjectPtr<UInputAction> EquipAction;
+
+	UPROPERTY(EditAnywhere, Category="Input") 
+	TObjectPtr<UInputAction> AttackAction;
 	
 	FVector2d MoveDir = FVector2d::ZeroVector;
 	
@@ -53,6 +63,12 @@ private:
 	// Quit 버튼 관련
 	void Input_Quit();		// Server
 	bool bQuitMenuOpen;		// Server
+
+	void AimingStarted(const struct FInputActionValue& AimActionValue);
+	void AimingReleased(const struct FInputActionValue& AimActionValue);
+	void EquipWeapon(const struct FInputActionValue& InputActionValue);
+	void WeaponAttackStarted(const struct FInputActionValue& InputActionValue);
+	void WeaponAttackReleased(const struct FInputActionValue& InputActionValue);
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -60,7 +76,16 @@ protected:
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
+
+	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDAmmo(int32 Ammo);
+
+	virtual void OnPossess(APawn* InPawn) override;
 	
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
+
+private:
+	UPROPERTY()
+	ATFHUD* TFHUD;
 };
