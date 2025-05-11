@@ -9,6 +9,7 @@
 #include "Character/TFPlayerCharacter.h"
 #include "TFAnimInstance.generated.h"
 
+enum class EWeaponType : uint8;
 class ATFPlayerCharacter;
 class UCharacterMovementComponent;
 class UPoseSearchDatabase;
@@ -32,6 +33,19 @@ enum class E_MovementState : uint8
 {
 	Idle	UMETA(DisplayName = "Idle"),
 	Moving	UMETA(DisplayName = "Moving")
+};
+
+// 근거리 무기이냐 원거리 무기이냐 OR 라이플이냐, 샷건이냐, 칼이냐, 헤머냐
+// 전자는 무기가 무엇인지 상관없이 원거리일 때 애니메이션 1개, 근거리 일 때 애니메이션 1개로 공용으로 돌려쓰기
+// 후자는 같은 원거리 무기, 근거리 무기에 상관없이 무기 하나 하나 별로 다른 애니메이션 사용
+UENUM(BlueprintType)
+enum class E_EquippedWeaponType : uint8
+{
+	Rifle UMETA(DisplayName = "Rifle"),
+	ShotGun UMETA(DisplayName = "ShotGun"),
+	Knife UMETA(DisplayName = "Knife"),
+	Hammer UMETA(DisplayName = "Hammer"),
+	UnEquipped UMETA(DisplayName = "UnEquipped")
 };
 
 USTRUCT(BlueprintType)
@@ -150,6 +164,12 @@ protected:
 	E_MovementState MovementStateLastFrame;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
+	E_EquippedWeaponType WeaponTypeState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
+	E_EquippedWeaponType WeaponTypeStateLastFrame;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait Gait;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
@@ -188,4 +208,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FAnimNodeReference OffsetRootNode;
 
+	E_EquippedWeaponType CheckWeaponType(EWeaponType CurrentWeaponType);
 };

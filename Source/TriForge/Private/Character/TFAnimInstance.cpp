@@ -10,6 +10,8 @@
 #include "PoseSearch/PoseSearchTrajectoryTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryLibrary.h"
 #include "PoseSearch/PoseSearchDatabase.h"
+#include "Weapon/TFWeapon.h"
+#include "Weapon/TFWeaponComponent.h"
 
 
 UTFAnimInstance::UTFAnimInstance()
@@ -19,6 +21,9 @@ UTFAnimInstance::UTFAnimInstance()
 	MovementMode = E_MovementMode::OnGorund;
 	RotationMode = E_RotationMode::Strafe;
 	MovementState = E_MovementState::Idle;
+	
+	WeaponTypeState = E_EquippedWeaponType::UnEquipped;
+	
 	Gait = E_Gait::Walk;
 	bHasAcceleration = false;
 	bHasVelocity = false;
@@ -274,7 +279,40 @@ void UTFAnimInstance::UpdateStates()
 		{
 			Gait = E_Gait::Sprint;
 		}
+		
+		if (TFPlayerCharacter->IsWeaponEquipped())
+		{
+			EWeaponType WeaponType = TFPlayerCharacter->GetWeaponComponent()->GetEquippedWeapon()->GetWeaponType();
+			WeaponTypeState = CheckWeaponType(WeaponType);
+		}
+		else
+		{
+			WeaponTypeState = E_EquippedWeaponType::UnEquipped;
+		}
 	}
+}
+
+E_EquippedWeaponType UTFAnimInstance::CheckWeaponType(EWeaponType CurrentWeaponType)
+{
+	E_EquippedWeaponType EquippedWeaponType;
+	switch (CurrentWeaponType)
+	{
+	case EWeaponType::Ewt_Rifle:
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
+		break;
+	case EWeaponType::Ewt_ShotGun:
+		EquippedWeaponType = E_EquippedWeaponType::ShotGun;
+		break;
+	case EWeaponType::Ewt_Knife:
+		EquippedWeaponType = E_EquippedWeaponType::Knife;
+		break;
+	case EWeaponType::Ewt_Hammer:
+		EquippedWeaponType = E_EquippedWeaponType::Hammer;
+		break;
+	default:
+		break;
+	}
+	return EquippedWeaponType;
 }
 
 bool UTFAnimInstance::isMoving()
