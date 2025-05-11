@@ -304,7 +304,7 @@ E_EquippedWeaponType UTFAnimInstance::CheckWeaponType(EWeaponType CurrentWeaponT
 		EquippedWeaponType = E_EquippedWeaponType::ShotGun;
 		break;
 	case EWeaponType::Ewt_Knife:
-		EquippedWeaponType = E_EquippedWeaponType::Knife;
+		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;
 		break;
 	case EWeaponType::Ewt_Hammer:
 		EquippedWeaponType = E_EquippedWeaponType::Hammer;
