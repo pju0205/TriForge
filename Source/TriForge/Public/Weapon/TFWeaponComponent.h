@@ -46,17 +46,11 @@ protected:
 	void ServerSetAiming(bool bIsAiming);
 private:
 	UPROPERTY()
-	ATFWeaponCharacter* Character;
-
-	UPROPERTY()
 	ATFPlayerCharacter* PlayerCharacter;
 
 	UPROPERTY()
 	ATFPlayerController* PlayerController;
-
-	UPROPERTY()
-	ATFWeaponPlayerController* Controller;
-
+	
 	UPROPERTY()
 	ATFHUD* HUD;
 

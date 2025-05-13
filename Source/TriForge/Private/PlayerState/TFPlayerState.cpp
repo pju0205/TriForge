@@ -3,8 +3,6 @@
 #include "PlayerState/TFPlayerState.h"
 
 #include "Character/TFPlayerController.h"
-#include "Character/TFWeaponCharacter.h"
-#include "Character/TFWeaponPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
 ATFPlayerState::ATFPlayerState()

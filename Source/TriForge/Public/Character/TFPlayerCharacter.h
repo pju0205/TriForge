@@ -126,6 +126,8 @@ public:
 
 	UTFWeaponComponent* GetWeaponComponent();
 
+	ATFWeapon* GetEquippedWeapon();
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UTFWeaponComponent* WeaponComponent;

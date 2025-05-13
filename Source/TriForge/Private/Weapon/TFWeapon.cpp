@@ -3,7 +3,6 @@
 #include "Weapon/TFWeapon.h"
 
 #include "Character/TFPlayerCharacter.h"
-#include "Character/TFWeaponCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/TFWeaponComponent.h"

@@ -43,6 +43,7 @@ enum class E_EquippedWeaponType : uint8
 {
 	Rifle UMETA(DisplayName = "Rifle"),
 	ShotGun UMETA(DisplayName = "ShotGun"),
+	Pistol UMETA(DisplayName = "Pistol"),
 	Knife UMETA(DisplayName = "Knife"),
 	Hammer UMETA(DisplayName = "Hammer"),
 	UnEquipped UMETA(DisplayName = "UnEquipped")
@@ -165,10 +166,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_EquippedWeaponType WeaponTypeState;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
-	E_EquippedWeaponType WeaponTypeStateLastFrame;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait Gait;
 	
@@ -209,4 +207,14 @@ public:
 	FAnimNodeReference OffsetRootNode;
 
 	E_EquippedWeaponType CheckWeaponType(EWeaponType CurrentWeaponType);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	bool bWeaponEquipped;
+	
+	UPROPERTY()
+	ATFWeapon* EquippedWeapon;
+
+private:
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	FTransform LeftHandTransform;
 };

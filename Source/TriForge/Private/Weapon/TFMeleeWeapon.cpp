@@ -4,7 +4,6 @@
 #include "Weapon/TFMeleeWeapon.h"
 
 #include "Character/TFPlayerCharacter.h"
-#include "Character/TFWeaponCharacter.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"

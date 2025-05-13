@@ -2,8 +2,6 @@
 
 #include "Weapon/TFWeaponComponent.h"
 
-#include "Character/TFWeaponCharacter.h"
-#include "Character/TFWeaponPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "HUD/TFHUD.h"
 #include "Kismet/GameplayStatics.h"
@@ -71,6 +69,10 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
 		bCanAttack = true; 
 		EquippedWeapon = nullptr;
+		if (PlayerController)
+		{
+			PlayerController->SetHUDAmmo(0);
+		}
 	}
 
 	if (WeaponToEquip == nullptr) return;
@@ -133,7 +135,9 @@ void UTFWeaponComponent::Attacking()
 	if (CanAttack())
 	{
 		bCanAttack = false;
-		
+
+		//TODO: WeaponClass가 아닌 WeaponType을 검사하게 해서 무기마다 다른 LineTrace 적용
+		//TODO: 현재는 LineTrace가 WeaponComponent로 있지만 무기마다 LineTrace함수를 만드는 것이 나아 보임
 		EWeaponClass EquippedWeaponClass = EquippedWeapon->GetWeaponClass();
 		switch (EquippedWeaponClass)
 		{
@@ -258,6 +262,7 @@ void UTFWeaponComponent::TraceEnemy(FHitResult& TraceHitResult)
 			ECC_Visibility,
 			Params
 		);
+		// End 값을 넘기지 않아서 아마 지워도 될듯?
 		End = TraceHitResult.bBlockingHit ? TraceHitResult.ImpactPoint : End;
 		//DrawDebugLine(GetWorld(), Start, End, FColor::Black, false, 3.f);
 	}

@@ -328,6 +328,12 @@ UTFWeaponComponent* ATFPlayerCharacter::GetWeaponComponent()
 	return WeaponComponent;
 }
 
+ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
+{
+	if (WeaponComponent == nullptr) return nullptr;
+	return WeaponComponent->EquippedWeapon;
+}
+
 void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
 	
