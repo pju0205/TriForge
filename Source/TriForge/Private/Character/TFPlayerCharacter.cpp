@@ -25,8 +25,8 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	Camera->bUsePawnControlRotation = true;
 
 	
-	WalkSpeed = FVector(300.0f, 275.0f, 250.0f);
-	SprintSpeed = FVector(700.0f, 575.0f, 550.0f);
+	WalkSpeed = FVector(400.0f, 375.0f, 350.0f);			// default : 300 275 250
+	SprintSpeed = FVector(1000.0f, 775.0f, 750.0f);			// default : 700 575 550
 	ECurrentGait = E_Gait::Walk;
 	bSprinting = false;
 	bWalking = true;
