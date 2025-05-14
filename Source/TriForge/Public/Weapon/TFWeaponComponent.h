@@ -32,9 +32,7 @@ public:
 	void AttackButtonPressed(bool bPressed);
 	
 	ATFWeapon* GetEquippedWeapon();
-
-	void TraceEnemy(FHitResult& TraceHitResult);
-
+	
 	void SetHUDCrosshairs(float DeltaTime);
 
 protected:

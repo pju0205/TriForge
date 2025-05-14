@@ -40,13 +40,17 @@ private:
 	
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
+
 	
 public:
 	ATFRangedWeapon();
+	
+	UFUNCTION()
+	virtual void Attack() override;
 
 	UFUNCTION(Server, Reliable)
-	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation) override;
-
+	void ServerAttack(const FHitResult& HitResult, const FVector& SocketLocation);
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void AttackEffects();
 
@@ -59,4 +63,6 @@ public:
 	void SetHUDRangedWeaponAmmo();
 
 	bool IsAmmoEmpty();
+
+	void TraceEnemy(FHitResult& TraceHitResult, float TraceLength);
 };

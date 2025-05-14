@@ -18,9 +18,18 @@ class TRIFORGE_API ATFMeleeWeapon : public ATFWeapon
 public:
 	ATFMeleeWeapon();
 
-	UFUNCTION(Server, Reliable)
-	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation) override;
+	UFUNCTION()
+	virtual void Attack() override;
 
+	UFUNCTION(Server, Reliable)
+	void ServerAttack(const FHitResult& HitResult);
+
+	UFUNCTION(Server, Reliable)
+	void ServerAttackEffects();
+
+	UFUNCTION(NetMulticast,Reliable)
+	void MultiAttackEffects();
+	
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
 
@@ -30,13 +39,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	float Damage = 10.f;
 
-	UFUNCTION(NetMulticast,Reliable)
-	void AttackEffects();
 protected:
 	virtual void BeginPlay() override;
-	
-	UFUNCTION()
-	virtual void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
 	virtual void OnRep_WeaponState() override;
 private:
@@ -46,7 +50,4 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* CollisionBoxEnd;
 
-
-	UFUNCTION(NetMulticast, Reliable)
-	void SetBoxCollision(bool bCollisionOn);
 };

@@ -62,14 +62,29 @@ void ATFMeleeWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 		BoxHit,
 		true
 		);
-	Attack(BoxHit,FVector(0,0,0));
+	
+	ServerAttack(BoxHit);
 }
 
-void ATFMeleeWeapon::Attack_Implementation(const FHitResult& HitResult, const FVector& SocketLocation)
+void ATFMeleeWeapon::Attack()
 {
-	Super::Attack(HitResult, SocketLocation);
+	Super::Attack();
 	
-	//AttackEffects();
+	 ServerAttackEffects();
+}
+
+void ATFMeleeWeapon::ServerAttackEffects_Implementation()
+{
+	MultiAttackEffects();
+}
+
+void ATFMeleeWeapon::MultiAttackEffects_Implementation()
+{
+	PlayAttackMontage();
+}
+
+void ATFMeleeWeapon::ServerAttack_Implementation(const FHitResult& HitResult)
+{
 	if (HitResult.bBlockingHit)
 	{
 		
@@ -78,7 +93,7 @@ void ATFMeleeWeapon::Attack_Implementation(const FHitResult& HitResult, const FV
 		if (DamagedActor)
 		{
 			ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-			if (OwnerCharacter)
+			if (OwnerCharacter && DamagedActor != OwnerCharacter)
 			{
 				AController* OwnerController = OwnerCharacter->Controller;
 				if (OwnerController)
@@ -86,25 +101,6 @@ void ATFMeleeWeapon::Attack_Implementation(const FHitResult& HitResult, const FV
 					UGameplayStatics::ApplyDamage(DamagedActor, Damage, OwnerController, this, UDamageType::StaticClass());
 				}
 			}
-		}
-	}
-
-}
-
-
-
-
-void ATFMeleeWeapon::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-                           FVector NormalImpulse, const FHitResult& Hit)
-{
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (OwnerCharacter)
-	{
-		AController* OwnerController = OwnerCharacter->Controller;
-		if (OwnerController)
-		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
-			
 		}
 	}
 }
@@ -133,25 +129,4 @@ void ATFMeleeWeapon::OnRep_WeaponState()
 	}*/
 }
 
-void ATFMeleeWeapon::SetBoxCollision_Implementation(bool bCollisionOn)
-{
-	/*if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Cyan, "setboxCollision");
-	}
-	if (bCollisionOn)
-	{
-		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Overlap);
-	}
-	else
-	{
-		CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}*/
-}
 
-void ATFMeleeWeapon::AttackEffects_Implementation()
-{
-	PlayAttackMontage();
-}

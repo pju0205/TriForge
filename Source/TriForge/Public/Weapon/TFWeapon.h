@@ -103,7 +103,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	virtual void Attack(const FHitResult& HitResult, const FVector& SocketLocation);
+	virtual void Attack();
+	
 	void PlayAttackMontage();
 
 	virtual void Dropped();
