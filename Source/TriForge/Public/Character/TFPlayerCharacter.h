@@ -6,6 +6,10 @@
 #include "Character/TFCharacter.h"
 #include "TFPlayerCharacter.generated.h"
 
+class ATFPlayerState;
+class ATFPlayerController;
+class UTFWeaponComponent;
+class ATFWeapon;
 class USpringArmComponent;
 class UCameraComponent;
 class UCurveFloat;
@@ -99,6 +103,52 @@ public:
 	E_Gait GetGait() const {return ECurrentGait;};
 	bool GetJustLanded() const {return bJustLanded;};
 	FVector GetLandVelocity() {return LandVelocity;};
+
+
+//Weapon
+private:
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+public:
+	virtual void PostInitializeComponents() override;
+
+	void SetOverlappingWeapon(ATFWeapon* Weapon);
+
+	bool IsWeaponEquipped();
+	bool IsAiming();
+
+	void AimButtonPressed();
+	void AimButtonReleased();
+	void EquipButtonPressed();
+	void AttackButtonPressed();
+	void AttackButtonReleased();
+
+	UTFWeaponComponent* GetWeaponComponent();
+
+	ATFWeapon* GetEquippedWeapon();
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	UTFWeaponComponent* WeaponComponent;
+
+	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
+	ATFWeapon* OverlappingWeapon;
+
+	UPROPERTY()
+	ATFPlayerController* TFPlayerController;
+
+	UPROPERTY()
+	ATFPlayerState* TFPlayerState;
 	
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastEquipButtonPressed();
 };
+
 

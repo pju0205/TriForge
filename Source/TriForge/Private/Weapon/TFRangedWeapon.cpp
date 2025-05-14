@@ -3,8 +3,8 @@
 
 #include "Weapon/TFRangedWeapon.h"
 
-#include "Character/TFWeaponCharacter.h"
-#include "Character/TFWeaponPlayerController.h"
+#include "Character/TFPlayerCharacter.h"
+#include "Character/TFPlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "Weapon/TFProjectile.h"
 
@@ -93,10 +93,10 @@ void ATFRangedWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 
 void ATFRangedWeapon::SetHUDRangedWeaponAmmo()
 {
-	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFWeaponCharacter>(GetOwner()) : TFOwnerCharacter;
+	TFOwnerCharacter = TFOwnerCharacter == nullptr ? Cast<ATFPlayerCharacter>(GetOwner()) : TFOwnerCharacter;
 	if (TFOwnerCharacter)
 	{
-		TFOwnerController = TFOwnerController == nullptr ? Cast<ATFWeaponPlayerController>(TFOwnerCharacter->GetController()) : TFOwnerController;
+		TFOwnerController = TFOwnerController == nullptr ? Cast<ATFPlayerController>(TFOwnerCharacter->GetController()) : TFOwnerController;
 
 		if (TFOwnerController)
 		{

@@ -7,6 +7,7 @@
 
 #define TRACE_LENGTH 80000.f
 
+class ATFPlayerController;
 class ATFHUD;
 class ATFWeaponPlayerController;
 class ATFWeapon;
@@ -24,6 +25,7 @@ public:
 	
 	friend class ATFWeaponCharacter;
 
+	friend class ATFPlayerCharacter;
 	
 	void EquipWeapon(ATFWeapon* WeaponToEquip);
 
@@ -44,11 +46,11 @@ protected:
 	void ServerSetAiming(bool bIsAiming);
 private:
 	UPROPERTY()
-	ATFWeaponCharacter* Character;
+	ATFPlayerCharacter* PlayerCharacter;
 
 	UPROPERTY()
-	ATFWeaponPlayerController* Controller;
-
+	ATFPlayerController* PlayerController;
+	
 	UPROPERTY()
 	ATFHUD* HUD;
 

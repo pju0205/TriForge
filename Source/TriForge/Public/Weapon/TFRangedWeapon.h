@@ -5,6 +5,8 @@
 #include "Weapon/TFWeapon.h"
 #include "TFRangedWeapon.generated.h"
 
+class ATFPlayerController;
+class ATFPlayerCharacter;
 class ATFWeaponPlayerController;
 class ATFWeaponCharacter;
 class ATFProjectile;
@@ -34,10 +36,10 @@ private:
 	int32 MagCapacity;
 
 	UPROPERTY()
-	ATFWeaponCharacter* TFOwnerCharacter;
+	ATFPlayerCharacter* TFOwnerCharacter;
 	
 	UPROPERTY()
-	ATFWeaponPlayerController* TFOwnerController;
+	ATFPlayerController* TFOwnerController;
 	
 public:
 	ATFRangedWeapon();

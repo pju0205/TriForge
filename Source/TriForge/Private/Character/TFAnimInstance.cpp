@@ -10,6 +10,7 @@
 #include "PoseSearch/PoseSearchTrajectoryTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryLibrary.h"
 #include "PoseSearch/PoseSearchDatabase.h"
+#include "Weapon/TFWeapon.h"
 
 
 UTFAnimInstance::UTFAnimInstance()
@@ -19,12 +20,16 @@ UTFAnimInstance::UTFAnimInstance()
 	MovementMode = E_MovementMode::OnGorund;
 	RotationMode = E_RotationMode::Strafe;
 	MovementState = E_MovementState::Idle;
+	
+	WeaponTypeState = E_EquippedWeaponType::UnEquipped;
+	
 	Gait = E_Gait::Walk;
 	bHasAcceleration = false;
 	bHasVelocity = false;
 	AccelerationAmount = 0.0f;
 	Speed2D = 0.0f;
 	HeayLandSpeedThreshold = 700.0f;
+
 }
 
 void UTFAnimInstance::NativeInitializeAnimation()
@@ -51,9 +56,33 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		}
 	}
 	
+	if (TFPlayerCharacter == nullptr) return;
+
+	// 50번 ~ 59번줄(Super 이후부터 주석코드 전) 까지 없애고 주석 처리된 부분으로 사용해도 될 듯
+	/*TFPlayerCharacter = TFPlayerCharacter == nullptr ? Cast<ATFPlayerCharacter>(TryGetPawnOwner()) : TFPlayerCharacter;
+	if (TFPlayerCharacter == nullptr) return;
+	TFCharacterMovement = TFPlayerCharacter->GetCharacterMovement();*/
+	
+	bWeaponEquipped = TFPlayerCharacter->IsWeaponEquipped();
+	EquippedWeapon = TFPlayerCharacter->GetEquippedWeapon();
+
+	
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
 	UpdateStates();
+
+	// 무기 왼손위치를 무기의 LeftHandSocket을 만들어 고정 시키기 위한 함수
+	// LeftHandSocket Transform을 월드 상에서 구한 후 BoneSpace에서 오른 손에 대한 상대적위치로 변환 후
+	// OutPosition, OutRotation으로 LeftHand를 이동.
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && TFPlayerCharacter->GetMesh())
+	{
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), RTS_World);
+		FVector OutPosition;
+		FRotator OutRotation;
+		TFPlayerCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 
 	if (CurrentSelectedDatabase != nullptr)
 	{
@@ -74,6 +103,8 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			);
 		}
 	}
+
+	
 }
 
 void UTFAnimInstance::SetRootTransform()
@@ -274,7 +305,44 @@ void UTFAnimInstance::UpdateStates()
 		{
 			Gait = E_Gait::Sprint;
 		}
+		
+		if (bWeaponEquipped)
+		{
+			EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
+			WeaponTypeState = CheckWeaponType(WeaponType);
+		}
+		else
+		{
+			WeaponTypeState = E_EquippedWeaponType::UnEquipped;
+		}
 	}
+}
+
+E_EquippedWeaponType UTFAnimInstance::CheckWeaponType(EWeaponType CurrentWeaponType)
+{
+	E_EquippedWeaponType EquippedWeaponType;
+	switch (CurrentWeaponType)
+	{
+	case EWeaponType::Ewt_Rifle:
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
+		break;
+	case EWeaponType::EWt_Pistol:
+		EquippedWeaponType = E_EquippedWeaponType::Pistol;
+		break;
+	case EWeaponType::Ewt_ShotGun:
+		EquippedWeaponType = E_EquippedWeaponType::ShotGun;
+		break;
+	case EWeaponType::Ewt_Knife:
+		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;
+		break;
+	case EWeaponType::Ewt_Hammer:
+		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;
+		break;
+	default:
+		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;
+		break;
+	}
+	return EquippedWeaponType;
 }
 
 bool UTFAnimInstance::isMoving()

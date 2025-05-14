@@ -6,10 +6,14 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
+#include "PlayerState/TFPlayerState.h"
+#include "TriForge/TriForge.h"
+#include "Weapon/TFWeaponComponent.h"
 
 ATFPlayerCharacter::ATFPlayerCharacter()
 {
@@ -23,6 +27,15 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(GetMesh(), FName("head"));
 	Camera->bUsePawnControlRotation = true;
+
+	// Weapon
+	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
+	WeaponComponent->SetIsReplicated(true);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	
 	WalkSpeed = FVector(400.0f, 375.0f, 350.0f);			// default : 300 275 250
@@ -46,12 +59,19 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
 	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
+
+	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
 
 void ATFPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
+	}
 }
 
 void ATFPlayerCharacter::GetDesiredGait()
@@ -204,3 +224,119 @@ void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
 		}
 	}
 }
+
+
+void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
+	class AController* InstigatedBy, AActor* DamageCauser)
+{
+	ATFPlayerCharacter* DamagedCharacter = Cast<ATFPlayerCharacter>(DamagedActor);
+	if (DamagedCharacter)
+	{
+		TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(DamagedCharacter->GetPlayerState()) : TFPlayerState;
+
+		if (TFPlayerState)
+		{
+			TFPlayerState->CalcDamage(Damage);
+		}
+	}
+}
+
+void ATFPlayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (WeaponComponent)
+	{
+		WeaponComponent->PlayerCharacter = this;
+	}
+}
+
+void ATFPlayerCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
+{
+	OverlappingWeapon = Weapon;
+}
+
+bool ATFPlayerCharacter::IsWeaponEquipped()
+{
+	return (WeaponComponent && WeaponComponent->EquippedWeapon);
+}
+
+bool ATFPlayerCharacter::IsAiming()
+{
+	return (WeaponComponent && WeaponComponent->bAiming);
+}
+
+void ATFPlayerCharacter::AimButtonPressed()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAiming(true);
+	}
+}
+
+void ATFPlayerCharacter::AimButtonReleased()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAiming(false);
+	}
+}
+
+void ATFPlayerCharacter::EquipButtonPressed()
+{
+	if (WeaponComponent)
+	{
+		ServerEquipButtonPressed();
+	}
+}
+
+void ATFPlayerCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (WeaponComponent)
+	{
+		MulticastEquipButtonPressed();
+	}
+}
+
+void ATFPlayerCharacter::MulticastEquipButtonPressed_Implementation()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+
+void ATFPlayerCharacter::AttackButtonPressed()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->AttackButtonPressed(true);
+	}
+}
+
+void ATFPlayerCharacter::AttackButtonReleased()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->AttackButtonPressed(false);
+	}
+}
+
+UTFWeaponComponent* ATFPlayerCharacter::GetWeaponComponent()
+{
+	return WeaponComponent;
+}
+
+ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
+{
+	if (WeaponComponent == nullptr) return nullptr;
+	return WeaponComponent->EquippedWeapon;
+}
+
+void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
+{
+	
+}
+
+
