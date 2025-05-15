@@ -26,7 +26,7 @@ enum class EWeaponClass : uint8
 	Ewt_Max UMETA(DisplayName = "DefaultMax")
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
 	Ewt_Rifle UMETA(DisplayName = "Rifle"),
