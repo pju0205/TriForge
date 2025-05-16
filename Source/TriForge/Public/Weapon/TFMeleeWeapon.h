@@ -31,23 +31,36 @@ public:
 	void MultiAttackEffects();
 	
 	UPROPERTY(EditAnywhere)
-	UBoxComponent* CollisionBox;
+	float Damage = 10.f;
 
 	UFUNCTION()
-	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-	UPROPERTY(EditAnywhere)
-	float Damage = 10.f;
+	void BeginTrace();
+	UFUNCTION()
+	void EndTrace();
 
 protected:
 	virtual void BeginPlay() override;
 	
 	virtual void OnRep_WeaponState() override;
 private:
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* CollisionBoxStart;
+	UPROPERTY(EditAnywhere)
+	USceneComponent* TraceStart;
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* CollisionBoxEnd;
+	UPROPERTY(EditAnywhere)
+	USceneComponent* TraceEnd;
+
+	FTimerHandle TraceTimerHandle;
+
+	UPROPERTY()
+	TArray<AActor*> AlreadyHitActors;
+
+	void StartTraceTimer();
+
+	void StopTraceTimer();
+
+	void TraceEnemy();
+
+	FVector PreTraceStart;
+	FVector PreTraceEnd;
 
 };

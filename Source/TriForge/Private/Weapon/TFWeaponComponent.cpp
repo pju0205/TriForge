@@ -135,38 +135,7 @@ void UTFWeaponComponent::Attacking()
 	if (CanAttack())
 	{
 		bCanAttack = false;
-
-		//TODO: WeaponClass가 아닌 WeaponType을 검사하게 해서 무기마다 다른 LineTrace 적용
-		//TODO: 현재는 LineTrace가 WeaponComponent로 있지만 무기마다 LineTrace함수를 만드는 것이 나아 보임
-		/*EWeaponClass EquippedWeaponClass = EquippedWeapon->GetWeaponClass();
-		switch (EquippedWeaponClass)
-		{
-		case EWeaponClass::Ewc_RangedWeapon :
-			{
-			    FHitResult Result;
-			    TraceEnemy(Result);
-			    const USkeletalMeshSocket* MuzzleFlashSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-			    FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
-			    FVector SocketLocation = SocketTransform.GetLocation();
-			    EquippedWeapon->Attack(Result, SocketLocation);
-			}
-			break;
-			
-		case EWeaponClass::Ewc_MeleeWeapon :
-			{
-			    FHitResult HitResult;
-			    FVector Location (0,0,0);
-			    //EquippedWeapon->Attack(HitResult, Location);
-				ATFMeleeWeapon* Melee = Cast<ATFMeleeWeapon>(EquippedWeapon);
-				if (Melee)
-				{
-					Melee->AttackEffects();
-				}
-				
-			}
-			break;
-		}*/
-
+		
 		EquippedWeapon->Attack();
 		
 		StartAttackTimer();
@@ -177,13 +146,30 @@ void UTFWeaponComponent::Attacking()
 bool UTFWeaponComponent::CanAttack()
 {
 	if (EquippedWeapon == nullptr) return false;
-	if (EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon)
+	
+	EWeaponClass EquippedWeaponClass = EquippedWeapon->GetWeaponClass();
+	switch (EquippedWeaponClass)
 	{
-		ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
-		if (RangedWeapon)
+	case EWeaponClass::Ewc_RangedWeapon:
 		{
-			return !RangedWeapon->IsAmmoEmpty() || !bCanAttack;
+			ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
+			if (RangedWeapon)
+			{
+				return !RangedWeapon->IsAmmoEmpty() || !bCanAttack;
+			}
+			break;
 		}
+	case EWeaponClass::Ewc_MeleeWeapon:
+		{
+			ATFMeleeWeapon* MeleeWeapon = Cast<ATFMeleeWeapon>(EquippedWeapon);
+			if (MeleeWeapon)
+			{
+				return !PlayerCharacter->GetMesh()->GetAnimInstance()->Montage_IsPlaying(EquippedWeapon->AttackMontage);
+			}
+			break;
+		}
+		default:
+			break;
 	}
 	return bCanAttack;
 }
