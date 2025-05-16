@@ -17,6 +17,9 @@ struct FLobbyPlayerInfoDelta
  
 	UPROPERTY()
 	TArray<FLobbyPlayerInfo> RemovedPlayers{};
+
+	UPROPERTY()
+	TArray<FLobbyPlayerInfo> UpdatedPlayers{};
 };
 
 
@@ -30,6 +33,8 @@ class DEDICATEDSERVERS_API ALobbyState : public AInfo
 	GENERATED_BODY()
  
 public:
+	virtual void BeginPlay() override;
+	
 	ALobbyState();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
  
@@ -38,10 +43,19 @@ public:
  
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerInfoChanged OnPlayerInfoRemoved;
- 
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerInfoChanged OnPlayerInfoUpdated;
+
+	// UserInfo 관련
 	void AddPlayerInfo(const FLobbyPlayerInfo& PlayerInfo);
 	void RemovePlayerInfo(const FString& Username);
 	TArray<FLobbyPlayerInfo> GetPlayers() const;
+	
+	// Ready 관련
+	void SetPlayerReadyState(const FString& Username, bool bIsReady);
+	bool AreAllPlayersReady();
+	
 protected:
  
 	UFUNCTION()

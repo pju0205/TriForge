@@ -14,3 +14,12 @@ FString UPlayerLabel::GetUsername() const
  {
  	return TextBlock_Username->GetText().ToString();
  }
+
+// Label에 있는 유저의 Ready 상태 UI 출력
+void UPlayerLabel::SetReadyState(bool bIsReady)
+{
+ 	if (TextBlock_ReadyStatus)
+ 	{
+ 		TextBlock_ReadyStatus->SetText(FText::FromString(bIsReady ? TEXT("Ready") : TEXT("Not Ready")));
+ 	}
+}

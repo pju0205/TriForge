@@ -24,7 +24,7 @@ void ADSLobbyGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
-    InitGameLift();
+    InitGameLift();     // Lobby 상태에서 GameLift PlayerSessions 초기화 시키기
 }
 
 // 플레이어가 로그인
@@ -46,13 +46,6 @@ void ADSLobbyGameMode::InitSeamlessTravelPlayer(AController* NewController)
     if (LobbyStatus != ELobbyStatus::SeamlessTravelling)
     {
         AddPlayerInfoToLobbyState(NewController);
-    }
-    else
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("Failed AddPlayerInfoToLobbyState in InitSeamlessTravelPlayer"));
-        }
     }
 }
 
@@ -109,15 +102,9 @@ FString ADSLobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController, 
     
     if (LobbyStatus != ELobbyStatus::SeamlessTravelling)
     {
-        AddPlayerInfoToLobbyState(NewPlayerController);
+        AddPlayerInfoToLobbyState(NewPlayerController);         // playerSessionID, Username을 저장한 값으로 LobbyState 생성
     }
-    else
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, TEXT("Failed AddPlayerInfoToLobbyState in InitNewPlayer"));
-        }
-    }
+
     return InitializedString;
 }
 
@@ -130,19 +117,6 @@ void ADSLobbyGameMode::AddPlayerInfoToLobbyState(AController* Player) const
     {
         FLobbyPlayerInfo PlayerInfo(DSPlayerController->Username);
         DSGameState->LobbyState->AddPlayerInfo(PlayerInfo);
-        if (GEngine)
-        {
-            FString success_message = "AddPlayerInfo Sueccessful";
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString(success_message));
-        }
-    }
-    else
-    {
-        if (GEngine)
-        {
-            FString failed_message = "AddPlayerInfo failed";
-            GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Yellow, FString(failed_message));
-        }
     }
 }
 
@@ -215,18 +189,31 @@ void ADSLobbyGameMode::TryAcceptPlayerSession(const FString& PlayerSessionId, co
     }
 #endif
 }
-    
-// 카운트다운 종료 시 호출되는 함수 (부모 함수도 호출)
-void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
-{
-    Super::OnCountdownTimerFinished(Type);
 
-    // 로비 카운트다운이 끝나면
-    if (Type == ECountdownTimerType::LobbyCountdown)
+void ADSLobbyGameMode::CheckAndStartLobbyCountdown()
+{
+    if (ADSGameState* GS = GetGameState<ADSGameState>())
     {
-        StopCountdownTimer(LobbyCountdownTimer);
-        LobbyStatus = ELobbyStatus::SeamlessTravelling;     // 상태 변경: Seamless Travel 중
-        TrySeamlessTravel(MapToTravelTo);
+        if (ALobbyState* LobbyState = GS->LobbyState)
+        {
+            // 최소 인원 확인
+            if (GetNumPlayers() < MinPlayers || LobbyStatus != ELobbyStatus::WaitingForPlayers)
+            {
+                CheckAndStopLobbyCountdown();
+                return;
+            }
+
+            // 전부 준비됐는지 확인
+            if (!LobbyState->AreAllPlayersReady())
+            {
+                CheckAndStopLobbyCountdown();
+                return;
+            }
+
+            // 모두 준비 완료!
+            LobbyStatus = ELobbyStatus::CountdownToSeamlessTravel;
+            StartCountdownTimer(LobbyCountdownTimer);
+        }
     }
 }
 
@@ -238,6 +225,20 @@ void ADSLobbyGameMode::CheckAndStopLobbyCountdown()
     {
         LobbyStatus = ELobbyStatus::WaitingForPlayers;      // 상태 복구
         StopCountdownTimer(LobbyCountdownTimer);         // 타이머 멈춤
+    }
+}
+
+// 카운트다운 종료 시 호출되는 함수 (부모 함수도 호출)
+void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
+{
+    Super::OnCountdownTimerFinished(Type);
+
+    // 로비 카운트다운이 끝나면
+    if (Type == ECountdownTimerType::LobbyCountdown)
+    {
+        StopCountdownTimer(LobbyCountdownTimer);
+        LobbyStatus = ELobbyStatus::SeamlessTravelling;     // 상태 변경: Seamless Travel 중
+        TrySeamlessTravel(MapToTravelTo);
     }
 }
 
@@ -287,14 +288,4 @@ void ADSLobbyGameMode::SetServerParameters(FServerParameters& OutServerParameter
     // 현재 프로세스 ID 저장
     OutServerParameters.m_processId = FString::Printf(TEXT("%d"), GetCurrentProcessId());
     UE_LOG(LogDedicatedServers, Log, TEXT("PID: %s"), *OutServerParameters.m_processId);
-}
-
-void ADSLobbyGameMode::CheckAndStartLobbyCountdown()
-{
-    // 최소 인원 이상이고, 대기 상태인 경우 카운트다운 시작
-    if (GetNumPlayers() >= MinPlayers && LobbyStatus == ELobbyStatus::WaitingForPlayers)
-    {
-        LobbyStatus = ELobbyStatus::CountdownToSeamlessTravel;  // 상태 변경: 카운트다운 중
-        StartCountdownTimer(LobbyCountdownTimer);            // 카운트다운 타이머 시작
-    }
 }

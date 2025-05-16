@@ -32,6 +32,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputEnabled(bool bEnabled);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetReadyState(bool bNewReady);		// Ready 관련
  
 	UPROPERTY(BlueprintAssignable)
 	FOnTimerStateChangedDelegate OnTimerUpdated;

@@ -26,6 +26,18 @@ void ULobbyPlayerBox::NativeOnInitialized()
 	}
 }
 
+// LobbyState 초기화 함수
+void ULobbyPlayerBox::OnLobbyStateInitialized(ALobbyState* LobbyState)
+{
+	if (!IsValid(LobbyState)) return;
+
+	LobbyState->OnPlayerInfoAdded.AddDynamic(this, &ULobbyPlayerBox::CreateAndAddPlayerLabel);
+	LobbyState->OnPlayerInfoRemoved.AddDynamic(this, &ULobbyPlayerBox::OnPlayerRemoved);
+	LobbyState->OnPlayerInfoUpdated.AddDynamic(this, &ULobbyPlayerBox::OnPlayerInfoStateUpdated);
+	UpdatePlayerInfo(LobbyState);
+}
+
+// PlayerInfo update시 실행 함수
 void ULobbyPlayerBox::UpdatePlayerInfo(ALobbyState* LobbyState)
 {
 	ScrollBox_PlayerInfo->ClearChildren();
@@ -35,15 +47,7 @@ void ULobbyPlayerBox::UpdatePlayerInfo(ALobbyState* LobbyState)
 	}
 }
 
-void ULobbyPlayerBox::OnLobbyStateInitialized(ALobbyState* LobbyState)
-{
-	if (!IsValid(LobbyState)) return;
-
-	LobbyState->OnPlayerInfoAdded.AddDynamic(this, &ULobbyPlayerBox::CreateAndAddPlayerLabel);
-	LobbyState->OnPlayerInfoRemoved.AddDynamic(this, &ULobbyPlayerBox::OnPlayerRemoved);
-	UpdatePlayerInfo(LobbyState);
-}
-
+// update 함수 실행되면 실행되는 Label 생성 함수
 void ULobbyPlayerBox::CreateAndAddPlayerLabel(const FLobbyPlayerInfo& PlayerInfo)
 {
 	if (FindPlayerLabel(PlayerInfo.Username)) return;
@@ -60,6 +64,14 @@ void ULobbyPlayerBox::OnPlayerRemoved(const FLobbyPlayerInfo& PlayerInfo)
 	if (UPlayerLabel* PlayerLabel = FindPlayerLabel(PlayerInfo.Username))
 	{
 		ScrollBox_PlayerInfo->RemoveChild(PlayerLabel);
+	}
+}
+
+void ULobbyPlayerBox::OnPlayerInfoStateUpdated(const FLobbyPlayerInfo& PlayerInfo)
+{
+	if (UPlayerLabel* PlayerLabel = FindPlayerLabel(PlayerInfo.Username))
+	{
+		PlayerLabel->SetReadyState(PlayerInfo.ReadyState);
 	}
 }
 

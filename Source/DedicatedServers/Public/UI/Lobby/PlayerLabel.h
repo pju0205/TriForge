@@ -17,7 +17,12 @@ class DEDICATEDSERVERS_API UPlayerLabel : public UUserWidget
 public:
 	void SetUsername(const FString& Username) const;
 	FString GetUsername() const;
+
+	void SetReadyState(bool bIsReady);
 private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TextBlock_Username;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> TextBlock_ReadyStatus;
 };

@@ -6,6 +6,13 @@
 #include "Net/UnrealNetwork.h"		// NetCore 사용
 
 
+void ALobbyState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	PlayerInfoArray.OwnerState = this;
+}
+
 ALobbyState::ALobbyState()
 {
 	PrimaryActorTick.bCanEverTick = false;		// Tick이 필요 없다는 뜻
@@ -21,7 +28,6 @@ void ALobbyState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Ou
 	DOREPLIFETIME(ALobbyState, PlayerInfoArray);
 }
 
-
 // 로비 입장시 정보 추가
 void ALobbyState::AddPlayerInfo(const FLobbyPlayerInfo& PlayerInfo)
 {
@@ -34,7 +40,19 @@ void ALobbyState::RemovePlayerInfo(const FString& Username)
 	PlayerInfoArray.RemovePlayer(Username);
 }
 
-// Get 함수
+// 로비 Ready 상태 변경 함수
+void ALobbyState::SetPlayerReadyState(const FString& Username, bool bIsReady)
+{
+	PlayerInfoArray.SetPlayerReadyState(Username, bIsReady);
+}
+
+// 로비상 모든 플레이어가 Ready 했는지 확인하는 함수
+bool ALobbyState::AreAllPlayersReady()
+{
+	return PlayerInfoArray.AreAllPlayersReady();
+}
+
+// player 정보 Get 함수
 TArray<FLobbyPlayerInfo> ALobbyState::GetPlayers() const
 {
 	return PlayerInfoArray.Players;
@@ -52,6 +70,10 @@ void ALobbyState::OnRep_LobbyPlayerInfo()
 	for (const auto& PlayerInfo : Delta.RemovedPlayers)
 	{
 		OnPlayerInfoRemoved.Broadcast(PlayerInfo);
+	}
+	for (const auto& PlayerInfo : Delta.UpdatedPlayers)
+	{
+		OnPlayerInfoUpdated.Broadcast(PlayerInfo);
 	}
  
 	LastPlayerInfoArray = PlayerInfoArray;
@@ -89,11 +111,30 @@ FLobbyPlayerInfoDelta ALobbyState::ComputePlayerInfoDelta(const TArray<FLobbyPla
 	// NewArray에는 있는데 OldArray에는 없는 경우 → 새로 추가된 플레이어
 	for (const auto& NewPlayerInfo : NewArray)
 	{
+		// 기존에 없는 username이면 새로 추가
 		if (!OldMap.Contains(NewPlayerInfo.Username))
 		{
 			Delta.AddedPlayers.Add(NewPlayerInfo);
 		}
+		else
+		{
+			// 기존에 있는 Username이면 옛날 정보와 비교해서 값을 새로운 값으로 업데이트
+			const FLobbyPlayerInfo* OldPlayerInfo = OldMap[NewPlayerInfo.Username];
+			if (OldPlayerInfo && *OldPlayerInfo != NewPlayerInfo)		// 값이 바뀐 경우
+			{
+				Delta.UpdatedPlayers.Add(NewPlayerInfo);
+			}
+		}
 	}
+
+	/*// NewArray에는 있는데 OldArray에는 없는 경우 → 새로 추가된 플레이어
+	for (const auto& NewPlayerInfo : NewArray)
+	{
+		if (!OldMap.Contains(NewPlayerInfo.Username))
+		{
+			Delta.AddedPlayers.Add(NewPlayerInfo);
+		}
+	}*/
  
 	return Delta;	// 해당 정보 구조체로 반환
 }

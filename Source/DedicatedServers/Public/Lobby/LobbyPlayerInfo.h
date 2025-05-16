@@ -1,5 +1,5 @@
 #pragma once
- 
+
 #include "Net/Serialization/FastArraySerializer.h"
  
 #include "LobbyPlayerInfo.generated.h"
@@ -7,6 +7,8 @@
 
 // 자체적으로 만든 파일 Build.cs 에서 NetCore 추가
 // shift shift 해서 FastArraySerializer 검색해서 헤더 파일 확인하기
+
+class ALobbyState;
 
 // 개별 항목 Struct
 // FFastArraySerializerItem 상속 : 상속해야 변화 추적 대상이 될 수 있음
@@ -20,6 +22,21 @@ struct FLobbyPlayerInfo : public FFastArraySerializerItem
  
 	UPROPERTY(BlueprintReadWrite)
 	FString Username{};
+
+	UPROPERTY(BlueprintReadWrite)
+	bool ReadyState = false;
+
+	// == 오버로딩
+	bool operator==(const FLobbyPlayerInfo& Other) const
+	{
+		return Username == Other.Username && ReadyState == Other.ReadyState;
+	}
+
+	// != 오버로딩
+	bool operator!=(const FLobbyPlayerInfo& Other) const
+	{
+		return !(*this == Other);
+	}
 };
 
 
@@ -33,6 +50,9 @@ struct FLobbyPlayerInfoArray : public FFastArraySerializer
 	UPROPERTY()
 	TArray<FLobbyPlayerInfo> Players;
 
+	UPROPERTY()
+	ALobbyState* OwnerState;
+
 	// 복제 과정에서 변경된 부분만 네트워크 전송되도록 하는 핵심 함수
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParams)
 	{
@@ -41,6 +61,8 @@ struct FLobbyPlayerInfoArray : public FFastArraySerializer
  
 	void AddPlayer(const FLobbyPlayerInfo& NewPlayerInfo);
 	void RemovePlayer(const FString& Username);
+	void SetPlayerReadyState(const FString& Username, bool bIsReady);
+	bool AreAllPlayersReady() const;
 };
 
 

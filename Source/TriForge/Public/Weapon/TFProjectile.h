@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundCue.h" 
 #include "TFProjectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -48,6 +49,5 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* ImpactSound;
-
 	
 };

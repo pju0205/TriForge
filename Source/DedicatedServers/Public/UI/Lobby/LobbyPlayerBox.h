@@ -36,6 +36,9 @@ protected:
 	UFUNCTION()
 	void OnPlayerRemoved(const FLobbyPlayerInfo& PlayerInfo);
 
+	UFUNCTION()
+	void OnPlayerInfoStateUpdated(const FLobbyPlayerInfo& PlayerInfo);
+
 private:
  
 	UPlayerLabel* FindPlayerLabel(const FString& Username);

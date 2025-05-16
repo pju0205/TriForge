@@ -3,6 +3,10 @@
 
 #include "Player/DSPlayerController.h"
 
+#include "Game/DSGameState.h"
+#include "Game/DSLobbyGameMode.h"
+#include "Lobby/LobbyState.h"
+
 
 ADSPlayerController::ADSPlayerController()
 {
@@ -56,7 +60,25 @@ void ADSPlayerController::BeginPlay()
 		DisableInput(this);
 	}*/
 }
- 
+
+void ADSPlayerController::Server_SetReadyState_Implementation(bool bNewReady)
+{
+	if (ADSGameState* GS = GetWorld()->GetGameState<ADSGameState>())
+	{
+		if (ALobbyState* LobbyState = GS->LobbyState)
+		{
+			FString Playername = this->Username;
+			LobbyState->SetPlayerReadyState(Playername, bNewReady);			// Player Name이 일치하는 유저 찾아서 Ready 상태 변경
+
+			// 모든 플레이어가 준비 완료되었는지 체크
+			if (ADSLobbyGameMode* GM = GetWorld()->GetAuthGameMode<ADSLobbyGameMode>())
+			{
+				GM->CheckAndStartLobbyCountdown();
+			}
+		}
+	}
+}
+
 void ADSPlayerController::Client_SetInputEnabled_Implementation(bool bEnabled)
 {
 	if (bEnabled)
