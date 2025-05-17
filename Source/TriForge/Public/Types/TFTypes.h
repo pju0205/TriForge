@@ -2,12 +2,22 @@
  
 #include "TFTypes.generated.h"
 
+
+
 //
 // 필요한 정보 저장용
 //
 UENUM(meta = (Bitflags))
-enum class ESpecialElimType : uint16
+enum class ETFPlayerType : uint16
 {
+	None = 0,
+	Wins			= 1 << 0,	// 00000000 00000001
+	Defeats			= 1 << 1,	// 00000000 00000010
+	RoundScore		= 1 << 2,	// 00000000 00000100
+	Hits			= 1 << 3,	// 00000000 00001000
+	Misses			= 1 << 4	// 00000000 00010000
+	
+	/*
 	None = 0,
 	Headshot        = 1 << 0,    // 00000000 00000001
 	Sequential      = 1 << 1,    // 00000000 00000010
@@ -23,6 +33,7 @@ enum class ESpecialElimType : uint16
 	ScoredElims = 1 << 11,       // 00001000 00000000
 	Hits = 1 << 12,              // 00010000 00000000
 	Misses = 1 << 13             // 00100000 00000000
+	*/
 };
 
-ENUM_CLASS_FLAGS(ESpecialElimType)
+ENUM_CLASS_FLAGS(ETFPlayerType)

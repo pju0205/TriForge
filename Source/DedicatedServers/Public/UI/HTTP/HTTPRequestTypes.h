@@ -272,3 +272,129 @@ struct FDSInitiateAuthResponse
  
 	void Dump() const;
 };
+
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ Game Stats Data ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 
+USTRUCT()
+struct FDSMatchStats
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 roundScore{};			// 씀
+
+	UPROPERTY()
+	int32 defeats{};			// 씀
+
+	UPROPERTY()
+	int32 hits{};
+
+	UPROPERTY()
+	int32 misses{};
+
+	UPROPERTY()
+	int32 headShotElims{};
+
+	UPROPERTY()
+	int32 highestStreak{};
+
+	UPROPERTY()
+	int32 revengeElims{};
+
+	UPROPERTY()
+	int32 dethroneElims{};
+
+	UPROPERTY()
+	int32 showstopperElims{};
+
+	UPROPERTY()
+	int32 gotFirstBlood{};
+
+	UPROPERTY()
+	int32 matchWins{};			// 씀
+
+	UPROPERTY()
+	int32 matchLosses{};		// 씀
+};
+
+USTRUCT()
+struct FDSRecordMatchStatsInput
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FDSMatchStats matchStats{};
+
+	UPROPERTY()
+	FString username{};
+};
+
+USTRUCT()
+struct FDSRetrieveMatchStatsResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 highestStreak;
+
+	UPROPERTY()
+	int32 dethroneElims;
+
+	UPROPERTY()
+	int32 gotFirstBlood;
+
+	UPROPERTY()
+	int32 defeats;			// 씀
+
+	UPROPERTY()
+	int32 roundScore;		// 씀
+
+	UPROPERTY()
+	FString email;
+
+	UPROPERTY()
+	int32 misses;
+
+	UPROPERTY()
+	int32 revengeElims;
+
+	UPROPERTY()
+	int32 matchLosses;
+
+	UPROPERTY()
+	int32 showstopperElims;
+
+	UPROPERTY()
+	FString databaseid;
+
+	UPROPERTY()
+	int32 headShotElims;
+
+	UPROPERTY()
+	FString username;		// 씀
+
+	UPROPERTY()
+	int32 hits;
+
+	UPROPERTY()
+	int32 matchWins;		// 씀
+
+	void Dump() const;
+};
+
+USTRUCT()
+struct FDSLeaderboardItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString databaseid{};
+
+	UPROPERTY()
+	FString username{};
+
+	UPROPERTY()
+	int32 matchWins{};
+
+	UPROPERTY()
+	int32 place{};
+};

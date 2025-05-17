@@ -9,6 +9,7 @@
 #include "Components/TextBlock.h"
 #include "UI/Portal/PortalManager.h"
 #include "Components/WidgetSwitcher.h"
+#include "Player/DSLocalPlayerSubsystem.h"
 #include "UI/Portal/SignIn/SignInPage.h"
 #include "UI/Portal/SignIn/SignUpPage.h"
 #include "UI/Portal/SignIn/ConfirmSignUpPage.h"
@@ -46,8 +47,23 @@ void USignInOverlay::NativeConstruct()
 	SuccessConfirmedPage->Button_Ok->OnClicked.AddDynamic(this, &USignInOverlay::ShowSignInPage);
 }
 
+void USignInOverlay::AutoSignIn()
+{
+	if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = PortalManager->GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
+	{
+		const FString& Username = DSLocalPlayerSubsystem->Username;
+		const FString& Password = DSLocalPlayerSubsystem->Password;
+		if (Username.IsEmpty() || Password.IsEmpty()) return;
+
+		SignInPage->Button_SignIn->SetIsEnabled(false);
+		PortalManager->SignIn(Username, Password);
+	}
+}
+
 void USignInOverlay::ShowSignInPage()
 {
+	SignInPage->Button_SignIn->SetIsEnabled(true);
+	
 	WidgetSwitcher->SetActiveWidget(SignInPage);
 }
  
@@ -72,6 +88,10 @@ void USignInOverlay::SignInButtonClicked()
 {
 	const FString Username = SignInPage->TextBox_UserName->GetText().ToString();
 	const FString Password = SignInPage->TextBox_Password->GetText().ToString();
+	if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = PortalManager->GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
+	{
+		DSLocalPlayerSubsystem->Password = Password;
+	}
 	PortalManager->SignIn(Username, Password);				// Portal Manager 함수로 데이터 보내기
 }
 

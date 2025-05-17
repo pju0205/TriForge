@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "DashboardOverlay.generated.h"
 
+class UGameStatsManager;
 class UWidgetSwitcher;
 class UGamePage;
 class UCareerPage;
@@ -42,11 +43,16 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Button_Leaderboard;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameStatsManager> GameStatsManagerClass;
+
 
 protected:
 	virtual void NativeConstruct() override;
 private:
- 
+	UPROPERTY()
+	TObjectPtr<UGameStatsManager> GameStatsManager;
+	
 	UFUNCTION()
 	void ShowGamePage();
  	
@@ -55,4 +61,6 @@ private:
  
 	UFUNCTION()
 	void ShowLeaderboardPage();
+
+	void DisableButton(UButton* Button) const;
 };

@@ -51,7 +51,8 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<UPortalManager> PortalManager;
-	
+
+	void AutoSignIn();
 	
 	// Show Sign Page
 	UFUNCTION()

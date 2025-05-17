@@ -14,4 +14,7 @@ UCLASS()
 class TRIFORGE_API ATFGameMode : public ADSMatchGameMode
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void OnMatchEnded() override;
 };

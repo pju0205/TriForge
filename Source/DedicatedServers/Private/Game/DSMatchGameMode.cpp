@@ -3,7 +3,9 @@
 
 #include "Game/DSMatchGameMode.h"
 
+#include "Player/DSMatchPlayerState.h"
 #include "Player/DSPlayerController.h"
+#include "UI/GameStats/GameStatsManager.h"
 
 ADSMatchGameMode::ADSMatchGameMode()
 {
@@ -12,6 +14,14 @@ ADSMatchGameMode::ADSMatchGameMode()
 	PreMatchTimer.Type = ECountdownTimerType::PreMatch;
 	MatchTimer.Type = ECountdownTimerType::Match;
 	PostMatchTimer.Type = ECountdownTimerType::PostMatch;
+}
+
+void ADSMatchGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	GameStatsManager = NewObject<UGameStatsManager>(this, GameStatsManagerClass);
+	GameStatsManager->OnUpdateLeaderboardSucceeded.AddDynamic(this, &ADSMatchGameMode::ADSMatchGameMode::OnLeaderboardUpdated);
 }
 
 void ADSMatchGameMode::PostLogin(APlayerController* NewPlayer)
@@ -51,14 +61,15 @@ void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 		StopCountdownTimer(PreMatchTimer);
 		MatchStatus = EMatchStatus::Match;
 		StartCountdownTimer(MatchTimer);
-		SetClientInputEnabled(true);
+		SetClientInputEnabled(true);			// 움직임 활성
 	}
 	if (Type == ECountdownTimerType::Match)
 	{
 		StopCountdownTimer(MatchTimer);
 		MatchStatus = EMatchStatus::PostMatch;
 		StartCountdownTimer(PostMatchTimer);
-		SetClientInputEnabled(false);
+		SetClientInputEnabled(false);			// 움직임 비활성
+		OnMatchEnded();							// 매치 종료 알림
 	}
 	if (Type == ECountdownTimerType::PostMatch)
 	{
@@ -68,6 +79,7 @@ void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	}
 }
 
+// 움직임 활성, 비활성 함수
 void ADSMatchGameMode::SetClientInputEnabled(bool bEnabled)
 {
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
@@ -80,4 +92,39 @@ void ADSMatchGameMode::SetClientInputEnabled(bool bEnabled)
 	}
 }
 
+// playerState로 Match가 끝났는지 확인 작업
+void ADSMatchGameMode::EndMatchForPlayerStates()
+{
+	// PlayerPC 하나씩 순행하며 확인
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		if (ADSPlayerController* DSPlayerController = Cast<ADSPlayerController>(Iterator->Get()); IsValid(DSPlayerController))
+		{
+			if (ADSMatchPlayerState* MatchPlayerState = DSPlayerController->GetPlayerState<ADSMatchPlayerState>(); IsValid(MatchPlayerState))
+			{
+				// 해당 이름을 가진 플레이어의 매치상태에서 OnMatchEnded 함수를 불렀는지 확인하여 매치 종료를 알림
+				MatchPlayerState->OnMatchEnded(DSPlayerController->Username);
+			}
+		}
+	}
+}
 
+// TFGameMode자식에서 오버라이딩 시켜 실행함
+// 그래서 비어있음
+void ADSMatchGameMode::OnMatchEnded()
+{
+	
+}
+
+void ADSMatchGameMode::UpdateLeaderboard(const TArray<FString>& LeaderboardNames)
+{
+	if (IsValid(GameStatsManager))
+	{
+		GameStatsManager->UpdateLeaderboard(LeaderboardNames);
+	}
+}
+
+void ADSMatchGameMode::OnLeaderboardUpdated()
+{
+	EndMatchForPlayerStates();
+}

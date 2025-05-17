@@ -254,7 +254,7 @@ void UPortalManager::RefreshTokens_Response(FHttpRequestPtr Request, FHttpRespon
 }
 
 
-
+// SignOut AccessToken으로 확인 및 관리
 void UPortalManager::SignOut(const FString& AccessToken)
 {
 	check(APIData);
@@ -275,11 +275,13 @@ void UPortalManager::SignOut(const FString& AccessToken)
  
 void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
+	// 응답 성공 여부
 	if (!bWasSuccessful)
 	{
 		return;
 	}
- 
+
+	// 에러 확인
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
@@ -290,6 +292,15 @@ void UPortalManager::SignOut_Response(FHttpRequestPtr Request, FHttpResponsePtr 
 		}
 	}
 
+	// User Data 초기화
+	if (UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(LocalPlayerSubsystem))
+	{
+		LocalPlayerSubsystem->Username = "";
+		LocalPlayerSubsystem->Password = "";
+		LocalPlayerSubsystem->Email = "";
+	}
+
+	// SignOut
 	APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
 	if (IsValid(LocalPlayerController))
 	{

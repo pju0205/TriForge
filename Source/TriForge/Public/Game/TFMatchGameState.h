@@ -6,6 +6,8 @@
 #include "GameFramework/GameState.h"
 #include "TFMatchGameState.generated.h"
 
+
+class ATFMatchPlayerState;
 /**
  * 
  */
@@ -13,4 +15,21 @@ UCLASS()
 class TRIFORGE_API ATFMatchGameState : public AGameState
 {
 	GENERATED_BODY()
+
+public:
+	ATFMatchGameState();
+	ATFMatchPlayerState* GetLeader() const;
+
+	void UpdateLeader();
+	TArray<ATFMatchPlayerState*> GetLeaders() const;
+	
+protected:
+	virtual void BeginPlay() override;
+	
+private:
+	UPROPERTY()
+	TArray<TObjectPtr<ATFMatchPlayerState>> Leaders;
+
+	UPROPERTY()
+	TArray<TObjectPtr<ATFMatchPlayerState>> SortedPlayerStates;
 };

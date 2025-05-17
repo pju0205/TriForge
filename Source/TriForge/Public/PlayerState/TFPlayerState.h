@@ -2,7 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerState.h"
+#include "PlayerState/TFMatchPlayerState.h"
 #include "TFPlayerState.generated.h"
 
 class ATFPlayerController;
@@ -12,7 +12,7 @@ class ATFWeaponPlayerController;
  * 
  */
 UCLASS()
-class TRIFORGE_API ATFPlayerState : public APlayerState
+class TRIFORGE_API ATFPlayerState : public ATFMatchPlayerState
 {
 	GENERATED_BODY()
 
