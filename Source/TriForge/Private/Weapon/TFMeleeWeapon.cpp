@@ -12,65 +12,81 @@
 ATFMeleeWeapon::ATFMeleeWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	
 	SetWeaponType(EWeaponType::Ewt_Knife);
 	SetWeaponClass(EWeaponClass::Ewc_MeleeWeapon);
 
-	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-	CollisionBox->SetupAttachment(RootComponent);
-
+	TraceStart = CreateDefaultSubobject<USceneComponent>(TEXT("CollisionBoxStart"));
+	TraceStart->SetupAttachment(RootComponent);
 	
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Overlap);
-	/*CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-	CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);*/
+	TraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("CollisionBoxEnd"));
+	TraceEnd->SetupAttachment(RootComponent);
 	
-
-	CollisionBoxStart = CreateDefaultSubobject<USceneComponent>(TEXT("CollisionBoxStart"));
-	CollisionBoxStart->SetupAttachment(RootComponent);
-	
-	CollisionBoxEnd = CreateDefaultSubobject<USceneComponent>(TEXT("CollisionBoxEnd"));
-	CollisionBoxEnd->SetupAttachment(RootComponent);
 }
 
 void ATFMeleeWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBoxBeginOverlap);
-
-}
-
-void ATFMeleeWeapon::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	ATFPlayerCharacter* OverlappedCharacter = Cast<ATFPlayerCharacter>(OtherActor);
-	if (OverlappedCharacter && OverlappedCharacter == GetOwner()) return;
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red, "CollisionBoxOverlap");
-	}
-	FHitResult BoxHit;
-	UKismetSystemLibrary::BoxTraceSingle(this,
-		CollisionBoxStart->GetComponentLocation(),
-		CollisionBoxEnd->GetComponentLocation(),
-		FVector(2.f,2.f,2.f),
-		CollisionBoxStart->GetComponentRotation(),
-		TraceTypeQuery1,
-		false,
-		{},
-		EDrawDebugTrace::ForDuration,
-		BoxHit,
-		true
-		);
-	
-	ServerAttack(BoxHit);
 }
 
 void ATFMeleeWeapon::Attack()
 {
 	Super::Attack();
 	
-	 ServerAttackEffects();
+	ServerAttackEffects();
+
+	// 근접무기 애니메이션 ~ 대미지 까지 흐름도
+	// 좌클릭 -> ... -> WeaponComponent::Attacking -> MeleeWeapon::Attack() -> ServerAttackEffects() -> MultiAttackEffects()
+	// -> Montage내의 ANS -> StartTraceTimer() -> TraceEnemy() -> ServerAttack() -> StopTraceTimer()
+}
+
+// ANS의 Begin ~ End동안 0.02초마다 SphereTrace
+void ATFMeleeWeapon::StartTraceTimer()
+{
+	AlreadyHitActors.Empty();
+
+	GetWorld()->GetTimerManager().SetTimer(
+		TraceTimerHandle,
+		this,
+		&ATFMeleeWeapon::TraceEnemy,
+		0.02f,
+		true
+	);
+}
+
+void ATFMeleeWeapon::StopTraceTimer()
+{
+	GetWorld()->GetTimerManager().ClearTimer(TraceTimerHandle);
+	AlreadyHitActors.Empty();
+}
+
+void ATFMeleeWeapon::TraceEnemy()
+{
+	FVector CurrentTraceStart = TraceStart->GetComponentLocation();
+	FVector CurrentTraceEnd = TraceEnd->GetComponentLocation();
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetOwner());
+
+	FHitResult HitResult;
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		CurrentTraceStart,
+		CurrentTraceEnd,
+		FQuat::Identity,
+		ECC_SkeletalMesh,
+		FCollisionShape::MakeCapsule(10.f,10.f),
+		Params
+	);
+
+	// Timer의 시작 ~ 중지 시간 동안 같은 Actor에게 중복해서 Damage 감소 불가
+	if (bHit && !AlreadyHitActors.Contains(HitResult.GetActor()))
+	{
+		AlreadyHitActors.Add(HitResult.GetActor());
+		ServerAttack(HitResult);
+	}
+	
 }
 
 void ATFMeleeWeapon::ServerAttackEffects_Implementation()
@@ -87,7 +103,6 @@ void ATFMeleeWeapon::ServerAttack_Implementation(const FHitResult& HitResult)
 {
 	if (HitResult.bBlockingHit)
 	{
-		
 		AActor* DamagedActor = HitResult.GetActor();
 
 		if (DamagedActor)
@@ -103,6 +118,17 @@ void ATFMeleeWeapon::ServerAttack_Implementation(const FHitResult& HitResult)
 			}
 		}
 	}
+	
+}
+
+void ATFMeleeWeapon::BeginTrace()
+{
+	StartTraceTimer();
+}
+
+void ATFMeleeWeapon::EndTrace()
+{
+	StopTraceTimer();
 }
 
 void ATFMeleeWeapon::OnRep_WeaponState()
@@ -128,5 +154,7 @@ void ATFMeleeWeapon::OnRep_WeaponState()
 		break;
 	}*/
 }
+
+
 
 

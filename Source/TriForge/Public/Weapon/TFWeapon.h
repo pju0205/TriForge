@@ -26,7 +26,7 @@ enum class EWeaponClass : uint8
 	Ewt_Max UMETA(DisplayName = "DefaultMax")
 };
 
-UENUM()
+UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
 	Ewt_Rifle UMETA(DisplayName = "Rifle"),
@@ -82,9 +82,6 @@ protected:
 		int32 OtherBodyIndex);
 
 
-	// 무기에 맞는 캐릭터 애니메이션 
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* AttackMontage;
 
 	UFUNCTION()
 	virtual void OnRep_WeaponState();
@@ -104,6 +101,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void Attack();
+	
+	// 무기에 맞는 캐릭터 애니메이션 
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* AttackMontage;
 	
 	void PlayAttackMontage();
 
