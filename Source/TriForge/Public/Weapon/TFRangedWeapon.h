@@ -19,7 +19,7 @@ class TRIFORGE_API ATFRangedWeapon : public ATFWeapon
 	GENERATED_BODY()
 
 protected:
-
+	virtual void SpendAmmo();
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ATFProjectile> ProjectileClass;
@@ -30,20 +30,21 @@ private:
 	UFUNCTION()
 	void OnRep_Ammo();
 
-	void SpendAmmo();
 	
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
+
+	
+
+	
+public:
+	ATFRangedWeapon();
 
 	UPROPERTY()
 	ATFPlayerCharacter* TFOwnerCharacter;
 	
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
-
-	
-public:
-	ATFRangedWeapon();
 	
 	UFUNCTION()
 	virtual void Attack() override;

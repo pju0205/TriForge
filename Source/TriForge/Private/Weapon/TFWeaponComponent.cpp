@@ -84,6 +84,10 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (WeaponSocket)
 	{
 		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
+
+		/*WeaponSocket->RelativeLocation*/
+		EquippedWeapon->SetActorRelativeLocation(EquippedWeapon->RightHandOffsetLocation);
+		EquippedWeapon->SetActorRelativeRotation(EquippedWeapon->RightHandOffsetRotation);
 	}
 	
 	EquippedWeapon->SetOwner(PlayerCharacter);

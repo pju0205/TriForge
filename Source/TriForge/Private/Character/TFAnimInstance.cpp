@@ -181,6 +181,7 @@ void UTFAnimInstance::UpdateEssentialValues()
 		{
 			CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
 		}
+		
 	}
 }
 

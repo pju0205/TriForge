@@ -121,6 +121,12 @@ public:
 	// 무기 자체의 애니메이션
 	UPROPERTY(EditAnywhere)
 	UAnimationAsset* RangedWeaponAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector RightHandOffsetLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FRotator RightHandOffsetRotation;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -136,9 +142,5 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	EWeaponType WeaponType;
-	
-	
-	
-	
 	
 };
