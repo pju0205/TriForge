@@ -17,12 +17,7 @@ class TRIFORGE_API ATFProjectileWeapon : public ATFRangedWeapon
 
 public:
 	ATFProjectileWeapon();
-private:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ATFProjectile> ProjectileClass;
-
-
-public:
+	
 	UFUNCTION()
 	virtual void Attack() override;
 
@@ -33,4 +28,10 @@ public:
 	void AttackEffects();
 
 	void TraceEnemy(FHitResult& TraceHitResult, float TraceLength);
+	
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ATFProjectile> ProjectileClass;
+	
+	
 };

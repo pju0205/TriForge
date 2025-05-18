@@ -8,6 +8,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Weapon/TFProjectile.h"
 
+ATFProjectileWeapon::ATFProjectileWeapon()
+{
+	
+}
+
 void ATFProjectileWeapon::Attack()
 {
 	FHitResult Result;
@@ -22,7 +27,6 @@ void ATFProjectileWeapon::Attack()
 
 void ATFProjectileWeapon::ServerAttack_Implementation(const FHitResult& HitResult, const FVector& SocketLocation)
 {
-	
 	// 디버깅용 코드
 	/*if (GEngine)
 	{
@@ -85,8 +89,6 @@ void ATFProjectileWeapon::ServerAttack_Implementation(const FHitResult& HitResul
 }
 void ATFProjectileWeapon::AttackEffects_Implementation()
 {
-	Super::AttackEffects_Implementation();
-
 	PlayAttackMontage();
 	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
 }

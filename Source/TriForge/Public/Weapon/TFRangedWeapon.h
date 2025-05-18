@@ -20,25 +20,6 @@ class TRIFORGE_API ATFRangedWeapon : public ATFWeapon
 
 protected:
 	virtual void SpendAmmo();
-private:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ATFProjectile> ProjectileClass;
-
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;
-
-	UFUNCTION()
-	void OnRep_Ammo();
-
-	
-	UPROPERTY(EditAnywhere)
-	int32 MagCapacity;
-
-	
-
-	
-public:
-	ATFRangedWeapon();
 
 	UPROPERTY()
 	ATFPlayerCharacter* TFOwnerCharacter;
@@ -46,15 +27,19 @@ public:
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
 	
+private:
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
 	UFUNCTION()
-	virtual void Attack() override;
-
-	UFUNCTION(Server, Reliable)
-	void ServerAttack(const FHitResult& HitResult, const FVector& SocketLocation);
+	void OnRep_Ammo();
 	
-	UFUNCTION(NetMulticast, Reliable)
-	void AttackEffects();
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
 
+public:
+	ATFRangedWeapon();
+	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void OnRep_Owner() override;
@@ -65,5 +50,4 @@ public:
 
 	bool IsAmmoEmpty();
 
-	void TraceEnemy(FHitResult& TraceHitResult, float TraceLength);
 };
