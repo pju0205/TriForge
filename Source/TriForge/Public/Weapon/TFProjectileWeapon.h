@@ -27,8 +27,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void AttackEffects();
 
-	void TraceEnemy(FHitResult& TraceHitResult, float TraceLength);
-	
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ATFProjectile> ProjectileClass;

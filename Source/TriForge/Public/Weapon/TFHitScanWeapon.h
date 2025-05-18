@@ -13,5 +13,31 @@ UCLASS()
 class TRIFORGE_API ATFHitScanWeapon : public ATFRangedWeapon
 {
 	GENERATED_BODY()
+
+public:
+	ATFHitScanWeapon();
 	
+	virtual void Attack() override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerAttack(const FHitResult& Hit);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void AttackEffects();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ImpactEffects(const FHitResult& Hit);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void BeamEffects(const FHitResult& Hit);
+
+private:
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles;
 };

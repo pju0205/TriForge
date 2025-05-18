@@ -5,6 +5,8 @@
 #include "Weapon/TFWeapon.h"
 #include "TFRangedWeapon.generated.h"
 
+#define TRACELENGTH 80000.f
+
 class ATFPlayerController;
 class ATFPlayerCharacter;
 class ATFWeaponPlayerController;
@@ -13,6 +15,8 @@ class ATFProjectile;
 /**
  * 
  */
+
+
 UCLASS()
 class TRIFORGE_API ATFRangedWeapon : public ATFWeapon
 {
@@ -26,6 +30,8 @@ protected:
 	
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
+
+	virtual void TraceEnemy(FHitResult& TraceHitResult);
 	
 private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
@@ -50,4 +56,5 @@ public:
 
 	bool IsAmmoEmpty();
 
+	
 };
