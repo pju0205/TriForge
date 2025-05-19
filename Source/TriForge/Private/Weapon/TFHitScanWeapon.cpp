@@ -7,6 +7,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 ATFHitScanWeapon::ATFHitScanWeapon()
 {
@@ -74,6 +75,7 @@ void ATFHitScanWeapon::ServerAttack_Implementation(const FHitResult& Hit)
 	}
 	BeamEffects(Hit);
 	AttackEffects();
+	
 	SpendAmmo();
 }
 
@@ -93,6 +95,14 @@ void ATFHitScanWeapon::ImpactEffects_Implementation(const FHitResult& Hit)
 			ImpactParticles,
 			Hit.ImpactPoint,
 			Hit.ImpactNormal.Rotation()
+		);
+	}
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			ImpactSound,
+			Hit.ImpactPoint
 		);
 	}
 }
@@ -120,5 +130,21 @@ void ATFHitScanWeapon::BeamEffects_Implementation(const FHitResult& Hit)
 		{
 			Beam->SetVectorParameter(FName("Target"), BeamEnd);
 		}
+	}
+	if (MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			MuzzleFlash,
+			Hit.TraceStart
+		);
+	}
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			GetActorLocation()
+		);
 	}
 }

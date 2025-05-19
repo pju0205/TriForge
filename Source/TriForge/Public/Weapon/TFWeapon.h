@@ -127,6 +127,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FRotator RightHandOffsetRotation;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* DropSound;
+
+	UFUNCTION()
+	void PlayEquipSound();
+	
+	UFUNCTION()
+	void PlayDropSound();
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;

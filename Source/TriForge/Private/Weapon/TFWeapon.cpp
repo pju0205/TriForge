@@ -4,7 +4,9 @@
 
 #include "Character/TFPlayerCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 #include "Weapon/TFWeaponComponent.h"
 
 ATFWeapon::ATFWeapon()
@@ -59,7 +61,7 @@ void ATFWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutL
 void ATFWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State;
-
+	
 	switch (WeaponState)
 	{
 	case EWeaponState::Ews_Equipped:
@@ -67,6 +69,7 @@ void ATFWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		PlayEquipSound();
 		break;
 	case EWeaponState::Ews_Dropped:
 		if (HasAuthority())
@@ -76,6 +79,7 @@ void ATFWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		PlayDropSound();
 		break;
 	}
 }
@@ -160,5 +164,30 @@ void ATFWeapon::Attack()
 		WeaponMesh->PlayAnimation(RangedWeaponAnimation, false);
 	}*/
 }
+
+void ATFWeapon::PlayEquipSound()
+{
+	if (EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquipSound,
+			GetActorLocation()
+		);
+	}
+}
+
+void ATFWeapon::PlayDropSound()
+{
+	if (DropSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			DropSound,
+			GetActorLocation()
+		);
+	}
+}
+
 
 

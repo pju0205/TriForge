@@ -4,7 +4,6 @@
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "HUD/TFHUD.h"
-#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
 #include "Character/TFPlayerCharacter.h"

@@ -35,6 +35,8 @@ public:
 	
 	void SetHUDCrosshairs(float DeltaTime);
 
+	
+
 protected:
 	virtual void BeginPlay() override;
 
