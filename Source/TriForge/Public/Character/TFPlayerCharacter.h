@@ -6,6 +6,8 @@
 #include "Character/TFCharacter.h"
 #include "TFPlayerCharacter.generated.h"
 
+class UTFPlayerHealthComponent;
+class UTFEliminationComponent;
 class ATFPlayerState;
 class ATFPlayerController;
 class UTFWeaponComponent;
@@ -107,6 +109,7 @@ public:
 
 //Weapon
 private:
+	// 데미지 함수
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
@@ -141,6 +144,7 @@ private:
 	UPROPERTY()
 	ATFPlayerState* TFPlayerState;
 	
+	
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);
 
@@ -149,6 +153,19 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastEquipButtonPressed();
+
+// Health 관련
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTFEliminationComponent> EliminationComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTFPlayerHealthComponent> HealthComponent;
+	
+	UFUNCTION()
+	void OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator);
+
+	
 };
 
 

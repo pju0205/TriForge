@@ -6,11 +6,11 @@
 #include "Character/TFAnimInstance.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Character/Component/TFPlayerHealthComponent.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
-#include "PlayerState/TFPlayerState.h"
 
 ATFPlayerController::ATFPlayerController()
 {
@@ -33,11 +33,21 @@ void ATFPlayerController::BeginPlay()
 void ATFPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	TFHUD = Cast<ATFHUD>(GetHUD());
 	
-	ATFPlayerState* TFPlayerState = Cast<ATFPlayerState>(InPawn->GetPlayerState());
-	if (TFPlayerState)
+	if (InPawn)
 	{
-		SetHUDHealth(TFPlayerState->GetCurrentHealth(), TFPlayerState->GetMaxHealth());
+		UTFPlayerHealthComponent* HealthComp = InPawn->FindComponentByClass<UTFPlayerHealthComponent>();
+		if (HealthComp)
+		{
+			// 이미 바인딩 되어있지 않은 경우에만 바인딩 추가
+			HealthComp->OnHealthChanged.RemoveDynamic(this, &ATFPlayerController::SetHUDHealth);
+			HealthComp->OnHealthChanged.AddDynamic(this, &ATFPlayerController::SetHUDHealth);
+			
+			// 초기 HUD 설정
+			SetHUDHealth(HealthComp->GetCurrentHealth(), HealthComp->GetMaxHealth());
+		}
 	}
 }
 

@@ -35,6 +35,11 @@ public:
 	
 	void SetHUDCrosshairs(float DeltaTime);
 
+	// 들고 있는 무기 삭제 함수 (태영 추가)
+	void DestroyWeapon();
+
+	UPROPERTY(Transient, Replicated)
+	TArray<ATFWeapon*> Inventory;
 protected:
 	virtual void BeginPlay() override;
 

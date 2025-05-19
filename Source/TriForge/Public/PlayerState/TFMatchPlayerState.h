@@ -20,7 +20,10 @@ public:
 	ATFMatchPlayerState();
 	virtual void OnMatchEnded(const FString& Username) override;
 
+	void AddHit();
+	void AddMiss();
 	void AddRoundScore();
+	void AddMatchScore();
 	void AddDefeat();
 	void IsTheWinner();
 	int32 GetRoundScore() const { return RoundScore; };
@@ -35,7 +38,15 @@ public:
 	TObjectPtr<UTFPlayerData> TFPlayerData;
 
 private:
+	// 기록 할 데이터
+	int32 Hits;
+	int32 Misses;
 	int32 RoundScore;
+	int32 MatchScore;
 	int32 Defeats;
 	bool bWinner;
+
+public:
+	int32 RoundWin;
+	int32 MatchWin;
 };

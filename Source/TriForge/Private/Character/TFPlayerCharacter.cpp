@@ -6,13 +6,19 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Character/TFPlayerController.h"
+#include "Character/Component/TFEliminationComponent.h"
+#include "Character/Component/TFPlayerHealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
+#include "Game/TFGameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "PlayerState/TFPlayerState.h"
 #include "TriForge/TriForge.h"
+#include "Weapon/TFWeapon.h"
 #include "Weapon/TFWeaponComponent.h"
 
 ATFPlayerCharacter::ATFPlayerCharacter()
@@ -32,11 +38,19 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
 	WeaponComponent->SetIsReplicated(true);
 
+	// 데이터 처리
+	EliminationComponent = CreateDefaultSubobject<UTFEliminationComponent>("EliminationComponent");
+	EliminationComponent->SetIsReplicated(false);
+
+	// Health 관련
+	HealthComponent = CreateDefaultSubobject<UTFPlayerHealthComponent>("Health");
+	HealthComponent->SetIsReplicated(true);
+
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-
+	
 	
 	WalkSpeed = FVector(400.0f, 375.0f, 350.0f);			// default : 300 275 250
 	SprintSpeed = FVector(1000.0f, 775.0f, 750.0f);			// default : 700 575 550
@@ -71,6 +85,11 @@ void ATFPlayerCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
+	}
+
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->OnDeathStarted.AddDynamic(this, &ATFPlayerCharacter::OnDeathStarted);
 	}
 }
 
@@ -225,20 +244,22 @@ void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
 	}
 }
 
-
+// 데미지 처리 함수
 void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
-	ATFPlayerCharacter* DamagedCharacter = Cast<ATFPlayerCharacter>(DamagedActor);
-	if (DamagedCharacter)
-	{
-		TFPlayerState = TFPlayerState == nullptr ? Cast<ATFPlayerState>(DamagedCharacter->GetPlayerState()) : TFPlayerState;
+	if (!IsValid(HealthComponent)) return;
 
-		if (TFPlayerState)
+	AActor* DamageInstigator = nullptr;
+	if (IsValid(DamageCauser))
+	{
+		DamageInstigator = DamageCauser->GetInstigator(); // Pawn이나 Character인 경우 보통 이게 공격자
+		if (!IsValid(DamageInstigator))
 		{
-			TFPlayerState->CalcDamage(Damage);
+			DamageInstigator = DamageCauser; // Fallback
 		}
 	}
+	HealthComponent->CalcDamage(Damage, DamageInstigator);
 }
 
 void ATFPlayerCharacter::PostInitializeComponents()
@@ -339,4 +360,37 @@ void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 	
 }
 
+void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator)
+{
+	// 이 부분 좀 더 손봐야함
+	// 죽었을 때 실행할 몽타주 코드 넣어야함
+	
+	ATFPlayerController* VictimController = Cast<ATFPlayerController>(GetController());
+	if (HasAuthority() && IsValid(VictimController))
+	{
+		if (IsValid(WeaponComponent))
+		{
+			WeaponComponent->DestroyWeapon();		// 손에 들고 있는 총기 삭제
+		}
+		
+		if (ATFGameMode* GameMode = Cast<ATFGameMode>(UGameplayStatics::GetGameMode(this)))
+		{
+			ACharacter* InstigatorCharacter = Cast<ACharacter>(DeathInstigator);
+			if (IsValid(InstigatorCharacter))
+			{
+				APlayerController* InstigatorController = Cast<APlayerController>(InstigatorCharacter->GetController());
+				if (IsValid(InstigatorController))
+				{
+					// 타이머 없이 즉시 라운드 종료 처리
+					GameMode->HandleRoundEnd(VictimController, InstigatorController);
+				}
+			}
+		}
+	}
 
+	
+	// 캐릭터 및 무기 Collision 처리
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	/*GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);*/
+}
