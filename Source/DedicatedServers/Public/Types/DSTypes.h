@@ -22,6 +22,7 @@ enum class ECountdownTimerState : uint8
 UENUM(BlueprintType)
 enum class ECountdownTimerType : uint8
 {
+	MatchEndedCountdown UMETA(DisplayName = "Match Ended"),
 	LobbyCountdown UMETA(DisplayName = "Lobby Countdown"),
 	PreMatch UMETA(DisplayName = "Pre Match"),
 	Match UMETA(DisplayName = "Match"),
@@ -39,6 +40,7 @@ enum class EMatchStatus : uint8
 	PreMatch,
 	Match,
 	PostMatch,
+	RoundEnd,
 	SeamlessTravelling
 };
 

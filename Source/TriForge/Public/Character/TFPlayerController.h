@@ -77,6 +77,7 @@ public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION()
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDAmmo(int32 Ammo);
 

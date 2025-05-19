@@ -5,9 +5,8 @@
 #include "PlayerState/TFMatchPlayerState.h"
 #include "TFPlayerState.generated.h"
 
+class ATFPlayerCharacter;
 class ATFPlayerController;
-class ATFWeaponCharacter;
-class ATFWeaponPlayerController;
 /**
  * 
  */
@@ -22,23 +21,12 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	UFUNCTION()
-	void OnRep_Health();
-
-	void CalcDamage(float Damage);
-
-	FORCEINLINE float GetCurrentHealth() const {return CurrentHealth; }
-	FORCEINLINE float GetMaxHealth() const {return MaxHealth; }
-
 private:
 	UPROPERTY()
 	ATFPlayerController* TFPlayerController;
-	
-	UPROPERTY(EditAnywhere, Category="PlayerState")
-	float MaxHealth = 100.f;
 
-	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category="PlayerState")
-	float CurrentHealth = 100.f;
+	UPROPERTY()
+	ATFPlayerCharacter* TFPlayerCharacter;
+	
+	// 체력 관련 HealthComponent -> TFplayerController에 바로 HUD 반영하도록 변경했음
 };

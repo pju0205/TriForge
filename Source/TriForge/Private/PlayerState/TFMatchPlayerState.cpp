@@ -3,12 +3,16 @@
 
 #include "PlayerState/TFMatchPlayerState.h"
 
+#include "Types/TFTypes.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
 
 ATFMatchPlayerState::ATFMatchPlayerState()
 {
 	NetUpdateFrequency = 100.f; // let's not be sluggish, alright?
-	
+
+	Hits = 0;
+	Misses = 0;
+	MatchScore = 0;
 	RoundScore = 0;
 	Defeats = 0;
 	bWinner = false;
@@ -30,10 +34,28 @@ void ATFMatchPlayerState::OnMatchEnded(const FString& Username)
 	RecordMatchStats(RecordMatchStatsInput);
 }
 
-// 
+// 맞춘 횟수
+void ATFMatchPlayerState::AddHit()
+{
+	++Hits;
+}
+
+// 빗맞춘 횟수
+void ATFMatchPlayerState::AddMiss()
+{
+	++Misses;
+}
+
+// 라운드 승리 횟수 
 void ATFMatchPlayerState::AddRoundScore()
 {
 	++RoundScore;
+}
+
+// 매치 승리 횟수
+void ATFMatchPlayerState::AddMatchScore()
+{
+	++MatchScore;
 }
 
 // 패배

@@ -233,3 +233,15 @@ void UTFWeaponComponent::SetHUDCrosshairs(float DeltaTime)
 		}
 	}
 }
+
+// 손에 들고 있는 무기 전부 삭제
+void UTFWeaponComponent::DestroyWeapon()
+{
+	for (ATFWeapon* Weapon : Inventory)
+	{
+		if (IsValid(Weapon))
+		{
+			Weapon->Destroy();
+		}
+	}
+}

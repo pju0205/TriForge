@@ -24,6 +24,7 @@ void ADSMatchGameMode::BeginPlay()
 	GameStatsManager->OnUpdateLeaderboardSucceeded.AddDynamic(this, &ADSMatchGameMode::ADSMatchGameMode::OnLeaderboardUpdated);
 }
 
+// 처음 들어오면서 실행
 void ADSMatchGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -31,7 +32,7 @@ void ADSMatchGameMode::PostLogin(APlayerController* NewPlayer)
 	if (MatchStatus == EMatchStatus::WaitingForPlayers)
 	{
 		MatchStatus = EMatchStatus::PreMatch;
-		StartCountdownTimer(PreMatchTimer);
+		StartCountdownTimer(PreMatchTimer);			// Start 카운트 다운 실행
 	}
 }
 
@@ -52,7 +53,7 @@ void ADSMatchGameMode::InitSeamlessTravelPlayer(AController* NewController)
 	}
 }
 
-void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
+/*void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 {
 	Super::OnCountdownTimerFinished(Type);
 
@@ -77,7 +78,7 @@ void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 		MatchStatus = EMatchStatus::SeamlessTravelling;
 		TrySeamlessTravel(LobbyMap);
 	}
-}
+}*/
 
 // 움직임 활성, 비활성 함수
 void ADSMatchGameMode::SetClientInputEnabled(bool bEnabled)
@@ -109,7 +110,7 @@ void ADSMatchGameMode::EndMatchForPlayerStates()
 	}
 }
 
-// TFGameMode자식에서 오버라이딩 시켜 실행함
+// TFGameMode에서 오버라이딩 시켜 실행함
 // 그래서 비어있음
 void ADSMatchGameMode::OnMatchEnded()
 {

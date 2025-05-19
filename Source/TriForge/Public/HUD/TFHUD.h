@@ -38,6 +38,9 @@ public:
 	UPROPERTY()
 	UTFOverlay* CharacterOverlay;
 
+
+	void SetHealthBar(float Health, float MaxHealth);
+
 protected:
 	virtual void BeginPlay() override;
 

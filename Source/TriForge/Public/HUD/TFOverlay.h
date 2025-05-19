@@ -24,5 +24,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AmmoAmount;
-	
+
+
+	UFUNCTION()
+	void UpdateHealthBar(float Health, float MaxHealth);
 };

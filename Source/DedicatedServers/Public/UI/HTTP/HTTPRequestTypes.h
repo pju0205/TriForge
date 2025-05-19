@@ -334,49 +334,49 @@ struct FDSRetrieveMatchStatsResponse
 	GENERATED_BODY()
 
 	UPROPERTY()
-	int32 highestStreak;
+	int32 highestStreak{};
 
 	UPROPERTY()
-	int32 dethroneElims;
+	int32 dethroneElims{};
 
 	UPROPERTY()
-	int32 gotFirstBlood;
+	int32 gotFirstBlood{};
 
 	UPROPERTY()
-	int32 defeats;			// 씀
+	int32 defeats{};			// 씀
 
 	UPROPERTY()
-	int32 roundScore;		// 씀
+	int32 roundScore{};		// 씀
 
 	UPROPERTY()
-	FString email;
+	FString email{};
 
 	UPROPERTY()
-	int32 misses;
+	int32 misses{};
 
 	UPROPERTY()
-	int32 revengeElims;
+	int32 revengeElims{};
 
 	UPROPERTY()
-	int32 matchLosses;
+	int32 matchLosses{};
 
 	UPROPERTY()
-	int32 showstopperElims;
+	int32 showstopperElims{};
 
 	UPROPERTY()
-	FString databaseid;
+	FString databaseid{};
 
 	UPROPERTY()
-	int32 headShotElims;
+	int32 headShotElims{};
 
 	UPROPERTY()
-	FString username;		// 씀
+	FString username{};		// 씀
 
 	UPROPERTY()
-	int32 hits;
+	int32 hits{};
 
 	UPROPERTY()
-	int32 matchWins;		// 씀
+	int32 matchWins{};		// 씀
 
 	void Dump() const;
 };

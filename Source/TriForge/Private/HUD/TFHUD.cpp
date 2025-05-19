@@ -39,6 +39,13 @@ void ATFHUD::DrawHUD()
 	}
 }
 
+void ATFHUD::SetHealthBar(float Health, float MaxHealth)
+{
+	if (CharacterOverlay == nullptr) return;
+
+	CharacterOverlay->UpdateHealthBar(Health, MaxHealth);
+}
+
 void ATFHUD::BeginPlay()
 {
 	Super::BeginPlay();
