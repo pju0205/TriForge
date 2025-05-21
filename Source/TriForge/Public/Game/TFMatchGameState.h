@@ -23,8 +23,6 @@ public:
 	void UpdateLeader();
 	TArray<ATFMatchPlayerState*> GetLeaders() const;
 
-	int32 CurrentRound = 0;
-	const int32 MaxRound = 3;
 protected:
 	virtual void BeginPlay() override;
 	

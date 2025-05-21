@@ -66,6 +66,9 @@ void ATFHUD::AddCharacterOverlay()
 
 void ATFHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter)
 {
+	// 정확한 Null Check를 위해 추가 (Map 이동시 Null 출력으로 충돌 일어남)
+	if (!Texture) return;
+	
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
 	const FVector2D TextureDrawPoint(

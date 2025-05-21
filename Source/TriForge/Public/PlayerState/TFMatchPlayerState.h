@@ -19,9 +19,13 @@ class TRIFORGE_API ATFMatchPlayerState : public ADSMatchPlayerState
 public:
 	ATFMatchPlayerState();
 	virtual void OnMatchEnded(const FString& Username) override;
+	virtual void CopyProperties(APlayerState* NewPlayerState) override;
+	
 
 	void AddHit();
 	void AddMiss();
+	void AddKill();
+	void AddDeath();
 	void AddRoundScore();
 	void AddMatchScore();
 	void AddDefeat();
@@ -41,12 +45,13 @@ private:
 	// 기록 할 데이터
 	int32 Hits;
 	int32 Misses;
+	int32 Kills;
+	int32 Deaths;
 	int32 RoundScore;
 	int32 MatchScore;
 	int32 Defeats;
 	bool bWinner;
-
 public:
-	int32 RoundWin;
-	int32 MatchWin;
+	int32 RoundWins;
+	int32 MatchWins;
 };

@@ -33,6 +33,12 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputEnabled(bool bEnabled);
 
+	UFUNCTION(Client, Reliable)
+	void Client_SetToLobbyMode();
+
+	UFUNCTION(Client, Reliable)
+	void Client_SetToGameMode();
+
 	UFUNCTION(Server, Reliable)
 	void Server_SetReadyState(bool bNewReady);		// Ready 관련
  

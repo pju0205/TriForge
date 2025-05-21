@@ -38,13 +38,12 @@ public:
 	UPROPERTY()
 	UTFOverlay* CharacterOverlay;
 
+	void AddCharacterOverlay();
 
 	void SetHealthBar(float Health, float MaxHealth);
 
 protected:
 	virtual void BeginPlay() override;
-
-	void AddCharacterOverlay();
 	
 private:
 	FHUDPackage HUDPackage;

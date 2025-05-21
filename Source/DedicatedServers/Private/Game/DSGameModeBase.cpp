@@ -7,6 +7,11 @@
 #include "Player/DSPlayerController.h"
 #include "GameLiftServerSDK.h"
 
+ADSGameModeBase::ADSGameModeBase()
+{
+	bUseSeamlessTravel = true;
+}
+
 // 카운트 다운 타이머
 void ADSGameModeBase::StartCountdownTimer(FCountdownTimerHandle& CountdownTimerHandle)
 {
@@ -88,7 +93,8 @@ void ADSGameModeBase::TrySeamlessTravel(TSoftObjectPtr<UWorld> DestinationMap)
 	}
 	else
 	{
-		GetWorld()->ServerTravel(MapName);
+		FString TravelURL = MapName + TEXT("?SeamlessTravel");
+		GetWorld()->ServerTravel(MapName, true);
 	}
 }
 

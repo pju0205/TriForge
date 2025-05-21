@@ -106,6 +106,7 @@ public:
 	bool GetJustLanded() const {return bJustLanded;};
 	FVector GetLandVelocity() {return LandVelocity;};
 
+	void CleanupBeforeMapTravel();
 
 //Weapon
 private:

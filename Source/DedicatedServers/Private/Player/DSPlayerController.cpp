@@ -61,6 +61,30 @@ void ADSPlayerController::BeginPlay()
 	}*/
 }
 
+// Game 진입 시 Input 설정
+void ADSPlayerController::Client_SetToGameMode_Implementation()
+{
+	bShowMouseCursor = false;
+	bEnableClickEvents = false;
+	bEnableMouseOverEvents = false;
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+}
+
+// Lobby 진입 시 Input 설정
+void ADSPlayerController::Client_SetToLobbyMode_Implementation()
+{
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;
+	bEnableMouseOverEvents = true;
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InputMode.SetWidgetToFocus(nullptr); // UI 포커스 줄 수 있으면 넣기
+	SetInputMode(InputMode);
+}
+
 void ADSPlayerController::Server_SetReadyState_Implementation(bool bNewReady)
 {
 	if (ADSGameState* GS = GetWorld()->GetGameState<ADSGameState>())

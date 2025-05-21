@@ -16,7 +16,7 @@ ADSLobbyGameMode::ADSLobbyGameMode()
     // SeamlessTravel을 사용하여 로딩 없이 레벨 전환
     bUseSeamlessTravel = true;
     LobbyStatus = ELobbyStatus::WaitingForPlayers;      // 초기 상태는 플레이어 대기
-    MinPlayers = 1;                                     // 최소 시작 인원 설정
+    MinPlayers = 2;                                     // 최소 시작 인원 설정
     LobbyCountdownTimer.Type = ECountdownTimerType::LobbyCountdown; // 타이머 타입 설정
 }
 
@@ -32,7 +32,10 @@ void ADSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
     
-    CheckAndStartLobbyCountdown();
+    if (ADSPlayerController* PC = Cast<ADSPlayerController>(NewPlayer))
+    {
+        PC->Client_SetToLobbyMode(); // 로비 모드 설정
+    }
 }
 
 // SeamlessTravel로 이동 중일 때 플레이어 컨트롤러 초기화 시 호출
@@ -77,6 +80,12 @@ void ADSLobbyGameMode::PreLogin(const FString& Options, const FString& Address, 
     FString& ErrorMessage               // 에러 메시지를 설정하면 접속 거부됨 (비워두면 통과)
     )
     */
+    
+    // Lobby 상태가 SeamlessTravelling 일 때 접속 못하도록 설정 (= 게임 시작했으면 접속 못하도록)
+    if (LobbyStatus == ELobbyStatus::SeamlessTravelling)
+    {
+        return;
+    }
 
     // 정보 저장
     const FString PlayerSessionId = UGameplayStatics::ParseOption(Options, TEXT("PlayerSessionId"));
@@ -238,7 +247,16 @@ void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
     {
         StopCountdownTimer(LobbyCountdownTimer);
         LobbyStatus = ELobbyStatus::SeamlessTravelling;     // 상태 변경: Seamless Travel 중
-        TrySeamlessTravel(MapToTravelTo);
+        
+        // 전환 직전에 GameMode 입력 설정
+        for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+        {
+            if (ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get()))
+            {
+                PC->Client_SetToGameMode();
+            }
+        }
+        TrySeamlessTravel(MapToTravelTo);       // 전투 맵으로 이동
     }
 }
 

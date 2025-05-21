@@ -59,7 +59,7 @@ private:
 	void SprintEnd(const struct FInputActionValue& InputActionValue);
 	void Jump(const struct FInputActionValue& InputActionValue);
 	void Slide(const struct FInputActionValue& InputActionValue);
-
+	
 	// Quit 버튼 관련
 	void Input_Quit();		// Server
 	bool bQuitMenuOpen;		// Server
@@ -72,6 +72,7 @@ private:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
+	virtual void GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList) override;
 
 public:
 	ATFPlayerController();

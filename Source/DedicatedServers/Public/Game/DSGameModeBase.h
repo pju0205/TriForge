@@ -16,6 +16,8 @@ class DEDICATEDSERVERS_API ADSGameModeBase : public AGameMode
 	GENERATED_BODY()
 
 protected:
+	ADSGameModeBase();
+	
 	void StartCountdownTimer(FCountdownTimerHandle& CountdownTimerHandle);
 	void StopCountdownTimer(FCountdownTimerHandle& CountdownTimerHandle);
 	void UpdateCountdownTimer(const FCountdownTimerHandle& CountdownTimerHandle);

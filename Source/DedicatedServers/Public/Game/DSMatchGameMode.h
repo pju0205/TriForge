@@ -28,26 +28,31 @@ public:
 	TSubclassOf<UGameStatsManager> GameStatsManagerClass;
  
 protected:
-	/*virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;*/
+	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
 
 	virtual void BeginPlay() override;
 	void SetClientInputEnabled(bool bEnabled);
 	void EndMatchForPlayerStates();
 	virtual void OnMatchEnded();
+	void StopAllCountdownTimers();
 	void UpdateLeaderboard(const TArray<FString>& LeaderboardNames);
 	
 	UPROPERTY(EditDefaultsOnly)
-	FCountdownTimerHandle PreMatchTimer;
+	FCountdownTimerHandle PreRoundTimer;
  
 	UPROPERTY(EditDefaultsOnly)
-	FCountdownTimerHandle MatchTimer;
+	FCountdownTimerHandle RoundTimer;
  
+	UPROPERTY(EditDefaultsOnly)
+	FCountdownTimerHandle PostRoundTimer;
+
 	UPROPERTY(EditDefaultsOnly)
 	FCountdownTimerHandle PostMatchTimer;
 
+	// 강제 종료됐을 때 실행 할 Timer
 	UPROPERTY(EditDefaultsOnly)
-	FCountdownTimerHandle MatchEndedTimer;
-
+	FCountdownTimerHandle ForceMatchEndedTimer;
+	
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> LobbyMap;
 

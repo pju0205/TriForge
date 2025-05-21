@@ -243,7 +243,6 @@ void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
 		}
 	}
 }
-
 // 데미지 처리 함수
 void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
@@ -393,4 +392,15 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	/*GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);*/
+}
+
+
+void ATFPlayerCharacter::CleanupBeforeMapTravel()
+{
+	if (IsValid(WeaponComponent))
+	{
+		WeaponComponent->DestroyWeapon();		// 손에 들고 있는 총기 삭제
+		WeaponComponent->EquippedWeapon->Destroy();
+		WeaponComponent->EquippedWeapon = nullptr;
+	}
 }

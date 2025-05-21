@@ -12,27 +12,13 @@
 ATFGameMode::ATFGameMode()
 {
 	bUseSeamlessTravel = true;
-	
-	CurrentRound = 0;
-	CurrentMatch = 0;
-	
-	MaxRound = 2;
-	MaxMatch = 3;
 
-	bIsEndedGame = false;
+	bIsEndedMatch = false;
 }
 
 void ATFGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-}
-
-// 플레이어 죽었을 때 실행할 함수
-void ATFGameMode::PlayerEliminated(ACharacter* ElimmedCharacter, class APlayerController* VictimController,
-	APlayerController* AttackerController)
-{
-	// 라운드 종료 로직 호출
-	HandleRoundEnd(VictimController, AttackerController);
 }
 
 void ATFGameMode::HandleRoundEnd(APlayerController* Loser, APlayerController* Winner)
@@ -42,19 +28,25 @@ void ATFGameMode::HandleRoundEnd(APlayerController* Loser, APlayerController* Wi
 
 	if (WinnerPS)
 	{
-		++CurrentRound;
-		WinnerPS->RoundWin++;
-		WinnerPS->AddRoundScore();	// PlayerState 값 증가
+		WinnerPS->RoundWins++;		// Local 라운드 횟수 1 증가
+		WinnerPS->AddRoundScore();	// PlayerState 값 증가 (기록용)
+		WinnerPS->AddKill();
+	}
+	if (LoserPS)
+	{
+		LoserPS->AddDeath();
 	}
 	
 	// Winner 라운드 승리 횟수 확인
-	if (WinnerPS && WinnerPS->RoundWin >= MaxRound)	// 2번 이상 승리시
+	if (WinnerPS && WinnerPS->RoundWins >= MaxRound)	// 2번 이상 라운드 승리시
 	{
 		HandleMatchWin(Winner);
 	}
 	else
 	{
-		StopCountdownTimer(MatchTimer);
+		StopCountdownTimer(RoundTimer);
+		MatchStatus = EMatchStatus::PostRound;
+		StartCountdownTimer(PostRoundTimer);
 	}
 }
 
@@ -85,7 +77,7 @@ void ATFGameMode::PrepareNextRound()
 	}
 
 	// 라운드 타이머 시작
-	StartCountdownTimer(PreMatchTimer);
+	StartCountdownTimer(PreRoundTimer);
 }
 
 void ATFGameMode::HandleMatchWin(APlayerController* Winner)
@@ -93,36 +85,33 @@ void ATFGameMode::HandleMatchWin(APlayerController* Winner)
 	ATFMatchPlayerState* WinnerPS = Winner ? Cast<ATFMatchPlayerState>(Winner->PlayerState) : nullptr;
 	if (WinnerPS)
 	{
-		++CurrentMatch;
-		WinnerPS->MatchWin++;		// 전체 매치 점수 1점 획득
-		WinnerPS->AddMatchScore();	// PlayerState 값 증가
+		WinnerPS->MatchWins++;		// Local 매치 횟수 1 증가
+		WinnerPS->AddMatchScore();	// PlayerState 값 증가 (기록용)
 	}
 
-	// 모든 PlayerState 순회하며 MaxMatch 달성자 찾기
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	// MatchWin가 2회 이상이면
+	if (WinnerPS && WinnerPS->MatchWins >= MaxMatch)
 	{
-		APlayerController* PC = It->Get();
-		if (IsValid(PC))
-		{
-			ATFMatchPlayerState* PS = Cast<ATFMatchPlayerState>(PC->PlayerState);
-			if (IsValid(PS) && PS->MatchWin >= MaxMatch)
-			{
-				bIsEndedGame = true;
-			}
-		}
+		bIsEndedMatch = true;
+		UE_LOG(LogTemp, Display, TEXT("bIsEndedMatch = true"));
 	}
 	
-	// MaxMatch 횟수 다 채웠으면 게임 끝
-	if (bIsEndedGame)
+	// MaxMatch 횟수 다 채웠으면 Winner 승리로 간주
+	if (bIsEndedMatch)
 	{
 		// 완전 종료 게임 끝
 		WinnerPS->IsTheWinner();				// 승리자로 기록
-		StopCountdownTimer(MatchTimer);
+		/* OnMatchEnded();						// 이게 모두한테 실행이 되나? 일단 보류 */
+		
+		StopCountdownTimer(RoundTimer);
+		MatchStatus = EMatchStatus::GameOver;
+		StartCountdownTimer(ForceMatchEndedTimer);
 	}
 	else
 	{
-		// 다음 맵으로 전환
-		RandomTravelMap();
+		StopCountdownTimer(RoundTimer);
+		MatchStatus = EMatchStatus::PostMatch;
+		StartCountdownTimer(PostMatchTimer);
 	}
 }
 
@@ -130,40 +119,35 @@ void ATFGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 {
 	Super::OnCountdownTimerFinished(Type);
 
-	if (Type == ECountdownTimerType::PreMatch)
+	// Round 관련
+	if (Type == ECountdownTimerType::PreRound)
 	{
-		StopCountdownTimer(PreMatchTimer);
-		MatchStatus = EMatchStatus::Match;
-		StartCountdownTimer(MatchTimer);
+		StopCountdownTimer(PreRoundTimer);
+		MatchStatus = EMatchStatus::Round;
+		StartCountdownTimer(RoundTimer);
 		SetClientInputEnabled(true);
 	}
-	if (Type == ECountdownTimerType::Match)
+	if (Type == ECountdownTimerType::Round)
 	{
-		MatchStatus = EMatchStatus::PostMatch;
-		StartCountdownTimer(PostMatchTimer);
+		MatchStatus = EMatchStatus::PostRound;
+		StartCountdownTimer(PostRoundTimer);
 		SetClientInputEnabled(false);
 	}
-	if (Type == ECountdownTimerType::PostMatch)
+	if (Type == ECountdownTimerType::PostRound)
 	{
-		if (bIsEndedGame)									// Match가 완전히 끝나면
-		{
-			MatchStatus = EMatchStatus::WaitingForPlayers;
-			StartCountdownTimer(MatchEndedTimer);
-			SetClientInputEnabled(false);
-		}
-		else
-		{
-			StopCountdownTimer(PostMatchTimer);
-			MatchStatus = EMatchStatus::WaitingForPlayers;
-			SetClientInputEnabled(false);
-			PrepareNextRound();
-		}
+		StopCountdownTimer(PostRoundTimer);
+		MatchStatus = EMatchStatus::PreRound;
+		SetClientInputEnabled(false);
+		PrepareNextRound();								// 다음 라운드 준비
 	}
-	if (Type == ECountdownTimerType::MatchEndedCountdown)	// 게임 종료용 타이머
+
+
+	// Match 관련
+	if (Type == ECountdownTimerType::PostMatch)			// Round 2번 승리 시 실행 타이머
 	{
-		StopCountdownTimer(MatchEndedTimer);
+		StopCountdownTimer(PostMatchTimer);
 		MatchStatus = EMatchStatus::SeamlessTravelling;
-		TrySeamlessTravel(LobbyMap);
+		NextRandomTravelMap();							// 다음 전투 맵 이동
 	}
 }
 
@@ -187,7 +171,7 @@ void ATFGameMode::OnMatchEnded()
 	UpdateLeaderboard(LeaderIds);
 }
 
-void ATFGameMode::RandomTravelMap()
+void ATFGameMode::NextRandomTravelMap()
 {
 	// 랜덤 맵 선택
 	if (CombatMaps.Num() > 0)
@@ -199,6 +183,9 @@ void ATFGameMode::RandomTravelMap()
 		{
 			// 선택된 맵으로 이동
 			TrySeamlessTravel(SelectedMap);
+
+			// Map 이동 로그 출력
+			UE_LOG(LogTemp, Display, TEXT("Map Index: %d, Path: %s"), RandomIndex, *SelectedMap.ToString());
 		}
 	}
 }

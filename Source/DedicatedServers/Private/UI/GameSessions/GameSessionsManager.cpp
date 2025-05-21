@@ -26,8 +26,7 @@ void UGameSessionsManager::JoinGameSession()
 	Request->OnProcessRequestComplete().BindUObject(this, &UGameSessionsManager::FindOrCreateGameSession_Response);
 	// 호출할 REST API의 URL 가져오기 (엔드포인트는 APIData에 저장된 게임 세션 찾기 URL)
 	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::GameSessionsAPI::FindOrCreateGameSession);
-
-
+	
 	// 요청 세팅
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));

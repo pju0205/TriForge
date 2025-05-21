@@ -11,6 +11,7 @@
 #include "Components/TextBlock.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
+#include "PlayerState/TFMatchPlayerState.h"
 
 ATFPlayerController::ATFPlayerController()
 {
@@ -28,6 +29,12 @@ void ATFPlayerController::BeginPlay()
 	}
 
 	TFHUD = Cast<ATFHUD>(GetHUD());
+
+	// 250521 추가
+	/*if (TFHUD)
+	{
+		TFHUD->AddCharacterOverlay(); // 강제 초기화
+	}*/
 }
 
 void ATFPlayerController::OnPossess(APawn* InPawn)
@@ -77,7 +84,6 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATFPlayerController::WeaponAttackStarted);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ATFPlayerController::WeaponAttackReleased);
 }
-
 
 void ATFPlayerController::Move(const struct FInputActionValue& InputActionValue)
 {
@@ -298,4 +304,17 @@ void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 	}
 }
 
+// Map 이동해도 유지할 Actor 넣는 함수
+void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
+{
+	Super::GetSeamlessTravelActorList(bToEntry, ActorList);
 
+	// 이 컨트롤러 자체를 유지
+	ActorList.Add(this);
+
+	// PlayerState가 유효하면 유지 목록에 추가
+	if (ATFMatchPlayerState* PS = GetPlayerState<ATFMatchPlayerState>())
+	{
+		ActorList.Add(PS);
+	}
+}

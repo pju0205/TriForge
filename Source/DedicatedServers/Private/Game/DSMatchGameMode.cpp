@@ -10,10 +10,16 @@
 ADSMatchGameMode::ADSMatchGameMode()
 {
 	bUseSeamlessTravel = true;
+
+	// Match 상태 타입 초기화
 	MatchStatus = EMatchStatus::WaitingForPlayers;
-	PreMatchTimer.Type = ECountdownTimerType::PreMatch;
-	MatchTimer.Type = ECountdownTimerType::Match;
+
+	// Timer 타입 초기화
+	PreRoundTimer.Type = ECountdownTimerType::PreRound;
+	RoundTimer.Type = ECountdownTimerType::Round;
+	PostRoundTimer.Type = ECountdownTimerType::PostRound;
 	PostMatchTimer.Type = ECountdownTimerType::PostMatch;
+	ForceMatchEndedTimer.Type = ECountdownTimerType::ForceMatchEnded;
 }
 
 void ADSMatchGameMode::BeginPlay()
@@ -31,15 +37,28 @@ void ADSMatchGameMode::PostLogin(APlayerController* NewPlayer)
 
 	if (MatchStatus == EMatchStatus::WaitingForPlayers)
 	{
-		MatchStatus = EMatchStatus::PreMatch;
-		StartCountdownTimer(PreMatchTimer);			// Start 카운트 다운 실행
+		MatchStatus = EMatchStatus::PreRound;
+		StartCountdownTimer(PreRoundTimer);			// Start 카운트 다운 실행
 	}
 }
 
 void ADSMatchGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
+
 	RemovePlayerSession(Exiting);
+	
+	const int32 RemainingPlayers = GetNumPlayers();
+
+	// 1명 이하만 남았을 때 강제로 매치 종료
+	if (RemainingPlayers <= 1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Remaining player count is low. Forcing match end."));
+
+		// 모든 타이머 정지
+		StopAllCountdownTimers();
+		StartCountdownTimer(ForceMatchEndedTimer);	// 강제 종료 됐을 때 실행할 타이머
+	}
 }
 
 void ADSMatchGameMode::InitSeamlessTravelPlayer(AController* NewController)
@@ -48,16 +67,16 @@ void ADSMatchGameMode::InitSeamlessTravelPlayer(AController* NewController)
 
 	if (MatchStatus == EMatchStatus::WaitingForPlayers)
 	{
-		MatchStatus = EMatchStatus::PreMatch;
-		StartCountdownTimer(PreMatchTimer);
+		MatchStatus = EMatchStatus::PreRound;
+		StartCountdownTimer(PreRoundTimer);
 	}
 }
 
-/*void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
+void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 {
 	Super::OnCountdownTimerFinished(Type);
 
-	if (Type == ECountdownTimerType::PreMatch)
+	/*if (Type == ECountdownTimerType::PreMatch)
 	{
 		StopCountdownTimer(PreMatchTimer);
 		MatchStatus = EMatchStatus::Match;
@@ -77,8 +96,25 @@ void ADSMatchGameMode::InitSeamlessTravelPlayer(AController* NewController)
 		StopCountdownTimer(PostMatchTimer);
 		MatchStatus = EMatchStatus::SeamlessTravelling;
 		TrySeamlessTravel(LobbyMap);
+	}*/
+
+	// 강제로 게임 종료 됐을 때
+	if (Type == ECountdownTimerType::ForceMatchEnded)
+	{
+		StopCountdownTimer(ForceMatchEndedTimer);
+		MatchStatus = EMatchStatus::SeamlessTravelling;
+		
+		// 전환 직전에 LobbyMode 입력 설정
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get()))
+			{
+				PC->Client_SetToLobbyMode();
+			}
+		}
+		TrySeamlessTravel(LobbyMap);
 	}
-}*/
+}
 
 // 움직임 활성, 비활성 함수
 void ADSMatchGameMode::SetClientInputEnabled(bool bEnabled)
@@ -128,4 +164,13 @@ void ADSMatchGameMode::UpdateLeaderboard(const TArray<FString>& LeaderboardNames
 void ADSMatchGameMode::OnLeaderboardUpdated()
 {
 	EndMatchForPlayerStates();
+}
+
+void ADSMatchGameMode::StopAllCountdownTimers()
+{
+	StopCountdownTimer(PreRoundTimer);
+	StopCountdownTimer(RoundTimer);
+	StopCountdownTimer(PostRoundTimer);
+	StopCountdownTimer(PostMatchTimer);
+	StopCountdownTimer(ForceMatchEndedTimer);
 }

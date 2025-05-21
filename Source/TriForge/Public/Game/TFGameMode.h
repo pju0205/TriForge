@@ -20,8 +20,6 @@ public:
 
 	UPROPERTY()
 	TMap<APlayerController*, FTimerHandle> Timers;
-	
-	virtual void PlayerEliminated(ACharacter* ElimmedCharacter, class APlayerController* VictimController, APlayerController* AttackerController);
 
 	void HandleRoundEnd(APlayerController* Loser, APlayerController* Winner);
 	void HandleMatchWin(APlayerController* Winner);
@@ -31,20 +29,17 @@ protected:
 	virtual void OnMatchEnded() override;
 	
 	void PrepareNextRound();
-	void RandomTravelMap();
+	void NextRandomTravelMap();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Maps")
 	TArray<TSoftObjectPtr<UWorld>> CombatMaps;
 
 	// 최대 라운드, 매치 수
-	int32 CurrentRound = 0;
-	int32 CurrentMatch = 0;
-	
-	int32 MaxRound;
-	int32 MaxMatch;
+	const int32 MaxRound = 2;
+	const int32 MaxMatch = 2;
 	// 라운드 2승 = 매치 1승
 	// 매치 2승 = 승리
 
 	// 게임이 완전히 끝났는지
-	bool bIsEndedGame = false;
+	bool bIsEndedMatch = false;
 };
