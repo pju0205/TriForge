@@ -21,15 +21,15 @@ public:
 	virtual void OnMatchEnded(const FString& Username) override;
 	virtual void CopyProperties(APlayerState* NewPlayerState) override;
 	
-
 	void AddHit();
 	void AddMiss();
 	void AddKill();
 	void AddDeath();
 	void AddRoundScore();
 	void AddMatchScore();
-	void AddDefeat();
+	// void AddDefeat();
 	void IsTheWinner();
+	
 	int32 GetRoundScore() const { return RoundScore; };
 	
 	UFUNCTION(Client, Reliable)
@@ -41,6 +41,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UTFPlayerData> TFPlayerData;
 
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_RoundResults)
+	TArray<bool> RoundResults;
+
+	UFUNCTION()
+	void OnRep_RoundResults();  // 클라에서 UI 갱신
+
 private:
 	// 기록 할 데이터
 	int32 Hits;
@@ -51,7 +60,12 @@ private:
 	int32 MatchScore;
 	int32 Defeats;
 	bool bWinner;
+	
 public:
+	// GameMatch에서 쓸 데이터
 	int32 RoundWins;
 	int32 MatchWins;
+
+	void AddRoundResult(bool bWon);
+	const TArray<bool>& GetRoundResults() const { return RoundResults; }
 };

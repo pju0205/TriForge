@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "HUD/UI/UTFCareerPage.h"
+#include "HUD/UI/TFCareerPage.h"
 
 #include "Components/ScrollBox.h"
 #include "Data/TFPlayerData.h"
@@ -9,7 +9,7 @@
 #include "UI/HTTP/HTTPRequestTypes.h"
 #include "UI/Portal/Dashboard/CareerAchievement.h"
 
-void UUTFCareerPage::OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse)
+void UTFCareerPage::OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse)
 {
 	Super::OnRetrieveMatchStats(RetrieveMatchStatsResponse);
 	

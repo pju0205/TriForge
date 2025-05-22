@@ -55,6 +55,13 @@ void ATFHUD::BeginPlay()
 
 void ATFHUD::AddCharacterOverlay()
 {
+	// 멀티 Crash 떄문에 추가
+	HUDPackage.CrosshairsCenter = nullptr;
+	HUDPackage.CrosshairsLeft = nullptr;
+	HUDPackage.CrosshairsRight = nullptr;
+	HUDPackage.CrosshairsTop = nullptr;
+	HUDPackage.CrosshairsBottom = nullptr;
+	
 	APlayerController* PlayerController =  GetOwningPlayerController();
 	if (PlayerController && CharacterOverlayClass)
 	{
@@ -67,7 +74,7 @@ void ATFHUD::AddCharacterOverlay()
 void ATFHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter)
 {
 	// 정확한 Null Check를 위해 추가 (Map 이동시 Null 출력으로 충돌 일어남)
-	if (!Texture) return;
+	if (!IsValid(Texture)) return;
 	
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();

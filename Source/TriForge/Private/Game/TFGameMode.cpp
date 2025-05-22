@@ -31,10 +31,12 @@ void ATFGameMode::HandleRoundEnd(APlayerController* Loser, APlayerController* Wi
 		WinnerPS->RoundWins++;		// Local 라운드 횟수 1 증가
 		WinnerPS->AddRoundScore();	// PlayerState 값 증가 (기록용)
 		WinnerPS->AddKill();
+		WinnerPS->AddRoundResult(true);
 	}
 	if (LoserPS)
 	{
 		LoserPS->AddDeath();
+		LoserPS->AddRoundResult(false);
 	}
 	
 	// Winner 라운드 승리 횟수 확인

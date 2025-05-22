@@ -3,6 +3,7 @@
 
 #include "PlayerState/TFMatchPlayerState.h"
 
+#include "Character/TFPlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "Types/TFTypes.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
@@ -112,20 +113,43 @@ void ATFMatchPlayerState::AddMatchScore()
 	UE_LOG(LogTemp, Log, TEXT("Player %s gained a Match win! Total Match Score: %d"), *Name, MatchScore);
 }
 
-// 패배
-void ATFMatchPlayerState::AddDefeat()
-{
-	++Defeats;
-}
-
 // 승패 여부
 void ATFMatchPlayerState::IsTheWinner()
 {
 	bWinner = true;
 }
 
+
+void ATFMatchPlayerState::AddRoundResult(bool bWon)
+{
+	RoundResults.Add(bWon);
+
+	if (HasAuthority())
+	{
+		OnRep_RoundResults(); // 서버에서도 수동 호출 (서버용 UI도 있다면)
+	}
+}
+
+void ATFMatchPlayerState::OnRep_RoundResults()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetOwner()))
+	{
+		if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(PC))
+		{
+			TFPC->UpdateRoundIndicator();
+		}
+	}
+}
+
 // 각 클라이언트에 RoundScore 변경 알리기
 void ATFMatchPlayerState::Client_RoundScored_Implementation(int32 InRoundScore)
 {
 	OnScoreChanged.Broadcast(InRoundScore);
+}
+
+void ATFMatchPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATFMatchPlayerState, RoundResults);
 }

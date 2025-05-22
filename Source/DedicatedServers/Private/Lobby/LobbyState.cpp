@@ -58,6 +58,20 @@ TArray<FLobbyPlayerInfo> ALobbyState::GetPlayers() const
 	return PlayerInfoArray.Players;
 }
 
+void ALobbyState::ResetAllReadyStates()
+{
+	for (FLobbyPlayerInfo& PlayerInfo : PlayerInfoArray.Players)
+	{
+		if (PlayerInfo.ReadyState)
+		{
+			// Ready Reset 시키기
+			// (Ready 한 상태에서 플레이어가 나가면 원래 방에 있던 플레이어의 Ready 강제로 풀기)
+			PlayerInfo.ReadyState = false;						
+			PlayerInfoArray.MarkItemDirty(PlayerInfo);
+			OnPlayerInfoUpdated.Broadcast(PlayerInfo);			// 델리게이트 호출도 해줘야 UI 갱신됨
+		}
+	}
+}
 
 // 멀티처리 실행 함수
 void ALobbyState::OnRep_LobbyPlayerInfo()

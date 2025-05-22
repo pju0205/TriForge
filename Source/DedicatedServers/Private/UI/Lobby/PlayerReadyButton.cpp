@@ -5,6 +5,8 @@
 
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Game/DSGameState.h"
+#include "Lobby/LobbyState.h"
 #include "Player/DSPlayerController.h"
 #include "UI/Lobby/PlayerLabel.h"
 
@@ -18,6 +20,14 @@ void UPlayerReadyButton::NativeConstruct()
 	if (Button_Ready)
 	{
 		Button_Ready->OnClicked.AddDynamic(this, &UPlayerReadyButton::OnReadyButtonClicked);
+	}
+	
+	if (const ADSGameState* DSGameState = GetWorld()->GetGameState<ADSGameState>())
+	{
+		if (ALobbyState* LobbyState = DSGameState->LobbyState)
+		{
+			LobbyState->OnPlayerCountChanged.AddDynamic(this, &UPlayerReadyButton::HandlePlayerCountChanged);
+		}
 	}
 }
 
@@ -40,6 +50,17 @@ void UPlayerReadyButton::OnReadyButtonClicked()
 	if (TextBlock_Ready)
 	{
 		TextBlock_Ready->SetText(!bLocalIsReady ? FText::FromString(TEXT("Ready")) : FText::FromString(TEXT("Cancel")));
+	}
+}
+
+// Lobby에 플레이어 수 확인해서 버튼 클릭 활성화 및 비활성화
+void UPlayerReadyButton::HandlePlayerCountChanged(int32 PlayerCount)
+{
+	const bool bCanReady = PlayerCount >= 2;
+
+	if (Button_Ready)
+	{
+		Button_Ready->SetIsEnabled(bCanReady);
 	}
 }
 

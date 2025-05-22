@@ -34,7 +34,8 @@ void ULobbyPlayerBox::OnLobbyStateInitialized(ALobbyState* LobbyState)
 	LobbyState->OnPlayerInfoAdded.AddDynamic(this, &ULobbyPlayerBox::CreateAndAddPlayerLabel);
 	LobbyState->OnPlayerInfoRemoved.AddDynamic(this, &ULobbyPlayerBox::OnPlayerRemoved);
 	LobbyState->OnPlayerInfoUpdated.AddDynamic(this, &ULobbyPlayerBox::OnPlayerInfoStateUpdated);
-	UpdatePlayerInfo(LobbyState);
+	
+	UpdatePlayerInfo(LobbyState); // 1. 최초 1회 바로 실행
 }
 
 // PlayerInfo update시 실행 함수
@@ -43,11 +44,11 @@ void ULobbyPlayerBox::UpdatePlayerInfo(ALobbyState* LobbyState)
 	ScrollBox_PlayerInfo->ClearChildren();
 	for (const FLobbyPlayerInfo& PlayerInfo : LobbyState->GetPlayers())
 	{
-		CreateAndAddPlayerLabel(PlayerInfo);
+		CreateAndAddPlayerLabel(PlayerInfo);	// 2. 만들거나 업데이트시키기 (최초시 만듦)
 	}
 }
 
-// update 함수 실행되면 실행되는 Label 생성 함수
+// 초기화, 업데이트시 실행되는 함수
 void ULobbyPlayerBox::CreateAndAddPlayerLabel(const FLobbyPlayerInfo& PlayerInfo)
 {
 	if (FindPlayerLabel(PlayerInfo.Username)) return;
@@ -55,8 +56,10 @@ void ULobbyPlayerBox::CreateAndAddPlayerLabel(const FLobbyPlayerInfo& PlayerInfo
 	UPlayerLabel* PlayerLabel = CreateWidget<UPlayerLabel>(this, PlayerLabelClass);
 	if (!IsValid(PlayerLabel)) return;
 	
-	PlayerLabel->SetUsername(PlayerInfo.Username);
-	ScrollBox_PlayerInfo->AddChild(PlayerLabel);
+	PlayerLabel->SetUsername(PlayerInfo.Username);			// UserName 부착
+	PlayerLabel->SetReadyState(PlayerInfo.ReadyState);		// UserReadyState 부착
+	
+	ScrollBox_PlayerInfo->AddChild(PlayerLabel);			// 3. 최초일 때 name, ReadtState 부착시킴
 }
 
 void ULobbyPlayerBox::OnPlayerRemoved(const FLobbyPlayerInfo& PlayerInfo)

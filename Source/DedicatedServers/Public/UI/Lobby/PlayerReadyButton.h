@@ -30,6 +30,9 @@ public:
 	UFUNCTION()
 	void OnReadyButtonClicked();
 
+	UFUNCTION()
+	void HandlePlayerCountChanged(int32 PlayerCount);
+
 	virtual void NativeConstruct() override;
 	
 private:

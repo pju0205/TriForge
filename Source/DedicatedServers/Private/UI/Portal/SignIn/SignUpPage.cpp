@@ -29,7 +29,6 @@ void USignUpPage::NativeConstruct()
 {
  	Super::NativeConstruct();
 
-
  	// 입력 값 동적으로 확인하여 상태 메시지 출력 & 버튼 활성화 여부 결정하기
  	TextBox_UserName->OnTextChanged.AddDynamic(this, &USignUpPage::UpdateSignUpButtonState);
  	TextBox_Password->OnTextChanged.AddDynamic(this, &USignUpPage::UpdateSignUpButtonState);

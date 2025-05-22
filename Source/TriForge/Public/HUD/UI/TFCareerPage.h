@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "UI/Portal/Dashboard/CareerPage.h"
-#include "UTFCareerPage.generated.h"
+#include "TFCareerPage.generated.h"
 
 class UTFPlayerData;
 /**
  * 
  */
 UCLASS()
-class TRIFORGE_API UUTFCareerPage : public UCareerPage
+class TRIFORGE_API UTFCareerPage : public UCareerPage
 {
 	GENERATED_BODY()
 

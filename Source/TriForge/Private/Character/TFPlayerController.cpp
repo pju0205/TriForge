@@ -11,6 +11,7 @@
 #include "Components/TextBlock.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
+#include "HUD/UI/RoundIndicator.h"
 #include "PlayerState/TFMatchPlayerState.h"
 
 ATFPlayerController::ATFPlayerController()
@@ -277,6 +278,17 @@ void ATFPlayerController::WeaponAttackReleased(const struct FInputActionValue& I
 void ATFPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+
+	// 가끔 적용 안되는 오류 있어서 이곳에서 실행
+	if (!TFHUD || !TFHUD->CharacterOverlay || !TFHUD->CharacterOverlay->HealthBar || !TFHUD->CharacterOverlay->HealthText)
+	{
+		// 0.1초 후 재시도
+		GetWorld()->GetTimerManager().SetTimerForNextTick([this, Health, MaxHealth]()
+		{
+			SetHUDHealth(Health, MaxHealth);
+		});
+		return;
+	}
 	
 	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->HealthBar && TFHUD->CharacterOverlay->HealthText;
 	// 추후 디버깅 시 조건들 중 무엇이 false여서 bTFHUDValid가 false인지 정확히 파악하기 힘들지만
@@ -317,4 +329,15 @@ void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActo
 	{
 		ActorList.Add(PS);
 	}
+}
+
+// Round 표시용
+void ATFPlayerController::UpdateRoundIndicator()
+{
+	if (!TFHUD || !TFHUD->CharacterOverlay || !TFHUD->CharacterOverlay->RoundIndicator) return;
+
+	ATFMatchPlayerState* MyPS = GetPlayerState<ATFMatchPlayerState>();
+	if (!MyPS) return;
+
+	TFHUD->CharacterOverlay->RoundIndicator->SetRoundResults(MyPS->GetRoundResults());
 }

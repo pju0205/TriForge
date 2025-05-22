@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TFOverlay.generated.h"
 
+class URoundIndicator;
 class UTextBlock;
 class UProgressBar;
 /**
@@ -24,6 +25,9 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	URoundIndicator* RoundIndicator;
 
 
 	UFUNCTION()

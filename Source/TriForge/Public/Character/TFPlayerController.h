@@ -83,9 +83,11 @@ public:
 	void SetHUDAmmo(int32 Ammo);
 
 	virtual void OnPossess(APawn* InPawn) override;
-	
+
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
+
+	void UpdateRoundIndicator();
 
 private:
 	UPROPERTY()
