@@ -31,11 +31,26 @@ protected:
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
 
-	virtual void TraceEnemy(FHitResult& TraceHitResult);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiAttackEffects();
 	
+
+public:
+	ATFRangedWeapon();
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void OnRep_Owner() override;
+
+	virtual void TraceEnemy(FHitResult& TraceHitResult);
+
+	virtual void Dropped() override;
+
+	void SetHUDRangedWeaponAmmo();
+
+	bool IsAmmoEmpty();
+
 private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
@@ -45,19 +60,5 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-
-public:
-	ATFRangedWeapon();
-	
-	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
-	virtual void OnRep_Owner() override;
-
-	virtual void Dropped() override;
-
-	void SetHUDRangedWeaponAmmo();
-
-	bool IsAmmoEmpty();
-
 	
 };

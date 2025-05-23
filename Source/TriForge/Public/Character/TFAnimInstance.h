@@ -211,10 +211,14 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	bool bWeaponEquipped;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	bool bRangedWeapon;
+	
 	UPROPERTY()
 	ATFWeapon* EquippedWeapon;
 
 private:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	FTransform LeftHandTransform;
+	
 };

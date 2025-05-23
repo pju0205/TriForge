@@ -128,6 +128,8 @@ public:
 
 	ATFWeapon* GetEquippedWeapon();
 
+	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UTFWeaponComponent* WeaponComponent;

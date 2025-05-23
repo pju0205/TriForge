@@ -5,7 +5,7 @@
 
 ATFPistol::ATFPistol()
 {
-	SetWeaponType(EWeaponType::EWt_Pistol);
+	SetWeaponType(EWeaponType::Ewt_Pistol);
 	bAutomatic = false;
 	AttackDelay = .8f;
 }

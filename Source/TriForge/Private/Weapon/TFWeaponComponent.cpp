@@ -6,6 +6,7 @@
 #include "HUD/TFHUD.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "Camera/CameraComponent.h"
 #include "Character/TFPlayerCharacter.h"
 #include "Character/TFPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -22,8 +23,12 @@ UTFWeaponComponent::UTFWeaponComponent()
 void UTFWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	
+
+	if (PlayerCharacter && PlayerCharacter->GetCamera())
+	{
+		DefaultFOV = PlayerCharacter->GetCamera()->FieldOfView;
+		CurrentFOV = DefaultFOV;
+	}
 }
 
 void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -34,6 +39,7 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (PlayerCharacter && PlayerCharacter->IsLocallyControlled())
 	{
 		SetHUDCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
 	}
 	
 }
@@ -57,6 +63,30 @@ void UTFWeaponComponent::ServerSetAiming_Implementation(bool bIsAiming)
 	bAiming = bIsAiming;
 }
 
+void UTFWeaponComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+
+	if (bAiming)
+	{
+		// 무기에 따라 줌되는 속도가 다름
+		CurrentFOV = FMath::FInterpTo(
+			CurrentFOV,
+			EquippedWeapon->GetZoomedFOV(),
+			DeltaTime, EquippedWeapon->GetZoomInterpSpeed()
+		);
+	}
+	else
+	{
+		// 무기에 따라 줌 아웃되는 속도는 같음
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+	}
+	if (PlayerCharacter && PlayerCharacter->GetCamera())
+	{
+		PlayerCharacter->GetCamera()->SetFieldOfView(CurrentFOV);
+	}
+}
+
 void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 {
 	if (PlayerCharacter == nullptr) return;
@@ -66,7 +96,8 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	{
 		EquippedWeapon->Dropped();
 		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
-		bCanAttack = true; 
+		bCanAttack = true;
+		CurrentFOV = DefaultFOV;
 		EquippedWeapon = nullptr;
 		if (PlayerController)
 		{

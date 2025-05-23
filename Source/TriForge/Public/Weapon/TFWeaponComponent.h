@@ -75,4 +75,18 @@ private:
 	void AttackTimerFinished();
 
 	void Attacking();
+
+	// when not aiming view
+	// FOV = Field Of View
+	float DefaultFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float ZoomInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 };

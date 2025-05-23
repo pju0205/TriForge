@@ -205,7 +205,7 @@ void ATFPlayerController::AimingStarted(const struct FInputActionValue& AimActio
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
 		if (TFCharacter)
 		{
-			
+			TFCharacter->AimButtonPressed();
 		}
 	}
 }
@@ -217,7 +217,7 @@ void ATFPlayerController::AimingReleased(const struct FInputActionValue& AimActi
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
 		if (TFCharacter)
 		{
-			
+			TFCharacter->AimButtonReleased();
 		}
 	}
 }

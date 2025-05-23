@@ -53,7 +53,7 @@ void ATFRangedWeapon::TraceEnemy(FHitResult& TraceHitResult)
 		{
 			float DistanceToCharacter = (TFOwnerCharacter->GetActorLocation() - Start).Size();
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
-			DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
+			//DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
 		}
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());

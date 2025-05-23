@@ -13,7 +13,7 @@
 ATFHitScanWeapon::ATFHitScanWeapon()
 {
 	// 임시로 타입 지정하여 캐릭터 애니메이션 보기
-	SetWeaponType(EWeaponType::EWt_Pistol);
+	SetWeaponType(EWeaponType::Ewt_Rifle);
 }
 
 void ATFHitScanWeapon::Attack()
