@@ -23,9 +23,6 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerAttack(const FHitResult& HitResult, const FVector& SocketLocation);
-	
-	UFUNCTION(NetMulticast, Reliable)
-	void AttackEffects();
 
 private:
 	UPROPERTY(EditAnywhere)

@@ -21,32 +21,41 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerAttack(const FHitResult& Hit);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void AttackEffects();
-
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void ImpactEffects(const FHitResult& Hit);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void BeamEffects(const FHitResult& Hit);
 
-private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	float Damage = 20.f;
-
-	UPROPERTY(EditAnywhere)
+	
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	UParticleSystem* ImpactParticles;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	UParticleSystem* BeamParticles;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	UParticleSystem* MuzzleFlash;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	USoundCue* FireSound;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	USoundCue* ImpactSound;
+protected:
+	FVector TraceWithScatter(const FVector& TraceStart, const FVector& HitTarget);
+
+private:
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float DistanceToSphere = 800.f;
+	
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	bool bIsScatter = false;
 };

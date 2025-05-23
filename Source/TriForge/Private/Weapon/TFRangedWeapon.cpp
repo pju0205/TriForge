@@ -132,3 +132,8 @@ void ATFRangedWeapon::Dropped()
 	Super::Dropped();
 }
 
+void ATFRangedWeapon::MultiAttackEffects_Implementation()
+{
+	PlayAttackMontage();
+	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
+}

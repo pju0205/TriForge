@@ -32,6 +32,9 @@ protected:
 	ATFPlayerController* TFOwnerController;
 
 	virtual void TraceEnemy(FHitResult& TraceHitResult);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiAttackEffects();
 	
 private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)

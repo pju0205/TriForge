@@ -40,8 +40,6 @@ void ATFProjectileWeapon::ServerAttack_Implementation(const FHitResult& HitResul
 	DrawDebugLine(GetWorld(), SocketLocation, HitResult.ImpactPoint, FColor::Red, false, 3.f);
 	DrawDebugLine(GetWorld(), SocketLocation, HitResult.TraceEnd, FColor::Yellow, false, 3.f);*/
 
-	//TODO: WeaponComponent => Attack() => 무기클래스의 Attack()함수 안에서 LineTrace => ServerAttack(HitResult&) 으로 구조 바꾸기
-	//TODO: ServerAttack()에서 LineTrace값 받아서 SpawnActor로 Projectile 발사
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	if (HitResult.bBlockingHit)
 	{
@@ -81,14 +79,10 @@ void ATFProjectileWeapon::ServerAttack_Implementation(const FHitResult& HitResul
 			}
 		}
 	}
-	AttackEffects();
+	MultiAttackEffects();
 
 	SpendAmmo();
 	
 }
-void ATFProjectileWeapon::AttackEffects_Implementation()
-{
-	PlayAttackMontage();
-	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
-}
+
 

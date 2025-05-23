@@ -126,7 +126,7 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 	bAttackButtonPressed = bPressed;
 	
 	if (EquippedWeapon == nullptr) return;
-	if (bAttackButtonPressed)
+	if (bAttackButtonPressed && bCanAttack)
 	{
 		Attacking();
 	}

@@ -6,6 +6,7 @@
 #include "Character/TFPlayerCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
@@ -74,17 +75,10 @@ void ATFHitScanWeapon::ServerAttack_Implementation(const FHitResult& Hit)
 		ImpactEffects(Hit);
 	}
 	BeamEffects(Hit);
-	AttackEffects();
+	MultiAttackEffects();
 	
 	SpendAmmo();
 }
-
-void ATFHitScanWeapon::AttackEffects_Implementation()
-{
-	PlayAttackMontage();
-	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
-}
-
 
 void ATFHitScanWeapon::ImpactEffects_Implementation(const FHitResult& Hit)
 {
@@ -124,7 +118,9 @@ void ATFHitScanWeapon::BeamEffects_Implementation(const FHitResult& Hit)
 		UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(),
 			BeamParticles,
-			Hit.TraceStart
+			Hit.TraceStart,
+			FRotator::ZeroRotator,
+			true
 		);
 		if (Beam)
 		{
@@ -148,3 +144,25 @@ void ATFHitScanWeapon::BeamEffects_Implementation(const FHitResult& Hit)
 		);
 	}
 }
+
+FVector ATFHitScanWeapon::TraceWithScatter(const FVector& TraceStart, const FVector& HitTarget)
+{
+	FVector ToTargetNormailized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTargetNormailized * DistanceToSphere;
+	FVector RandVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
+	FVector EndLocation = SphereCenter + RandVector;
+	FVector ToEndLocation = EndLocation - TraceStart;
+
+	/*DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLocation, 4.f, 12, FColor::Blue, true);
+	DrawDebugLine(
+		GetWorld(),
+		TraceStart,
+		FVector(TraceStart + ToEndLocation * TRACELENGTH / ToEndLocation.Size()),
+		FColor::Cyan,
+		true
+	);*/
+
+	return FVector(TraceStart + ToEndLocation * TRACELENGTH / ToEndLocation.Size());
+}
+
