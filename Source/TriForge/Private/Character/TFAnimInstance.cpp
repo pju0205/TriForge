@@ -87,8 +87,10 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 
+		// 무기가 Crosshair를 향하도록 하는 코드, RightHandRotation을 이용하여 Transform Bone노드를 이용해 AnimBlueprint에서 적용 가능
+		// 본인에게만 적용되고 클라이언트에서는 적용 안 됨, FHitResult를 Replicate되게 하면 할 수 있는데 네트워크 량이 너무 많아짐
 		/*if (TFPlayerCharacter->IsLocallyControlled())
-		{
+		{ 
 			ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
 			FHitResult Hit;
 			RangedWeapon->TraceEnemy(Hit);
@@ -345,7 +347,10 @@ E_EquippedWeaponType UTFAnimInstance::CheckWeaponType(EWeaponType CurrentWeaponT
 		EquippedWeaponType = E_EquippedWeaponType::Pistol;
 		break;
 	case EWeaponType::Ewt_ShotGun:
-		EquippedWeaponType = E_EquippedWeaponType::ShotGun;
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
+		break;
+	case EWeaponType::Ewt_SniperRifle:
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
 		break;
 	case EWeaponType::Ewt_Knife:
 		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;

@@ -54,8 +54,13 @@ void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 
 void UTFWeaponComponent::SetAiming(bool bIsAiming)
 {
+	if (PlayerCharacter == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
+	if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+	{
+		PlayerCharacter->ShowSniperScope(bIsAiming);
+	}
 }
 
 void UTFWeaponComponent::ServerSetAiming_Implementation(bool bIsAiming)
@@ -98,11 +103,24 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
 		bCanAttack = true;
 		CurrentFOV = DefaultFOV;
-		EquippedWeapon = nullptr;
+		SetAiming(false);
+		
+		/*if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+		{
+			PlayerCharacter->ShowSniperScope(false);
+		}*/
+		
+		if (PlayerCharacter && PlayerCharacter->GetCamera())
+		{
+			PlayerCharacter->GetCamera()->SetFieldOfView(DefaultFOV);
+		}
+		
 		if (PlayerController)
 		{
 			PlayerController->SetHUDAmmo(0);
 		}
+		
+		EquippedWeapon = nullptr;
 	}
 
 	if (WeaponToEquip == nullptr) return;

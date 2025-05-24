@@ -8,7 +8,7 @@
 
 ATFShotgun::ATFShotgun()
 {
-	SetWeaponType(EWeaponType::Ewt_Rifle);
+	SetWeaponType(EWeaponType::Ewt_ShotGun);
 }
 
 void ATFShotgun::Attack()
