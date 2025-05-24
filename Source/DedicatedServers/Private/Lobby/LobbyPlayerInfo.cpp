@@ -56,7 +56,7 @@ void FLobbyPlayerInfoArray::SetPlayerReadyState(const FString& Username, bool bI
 				{
 					OwnerState->OnPlayerInfoUpdated.Broadcast(Players[i]);
 					// LobbyState에 해당 플레이어 PalyerInfo가 Updated 됐다고 전부 알리기
-					// LobbyPlayerBox에서 자동으로 호출되면서 State 업데이트함
+					// LobbyPlayerBox에서 자동으로 호출되면서 ReadyState 업데이트함
 				}
 			}
 			return;

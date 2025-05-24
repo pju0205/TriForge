@@ -28,14 +28,6 @@ void ATFPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(TFCharacterContext, 0);
 	}
-
-	TFHUD = Cast<ATFHUD>(GetHUD());
-
-	// 250521 추가
-	/*if (TFHUD)
-	{
-		TFHUD->AddCharacterOverlay(); // 강제 초기화
-	}*/
 }
 
 void ATFPlayerController::OnPossess(APawn* InPawn)
@@ -43,25 +35,28 @@ void ATFPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	TFHUD = Cast<ATFHUD>(GetHUD());
-	
-	if (InPawn)
-	{
-		UTFPlayerHealthComponent* HealthComp = InPawn->FindComponentByClass<UTFPlayerHealthComponent>();
-		if (HealthComp)
-		{
-			// 이미 바인딩 되어있지 않은 경우에만 바인딩 추가
-			HealthComp->OnHealthChanged.RemoveDynamic(this, &ATFPlayerController::SetHUDHealth);
-			HealthComp->OnHealthChanged.AddDynamic(this, &ATFPlayerController::SetHUDHealth);
-			
-			// 초기 HUD 설정
-			SetHUDHealth(HealthComp->GetCurrentHealth(), HealthComp->GetMaxHealth());
-		}
-	}
+}
+
+void ATFPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	OnPlayerStateReplicated.Broadcast();
 }
 
 void ATFPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+UTFPlayerHealthComponent* ATFPlayerController::GetHealthComponent() const
+{
+	APawn* MyPawn = GetPawn();
+	if (IsValid(MyPawn))
+	{
+		return MyPawn->FindComponentByClass<UTFPlayerHealthComponent>();
+	}
+	return nullptr;
 }
 
 void ATFPlayerController::SetupInputComponent()
@@ -275,34 +270,6 @@ void ATFPlayerController::WeaponAttackReleased(const struct FInputActionValue& I
 	}
 }
 
-void ATFPlayerController::SetHUDHealth(float Health, float MaxHealth)
-{
-	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
-
-	// 가끔 적용 안되는 오류 있어서 이곳에서 실행
-	if (!TFHUD || !TFHUD->CharacterOverlay || !TFHUD->CharacterOverlay->HealthBar || !TFHUD->CharacterOverlay->HealthText)
-	{
-		// 0.1초 후 재시도
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this, Health, MaxHealth]()
-		{
-			SetHUDHealth(Health, MaxHealth);
-		});
-		return;
-	}
-	
-	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->HealthBar && TFHUD->CharacterOverlay->HealthText;
-	// 추후 디버깅 시 조건들 중 무엇이 false여서 bTFHUDValid가 false인지 정확히 파악하기 힘들지만
-	// 일단 코드 가독성을 위해 사용
-	if (bTFHUDValid)
-	{
-		const float HealthPercent = Health / MaxHealth;
-		TFHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
-
-		FString HealthText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
-		TFHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
-	}
-}
-
 void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 {
 	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
@@ -315,6 +282,7 @@ void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 		TFHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
 	}
 }
+
 
 // Map 이동해도 유지할 Actor 넣는 함수
 void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
@@ -329,15 +297,4 @@ void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActo
 	{
 		ActorList.Add(PS);
 	}
-}
-
-// Round 표시용
-void ATFPlayerController::UpdateRoundIndicator()
-{
-	if (!TFHUD || !TFHUD->CharacterOverlay || !TFHUD->CharacterOverlay->RoundIndicator) return;
-
-	ATFMatchPlayerState* MyPS = GetPlayerState<ATFMatchPlayerState>();
-	if (!MyPS) return;
-
-	TFHUD->CharacterOverlay->RoundIndicator->SetRoundResults(MyPS->GetRoundResults());
 }

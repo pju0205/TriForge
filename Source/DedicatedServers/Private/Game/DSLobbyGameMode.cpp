@@ -34,7 +34,7 @@ void ADSLobbyGameMode::PostLogin(APlayerController* NewPlayer)
     
     if (ADSPlayerController* PC = Cast<ADSPlayerController>(NewPlayer))
     {
-        PC->Client_SetToLobbyMode(); // 로비 모드 설정
+        PC->Client_SetToLobbyMode(); // 로비 입력 모드 설정
     }
 }
 

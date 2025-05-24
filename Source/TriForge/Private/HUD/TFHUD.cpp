@@ -5,6 +5,32 @@
 
 #include "Blueprint/UserWidget.h"
 #include "HUD/TFOverlay.h"
+#include "HUD/UI/MatchResultPage.h"
+
+void ATFHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+	
+}
+
+void ATFHUD::AddCharacterOverlay()
+{
+	// 멀티 Crash 떄문에 추가
+	HUDPackage.CrosshairsCenter = nullptr;
+	HUDPackage.CrosshairsLeft = nullptr;
+	HUDPackage.CrosshairsRight = nullptr;
+	HUDPackage.CrosshairsTop = nullptr;
+	HUDPackage.CrosshairsBottom = nullptr;
+	
+	APlayerController* PlayerController =  GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UTFOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
 
 void ATFHUD::DrawHUD()
 {
@@ -36,38 +62,6 @@ void ATFHUD::DrawHUD()
 		{
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter);
 		}
-	}
-}
-
-void ATFHUD::SetHealthBar(float Health, float MaxHealth)
-{
-	if (CharacterOverlay == nullptr) return;
-
-	CharacterOverlay->UpdateHealthBar(Health, MaxHealth);
-}
-
-void ATFHUD::BeginPlay()
-{
-	Super::BeginPlay();
-
-	AddCharacterOverlay();
-}
-
-void ATFHUD::AddCharacterOverlay()
-{
-	// 멀티 Crash 떄문에 추가
-	HUDPackage.CrosshairsCenter = nullptr;
-	HUDPackage.CrosshairsLeft = nullptr;
-	HUDPackage.CrosshairsRight = nullptr;
-	HUDPackage.CrosshairsTop = nullptr;
-	HUDPackage.CrosshairsBottom = nullptr;
-	
-	APlayerController* PlayerController =  GetOwningPlayerController();
-	if (PlayerController && CharacterOverlayClass)
-	{
-		CharacterOverlay = CreateWidget<UTFOverlay>(PlayerController, CharacterOverlayClass);
-		
-		CharacterOverlay->AddToViewport();
 	}
 }
 

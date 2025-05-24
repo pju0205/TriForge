@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "RoundIndicator.generated.h"
 
+class ATFMatchPlayerState;
 class UImage;
 /**
  * 
@@ -15,6 +16,7 @@ class TRIFORGE_API URoundIndicator : public UUserWidget
 {
 	GENERATED_BODY()
 public:
+		
 	UPROPERTY(meta = (BindWidget))
 	UImage* Image_Light_Left;
 
@@ -26,10 +28,15 @@ public:
 	
 	
 	UFUNCTION(BlueprintCallable)
-	void SetRoundResults(const TArray<bool>& RoundResults);
+	void OnRoundResultChanged(const TArray<bool>& RoundResults);
 
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void OnPlayerStateInitialized();
+
+	ATFMatchPlayerState* GetPlayerState() const;
 
 private:
 	void SetLightColor(UImage* Light, const FLinearColor& Color);

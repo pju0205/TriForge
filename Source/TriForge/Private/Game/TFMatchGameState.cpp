@@ -4,6 +4,7 @@
 #include "Game/TFMatchGameState.h"
 
 #include "PlayerState/TFMatchPlayerState.h"
+#include "Character/TFPlayerController.h"
 
 ATFMatchGameState::ATFMatchGameState()
 {

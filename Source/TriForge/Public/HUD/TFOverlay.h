@@ -5,6 +5,8 @@
 #include "Blueprint/UserWidget.h"
 #include "TFOverlay.generated.h"
 
+class UPlayerHealthBar;
+class UMatchResultPage;
 class URoundIndicator;
 class UTextBlock;
 class UProgressBar;
@@ -18,10 +20,7 @@ class TRIFORGE_API UTFOverlay : public UUserWidget
 
 public:
 	UPROPERTY(meta =(BindWidget))
-	UProgressBar* HealthBar;
-	
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* HealthText;
+	UPlayerHealthBar* PlayerHealthBar;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AmmoAmount;
@@ -29,7 +28,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	URoundIndicator* RoundIndicator;
 
-
-	UFUNCTION()
-	void UpdateHealthBar(float Health, float MaxHealth);
+	UPROPERTY(meta = (BindWidget))
+	UMatchResultPage* MatchResultWidget;
 };

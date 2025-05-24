@@ -3,43 +3,37 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Game/DSMatchGameMode.h"
+#include "Game/TFMatchGameMode.h"
 #include "TFGameMode.generated.h"
 
-// 전체적인 게임 흐름 관리하는 GameMode
+// 캐릭터 관련 관리 GameMode
 /**
  * 
  */
 UCLASS()
-class TRIFORGE_API ATFGameMode : public ADSMatchGameMode
+class TRIFORGE_API ATFGameMode : public ATFMatchGameMode
 {
 	GENERATED_BODY()
 public:
 	ATFGameMode();
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void PlayerEliminated() override;
+
+	// 스폰 중복 방지를 위한 PlayerStart 선택 함수
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	
+	
 	UPROPERTY()
 	TMap<APlayerController*, FTimerHandle> Timers;
-
-	void HandleRoundEnd(APlayerController* Loser, APlayerController* Winner);
-	void HandleMatchWin(APlayerController* Winner);
+	
 protected:
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
-	
-	virtual void OnMatchEnded() override;
-	
-	void PrepareNextRound();
-	void NextRandomTravelMap();
+		
+	virtual void OnMatchEnded() override;	// Match 끝남을 알림
 
-	UPROPERTY(EditDefaultsOnly, Category = "Maps")
-	TArray<TSoftObjectPtr<UWorld>> CombatMaps;
-
-	// 최대 라운드, 매치 수
-	const int32 MaxRound = 2;
-	const int32 MaxMatch = 2;
-	// 라운드 2승 = 매치 1승
-	// 매치 2승 = 승리
-
-	// 게임이 완전히 끝났는지
-	bool bIsEndedMatch = false;
+private:
+	// 이미 사용한 PlayerStart 저장용
+	UPROPERTY()
+	TSet<AActor*> UsedPlayerStarts;
 };

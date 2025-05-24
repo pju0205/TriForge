@@ -40,8 +40,6 @@ public:
 
 	void AddCharacterOverlay();
 
-	void SetHealthBar(float Health, float MaxHealth);
-
 protected:
 	virtual void BeginPlay() override;
 	

@@ -7,7 +7,7 @@
 #include "Types/DSTypes.h"
 #include "DSPlayerController.generated.h"
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOpponentUserNameReplicated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimerStateChangedDelegate, float, Time, ECountdownTimerType, Type);
 /**
  * 
@@ -33,23 +33,31 @@ public:
 	UFUNCTION(Client, Reliable)
 	void Client_SetInputEnabled(bool bEnabled);
 
+	// Lobby, Game Input Mode 관련
 	UFUNCTION(Client, Reliable)
 	void Client_SetToLobbyMode();
 
 	UFUNCTION(Client, Reliable)
 	void Client_SetToGameMode();
 
+	// Ready 관련
 	UFUNCTION(Server, Reliable)
-	void Server_SetReadyState(bool bNewReady);		// Ready 관련
+	void Server_SetReadyState(bool bNewReady);		
  
 	UPROPERTY(BlueprintAssignable)
 	FOnTimerStateChangedDelegate OnTimerUpdated;
  
 	UPROPERTY(BlueprintAssignable)
 	FOnTimerStateChangedDelegate OnTimerStopped;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnOpponentUserNameReplicated OnOpponentNameReplicated;
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	FString Username;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OpponentUsername)
+	FString OpponentUsername;
  
 	UPROPERTY(BlueprintReadOnly)
 	FString PlayerSessionId;
@@ -60,6 +68,11 @@ protected:
  
 	UFUNCTION(Client, Reliable)			// Client RPC
 	void Client_Pong(float TimeOfRequest);
+
+	UFUNCTION()
+	void OnRep_OpponentUsername();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 	
 private:
  

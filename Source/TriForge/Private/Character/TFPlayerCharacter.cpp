@@ -14,6 +14,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
 #include "Game/TFGameMode.h"
+#include "HUD/TFHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "PlayerState/TFPlayerState.h"
@@ -87,6 +88,7 @@ void ATFPlayerCharacter::BeginPlay()
 		OnTakeAnyDamage.AddDynamic(this, &ThisClass::ReceiveDamage);
 	}
 
+	// Death 관련 함수 바인딩
 	if (IsValid(HealthComponent))
 	{
 		HealthComponent->OnDeathStarted.AddDynamic(this, &ATFPlayerCharacter::OnDeathStarted);
@@ -361,17 +363,16 @@ void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 
 void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator)
 {
-	// 이 부분 좀 더 손봐야함
-	// 죽었을 때 실행할 몽타주 코드 넣어야함
+	if (!HealthComponent || HealthComponent->DeathState == EDeathState::NotDead) return;
+
+	// 죽는 몽타주 실행
+	PlayDirectionalDeathMontage(DeathInstigator);
+	// 실행 안됨 Montage_Play를 어떻게 실행시키는건지 모르겠네
 	
+	// 라운드 종료 시키기
 	ATFPlayerController* VictimController = Cast<ATFPlayerController>(GetController());
 	if (HasAuthority() && IsValid(VictimController))
 	{
-		if (IsValid(WeaponComponent))
-		{
-			WeaponComponent->DestroyWeapon();		// 손에 들고 있는 총기 삭제
-		}
-		
 		if (ATFGameMode* GameMode = Cast<ATFGameMode>(UGameplayStatics::GetGameMode(this)))
 		{
 			ACharacter* InstigatorCharacter = Cast<ACharacter>(DeathInstigator);
@@ -380,18 +381,65 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 				APlayerController* InstigatorController = Cast<APlayerController>(InstigatorCharacter->GetController());
 				if (IsValid(InstigatorController))
 				{
-					// 타이머 없이 즉시 라운드 종료 처리
+					// 라운드 결과 집계
 					GameMode->HandleRoundEnd(VictimController, InstigatorController);
 				}
 			}
 		}
 	}
 
+	if (TFPlayerController || TFPlayerController->TFHUD)
+	{
+		// Overlay 초기화 시켜야됨 Ammo, CrossHair
+	}
 	
 	// 캐릭터 및 무기 Collision 처리
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-	/*GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);
-	GetMesh()->SetCollisionResponseToChannel(ECC_Weapon, ECR_Ignore);*/
+
+	// 움직임, 입력 등 비활성화
+	/*GetCharacterMovement()->DisableMovement();*/
+}
+
+// DeathMontage 실행 함수
+void ATFPlayerCharacter::PlayDirectionalDeathMontage(AActor* DeathInstigator)
+{
+	if (!DeathInstigator) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AnimInstance Nullptr"));
+		return;
+	}
+	
+	FVector HitDirection = (GetActorLocation() - DeathInstigator->GetActorLocation()).GetSafeNormal();
+	UAnimMontage* SelectedMontage = GetDirectionalDeathMontage(HitDirection);	// 각도 계산
+
+	if (SelectedMontage)
+	{
+		AnimInstance->Montage_Play(SelectedMontage);
+		UE_LOG(LogTemp, Warning, TEXT("Selected Montage: %s"), *GetNameSafe(SelectedMontage));
+	}
+}
+
+// 맞은 방향 계산해서 그에 해당하는 Death 몽타주 return
+UAnimMontage* ATFPlayerCharacter::GetDirectionalDeathMontage(const FVector& HitDirection) const
+{
+	FVector Forward = GetActorForwardVector();
+	FVector Right = GetActorRightVector();
+
+	float ForwardDot = FVector::DotProduct(Forward, HitDirection);
+	float RightDot = FVector::DotProduct(Right, HitDirection);
+
+	if (ForwardDot > 0.7f) return DeathMontage_Front;
+	if (ForwardDot < -0.7f) return DeathMontage_Back;
+	if (RightDot > 0.7f) return DeathMontage_Right;
+	if (RightDot < -0.7f) return DeathMontage_Left;
+	if (ForwardDot > 0.f && RightDot > 0.f) return DeathMontage_FrontRight;
+	if (ForwardDot > 0.f && RightDot < 0.f) return DeathMontage_FrontLeft;
+
+	// 기본적으로 Front
+	return DeathMontage_Front;
 }
 
 

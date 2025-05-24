@@ -5,7 +5,6 @@
 
 #include "Character/TFPlayerController.h"
 #include "Net/UnrealNetwork.h"
-#include "Types/TFTypes.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
 
 ATFMatchPlayerState::ATFMatchPlayerState()
@@ -21,8 +20,10 @@ ATFMatchPlayerState::ATFMatchPlayerState()
 	Defeats = 0;
 	bWinner = false;
 
+	// 초기화 시키기
 	RoundWins = 0;
-	MatchWins = 0;
+	MyMatchWins = 0;
+	OpponentMatchWins = 0;
 }
 
 // 게임 종료시 유저 데이터 갱신시켜서 전달
@@ -58,8 +59,9 @@ void ATFMatchPlayerState::CopyProperties(APlayerState* NewPlayerState)
 		NewTFPS->Defeats = this->Defeats;
 		NewTFPS->bWinner = this->bWinner;
 
-		NewTFPS->MatchWins = this->MatchWins;
-		// RoundWins 는 미포함
+		NewTFPS->MyMatchWins = this->MyMatchWins;
+		NewTFPS->OpponentMatchWins = this->OpponentMatchWins;
+		// RoundWins 미포함
 	}
 }
 
@@ -85,32 +87,18 @@ void ATFMatchPlayerState::AddKill()
 void ATFMatchPlayerState::AddDeath()
 {
 	++Deaths;
-
-	const FString Name = GetPlayerName(); // APlayerState에서 제공하는 함수
-
-	UE_LOG(LogTemp, Log, TEXT("Player %s AddDeath Total Deaths : %d"), *Name, Deaths);
 }
 
 // 라운드 승리 횟수 
 void ATFMatchPlayerState::AddRoundScore()
 {
 	++RoundScore;
-	
-	const FString Name = GetPlayerName(); // APlayerState에서 제공하는 함수
-
-	UE_LOG(LogTemp, Log, TEXT("Player %s gained a round win! Total Round Wins: %d"), *Name, RoundWins);
-	UE_LOG(LogTemp, Log, TEXT("Player %s gained a round win! Total Round Score: %d"), *Name, RoundScore);
-	
 }
 
 // 매치 승리 횟수
 void ATFMatchPlayerState::AddMatchScore()
 {
 	++MatchScore;
-	
-	const FString Name = GetPlayerName();
-	UE_LOG(LogTemp, Log, TEXT("Player %s gained a Match win! Total Match Wins: %d"), *Name, MatchWins);
-	UE_LOG(LogTemp, Log, TEXT("Player %s gained a Match win! Total Match Score: %d"), *Name, MatchScore);
 }
 
 // 승패 여부
@@ -119,37 +107,59 @@ void ATFMatchPlayerState::IsTheWinner()
 	bWinner = true;
 }
 
+void ATFMatchPlayerState::Client_RoundScored_Implementation(int32 InRoundScore)
+{
+}
 
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ 라운드 관련 시작 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+// 잘됨
 void ATFMatchPlayerState::AddRoundResult(bool bWon)
 {
 	RoundResults.Add(bWon);
 
-	if (HasAuthority())
-	{
-		OnRep_RoundResults(); // 서버에서도 수동 호출 (서버용 UI도 있다면)
-	}
+	Client_RoundResult(RoundResults);
 }
 
-void ATFMatchPlayerState::OnRep_RoundResults()
+void ATFMatchPlayerState::Client_RoundResult_Implementation(const TArray<bool>& InRoundResults)
 {
-	if (APlayerController* PC = Cast<APlayerController>(GetOwner()))
-	{
-		if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(PC))
-		{
-			TFPC->UpdateRoundIndicator();
-		}
-	}
+	OnRoundResultChanged.Broadcast(InRoundResults);
 }
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ 라운드 관련 끝 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
-// 각 클라이언트에 RoundScore 변경 알리기
-void ATFMatchPlayerState::Client_RoundScored_Implementation(int32 InRoundScore)
+
+
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ Match 관련 시작 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+void ATFMatchPlayerState::AddMatchResult(bool bWon)
 {
-	OnScoreChanged.Broadcast(InRoundScore);
+	MatchResults = bWon;
+
+	if (bWon) MyMatchWins++;
+	else OpponentMatchWins++;
+
+	Client_MatchResult(MatchResults, MyMatchWins, OpponentMatchWins);
 }
 
+void ATFMatchPlayerState::Client_MatchResult_Implementation(bool bWon, int32 MyScore, int32 OpponentScore)
+{
+	OnMatchResultChanged.Broadcast(bWon, MyScore, OpponentScore);
+}
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ Match 관련 끝 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
+
+
+// 값 멀티 처리
 void ATFMatchPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATFMatchPlayerState, RoundResults);
 }
+
+void ATFMatchPlayerState::OnRep_MatchResults(bool bWon)
+{
+}
+
+void ATFMatchPlayerState::OnRep_RoundResults()
+{
+}
+
+

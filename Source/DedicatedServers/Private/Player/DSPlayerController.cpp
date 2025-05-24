@@ -6,12 +6,15 @@
 #include "Game/DSGameState.h"
 #include "Game/DSLobbyGameMode.h"
 #include "Lobby/LobbyState.h"
+#include "Net/UnrealNetwork.h"
 
 
 ADSPlayerController::ADSPlayerController()
 {
 	SingleTripTime = 0.f;
+	// TFMatchGameMode PostLogin 에서 OpponentUsername 찾음
 	Username = "";
+	OpponentUsername = "";
 	PlayerSessionId = "";
 }
 
@@ -141,4 +144,18 @@ void ADSPlayerController::Client_Pong_Implementation(float TimeOfRequest)
 {
  	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfRequest;		// 현재 시간에서 Ping을 보낼 때의 시간을 빼서 RTT를 구함
  	SingleTripTime = RoundTripTime * 0.5f;											// RTT의 절반 = 단방향 지연 시간, 즉 SingleTripTime
+}
+
+
+void ADSPlayerController::OnRep_OpponentUsername()
+{
+	OnOpponentNameReplicated.Broadcast();
+}
+
+void ADSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADSPlayerController, Username);
+	DOREPLIFETIME(ADSPlayerController, OpponentUsername);
 }

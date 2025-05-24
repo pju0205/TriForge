@@ -22,24 +22,7 @@ void UTFPlayerHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Health 초기화 등 필요한 초기 작업
-	CurrentHealth = MaxHealth;
-
-	// Pawn 및 Controller 가져오기
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (OwnerPawn)
-	{
-		APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
-		if (PC)
-		{
-			ATFPlayerController* TFPC = Cast<ATFPlayerController>(PC);
-			if (TFPC)
-			{
-				TFPC->SetHUDHealth(CurrentHealth, MaxHealth);
-				OnHealthChanged.AddDynamic(TFPC, &ATFPlayerController::SetHUDHealth);
-			}
-		}
-	}
+	OnHealthCompReplicated.Broadcast();
 }
 
 void UTFPlayerHealthComponent::CalcDamage(float Amount, AActor* Instigator)

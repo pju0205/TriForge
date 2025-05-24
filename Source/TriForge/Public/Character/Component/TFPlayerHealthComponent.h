@@ -8,7 +8,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealth_DeathEvent, AActor*, OwningActor, AActor*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealth_AttributeChanged, float, CurrentHealth, float, MaxHealth);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthCompReplicated);
 
 UENUM(BlueprintType)
 enum class EDeathState : uint8
@@ -40,12 +40,15 @@ public:
 	// Ends the death sequence for the owner.
 	virtual void FinishDeath(AActor* Instigator);
 
-protected:
-	virtual void BeginPlay() override;
-
 	UPROPERTY(ReplicatedUsing=OnRep_DeathState)
 	EDeathState DeathState;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthCompReplicated OnHealthCompReplicated;
+
+protected:
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_Health)
 	float CurrentHealth = 100;
 

@@ -4,14 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Player/DSPlayerController.h"
+#include "HUD/TFHUD.h"
 #include "TFPlayerController.generated.h"
 
-class ATFHUD;
+class UMatchResultPage;
+class ATFMatchPlayerState;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerStateReplicated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuitMenuOpen, bool, bOpen);		// Server
 UCLASS()
 class TRIFORGE_API ATFPlayerController : public ADSPlayerController
@@ -59,37 +61,49 @@ private:
 	void SprintEnd(const struct FInputActionValue& InputActionValue);
 	void Jump(const struct FInputActionValue& InputActionValue);
 	void Slide(const struct FInputActionValue& InputActionValue);
-	
-	// Quit 버튼 관련
-	void Input_Quit();		// Server
-	bool bQuitMenuOpen;		// Server
 
 	void AimingStarted(const struct FInputActionValue& AimActionValue);
 	void AimingReleased(const struct FInputActionValue& AimActionValue);
 	void EquipWeapon(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackStarted(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackReleased(const struct FInputActionValue& InputActionValue);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList) override;
+	virtual void OnPossess(APawn* InPawn) override;
+
+	// PlayerState 복제 시점 확인용
+	virtual void OnRep_PlayerState() override;
 
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
 
+
+	UFUNCTION(BlueprintCallable)
+	UTFPlayerHealthComponent* GetHealthComponent() const;
+
 	UFUNCTION()
-	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDAmmo(int32 Ammo);
 
-	virtual void OnPossess(APawn* InPawn) override;
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerStateReplicated OnPlayerStateReplicated;
+	
+	UPROPERTY()
+	ATFHUD* TFHUD;
+
+	UPROPERTY()
+	ATFMatchPlayerState* TFMatchPS;
 
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
-
-	void UpdateRoundIndicator();
-
 private:
-	UPROPERTY()
-	ATFHUD* TFHUD;
+
+	// Quit 버튼 관련
+	void Input_Quit();		// Server
+	bool bQuitMenuOpen;		// Server
+
+	const FString& GetUsername() const { return Username; }
 };

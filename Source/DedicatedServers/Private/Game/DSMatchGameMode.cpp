@@ -76,28 +76,6 @@ void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 {
 	Super::OnCountdownTimerFinished(Type);
 
-	/*if (Type == ECountdownTimerType::PreMatch)
-	{
-		StopCountdownTimer(PreMatchTimer);
-		MatchStatus = EMatchStatus::Match;
-		StartCountdownTimer(MatchTimer);
-		SetClientInputEnabled(true);			// 움직임 활성
-	}
-	if (Type == ECountdownTimerType::Match)
-	{
-		StopCountdownTimer(MatchTimer);
-		MatchStatus = EMatchStatus::PostMatch;
-		StartCountdownTimer(PostMatchTimer);
-		SetClientInputEnabled(false);			// 움직임 비활성
-		OnMatchEnded();							// 매치 종료 알림
-	}
-	if (Type == ECountdownTimerType::PostMatch)
-	{
-		StopCountdownTimer(PostMatchTimer);
-		MatchStatus = EMatchStatus::SeamlessTravelling;
-		TrySeamlessTravel(LobbyMap);
-	}*/
-
 	// 강제로 게임 종료 됐을 때
 	if (Type == ECountdownTimerType::ForceMatchEnded)
 	{

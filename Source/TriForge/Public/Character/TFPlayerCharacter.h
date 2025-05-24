@@ -162,11 +162,36 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UTFPlayerHealthComponent> HealthComponent;
-	
+
+	// 사망 처리 함수 - HealthComponent에서 호출
 	UFUNCTION()
 	void OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator);
 
-	
+protected:
+	// 사망 애니메이션 재생
+	void PlayDirectionalDeathMontage(AActor* DeathInstigator);
+
+	// 방향에 따른 애니메이션 선택
+	UAnimMontage* GetDirectionalDeathMontage(const FVector& HitDirection) const;
+
+	// 사망 애니메이션들
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_Front;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_Back;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_Left;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_Right;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_FrontLeft;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	UAnimMontage* DeathMontage_FrontRight;
 };
 
 

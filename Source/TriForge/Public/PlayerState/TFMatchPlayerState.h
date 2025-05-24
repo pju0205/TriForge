@@ -7,6 +7,8 @@
 #include "TFMatchPlayerState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, NewScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMatchResultChanged, bool, bIsWinner, int32, MyScore, int32, OpponentScore);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRoundResultChanged, const TArray<bool>& , RoundResult);
 class UTFPlayerData;
 /**
  * 
@@ -29,26 +31,46 @@ public:
 	void AddMatchScore();
 	// void AddDefeat();
 	void IsTheWinner();
-	
-	int32 GetRoundScore() const { return RoundScore; };
-	
+
+	bool GetMatchResult() const { return MatchResults; }
+	int32 GetRoundScore() const { return RoundScore; }
+	int32 GetMatchScore() const { return MatchScore; }
+
 	UFUNCTION(Client, Reliable)
 	void Client_RoundScored(int32 InRoundScore);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnScoreChanged OnScoreChanged;
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnMatchResultChanged OnMatchResultChanged;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnRoundResultChanged OnRoundResultChanged;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UTFPlayerData> TFPlayerData;
 
+	UFUNCTION(Client, Reliable)
+	void Client_MatchResult(bool bWon, int32 MyScore, int32 OpponentScore);
+
+	UFUNCTION(Client, Reliable)
+	void Client_RoundResult(const TArray<bool>& InRoundResults);
+	
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchResults)
+	bool MatchResults;
+
+	UFUNCTION()
+	void OnRep_MatchResults(bool bWon);	// 클라에서 Match 승 UI 갱신
 	
 	UPROPERTY(ReplicatedUsing = OnRep_RoundResults)
 	TArray<bool> RoundResults;
 
 	UFUNCTION()
-	void OnRep_RoundResults();  // 클라에서 UI 갱신
+	void OnRep_RoundResults();  // 클라에서 Round 승 UI 갱신
 
 private:
 	// 기록 할 데이터
@@ -63,9 +85,17 @@ private:
 	
 public:
 	// GameMatch에서 쓸 데이터
+	UPROPERTY()
 	int32 RoundWins;
-	int32 MatchWins;
+
+	UPROPERTY(Replicated)
+	int32 MyMatchWins;
+
+	UPROPERTY(Replicated)
+	int32 OpponentMatchWins;
 
 	void AddRoundResult(bool bWon);
-	const TArray<bool>& GetRoundResults() const { return RoundResults; }
+	void AddMatchResult(bool bWon);
+	const bool& GetMatchResults() const { return MatchResults; };
+	const TArray<bool>& GetRoundResults() const { return RoundResults; };
 };
