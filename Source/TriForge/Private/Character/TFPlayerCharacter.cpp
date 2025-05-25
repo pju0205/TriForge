@@ -334,6 +334,11 @@ ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
 	return WeaponComponent->EquippedWeapon;
 }
 
+void ATFPlayerCharacter::PlayTestMontage()
+{
+	GetMesh()->GetAnimInstance()->Montage_Play(TestMontage);
+}
+
 void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
 	
