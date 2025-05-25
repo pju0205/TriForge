@@ -8,9 +8,9 @@
 #include "GameSessionsManager.generated.h"
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBroadcastGameSessionMessage, const FString&, StatusMessage, bool, bShouldResetJoinGameButton);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameSessionCreated, const FDSGameSession&, GameSession);
 
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBroadcastJoinGameSessionMessage, const FString&, StatusMessage, bool, bShouldResetJoinGameButton);
 /**
  * 
  */
@@ -21,13 +21,20 @@ class DEDICATEDSERVERS_API UGameSessionsManager : public UHTTPRequestManager
 
 
 public:
+	// Session Message 델리게이트
 	UPROPERTY(BlueprintAssignable)
-	FAPIStatusMessage BroadcastJoinGameSessionMessage;
+	FAPIStatusMessage BroadcastGameSessionMessage;
+
+	// GameSessionCreated 델리게이트
+	UPROPERTY(BlueprintAssignable, Category = "GameSession")
+	FOnGameSessionCreated OnGameSessionCreated;
  
 	void JoinGameSession();
+	void HostGameSession();
 private:
  
 	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void HostGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	FString GetUniquePlayerId() const;
 	void HandleGameSessionStatus(const FString& Status, const FString& SessionId);

@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "LobbyPlayerBox.generated.h"
- 
+
+class ALobbyState;
 class UScrollBox;
 class UPlayerLabel;
 struct FLobbyPlayerInfo;

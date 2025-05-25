@@ -1,4 +1,4 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/API/GameSessions/JoinGame.h"
+#include "UI/API/GameSessions/HostGame.h"

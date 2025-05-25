@@ -4,20 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "JoinGame.generated.h"
+#include "GameListBox.generated.h"
 
-
-class UButton;
 /**
  * 
  */
 UCLASS()
-class DEDICATEDSERVERS_API UJoinGame : public UUserWidget
+class DEDICATEDSERVERS_API UGameListBox : public UUserWidget
 {
 	GENERATED_BODY()
-
-public:
- 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> Button_JoinGame;
 };

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/Portal/Dashboard/CareerPage.h"
+#include "UI/Portal/Dashboard/Career/CareerPage.h"
 #include "TFCareerPage.generated.h"
 
 class UTFPlayerData;

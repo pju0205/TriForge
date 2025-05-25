@@ -1,11 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Portal/Dashboard/LeaderboardPage.h"
+#include "UI/Portal/Dashboard/Leaderboard/LeaderboardPage.h"
 
 #include "Components/ScrollBox.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
-#include "UI/Portal/Dashboard/LeaderboardCard.h"
+#include "UI/Portal/Dashboard/Leaderboard/LeaderboardCard.h"
 
 void ULeaderboardPage::PopulateLeaderboard(TArray<FDSLeaderboardItem>& Leaderboard)
 {

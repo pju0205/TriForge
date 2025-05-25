@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "UI/Portal/Dashboard/CareerPage.h"
+#include "UI/Portal/Dashboard/Career/CareerPage.h"
 
 #include "Components/TextBlock.h"
 #include "UI/HTTP/HTTPRequestTypes.h"

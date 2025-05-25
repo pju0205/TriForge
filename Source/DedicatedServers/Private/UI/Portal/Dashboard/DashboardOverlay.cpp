@@ -4,9 +4,9 @@
 #include "UI/Portal/Dashboard/DashboardOverlay.h"
 
 #include "Components/Button.h"
-#include "UI/Portal/Dashboard/GamePage.h"
-#include "UI/Portal/Dashboard/CareerPage.h"
-#include "UI/Portal/Dashboard/LeaderboardPage.h"
+#include "UI/Portal/Dashboard/Game/GamePage.h"
+#include "UI/Portal/Dashboard/Career/CareerPage.h"
+#include "UI/Portal/Dashboard/Leaderboard/LeaderboardPage.h"
 #include "Components/WidgetSwitcher.h"
 #include "UI/GameStats/GameStatsManager.h"
 

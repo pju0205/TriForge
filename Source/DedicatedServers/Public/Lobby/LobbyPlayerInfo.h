@@ -46,6 +46,10 @@ USTRUCT()
 struct FLobbyPlayerInfoArray : public FFastArraySerializer
 {
 	GENERATED_BODY()
+	
+	FLobbyPlayerInfoArray()
+		: OwnerState(nullptr) // OwnerState 처리
+	{}
  
 	UPROPERTY()
 	TArray<FLobbyPlayerInfo> Players;

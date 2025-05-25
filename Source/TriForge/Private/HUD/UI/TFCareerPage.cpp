@@ -7,7 +7,7 @@
 #include "Data/TFPlayerData.h"
 #include "Types/TFTypes.h"
 #include "UI/HTTP/HTTPRequestTypes.h"
-#include "UI/Portal/Dashboard/CareerAchievement.h"
+#include "UI/Portal/Dashboard/Career/CareerAchievement.h"
 
 void UTFCareerPage::OnRetrieveMatchStats(const FDSRetrieveMatchStatsResponse& RetrieveMatchStatsResponse)
 {
