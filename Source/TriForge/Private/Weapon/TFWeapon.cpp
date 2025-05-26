@@ -4,6 +4,7 @@
 
 #include "Character/TFPlayerCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Sound/SoundCue.h"
@@ -28,6 +29,9 @@ ATFWeapon::ATFWeapon()
 
 	WeaponSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	WeaponSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
+	PickupWidget->SetupAttachment(RootComponent);
 	
 }
 
@@ -42,6 +46,10 @@ void ATFWeapon::BeginPlay()
 
 		WeaponSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::ATFWeapon::SphereBeginOverlap);
 		WeaponSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::ATFWeapon::SphereEndOverlap);
+	}
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(false);
 	}
 }
 
@@ -69,6 +77,7 @@ void ATFWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ShowPickupWidget(false);
 		PlayEquipSound();
 		break;
 	case EWeaponState::Ews_Dropped:
@@ -107,12 +116,12 @@ void ATFWeapon::SphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(OtherActor);
-	if (TFCharacter)
+	if (TFCharacter && PickupWidget)
 	{
 		// WeaponSphere에 캐릭터가 Overlap이면 OveralppingWeapon 값을 Overlap되어있는 무기로 하여
 		// 현재 WeaponSphere에 캐릭터가 Overlap 되어있음을 알 수 있음
 		TFCharacter->SetOverlappingWeapon(this);
-		
+		PickupWidget->SetVisibility(true);
 	}
 }
 
@@ -120,11 +129,12 @@ void ATFWeapon::SphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(OtherActor);
-	if (TFCharacter)
+	if (TFCharacter && PickupWidget)
 	{
 		// Sphere 범위 밖으로 나가면 Overlapping Weapon = nullptr로 해줌으로써
 		// Overlap 되어있는 Weapon이 없다는 것을 의미
 		TFCharacter->SetOverlappingWeapon(nullptr);
+		PickupWidget->SetVisibility(false);
 	}
 }
 
@@ -186,6 +196,14 @@ void ATFWeapon::PlayDropSound()
 			DropSound,
 			GetActorLocation()
 		);
+	}
+}
+
+void ATFWeapon::ShowPickupWidget(bool bShow)
+{
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShow);
 	}
 }
 

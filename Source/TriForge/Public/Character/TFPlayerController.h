@@ -48,9 +48,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Input") 
 	TObjectPtr<UInputAction> AttackAction;
-
-	UPROPERTY(EditAnywhere, Category="Input") 
-	TObjectPtr<UInputAction> TestAction;
 	
 	FVector2d MoveDir = FVector2d::ZeroVector;
 	
@@ -72,7 +69,6 @@ private:
 	void EquipWeapon(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackStarted(const struct FInputActionValue& InputActionValue);
 	void WeaponAttackReleased(const struct FInputActionValue& InputActionValue);
-	void TestMontagePlay(const struct FInputActionValue& InputActionValue);
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;

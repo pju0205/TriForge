@@ -67,8 +67,6 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATFPlayerController::WeaponAttackStarted);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ATFPlayerController::WeaponAttackReleased);
 
-
-	EnhancedInputComponent->BindAction(TestAction, ETriggerEvent::Started, this, &ATFPlayerController::TestMontagePlay);
 }
 
 
@@ -291,20 +289,4 @@ void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 	}
 }
 
-
-void ATFPlayerController::TestMontagePlay(const struct FInputActionValue& InputActionValue)
-{
-	if (APawn* ControlledPawn = GetPawn<APawn>())
-	{
-		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
-		if (TFCharacter)
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Blue, "TestMontagePlay");
-			}
-			TFCharacter->PlayTestMontage();
-		}
-	}
-}
 

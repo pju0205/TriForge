@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "TFWeapon.generated.h"
 
+class UWidgetComponent;
 class USphereComponent;
 
 UENUM(BlueprintType)
@@ -141,6 +142,8 @@ public:
 	
 	UFUNCTION()
 	void PlayDropSound();
+	
+	void ShowPickupWidget(bool bShow);
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -162,4 +165,11 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	float ZoomInterpSpeed = 20.f;
+
+	 /* PickupWidget Settings in Blueprint
+	 Category = "User Interface"
+	 Space : Screen, WidgetClass : WBP_PickupWidget
+	 Draw at Desired Size = true */
+	UPROPERTY(VisibleAnywhere, Category = "Settings")
+	UWidgetComponent* PickupWidget;
 };

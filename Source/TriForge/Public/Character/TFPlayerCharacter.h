@@ -133,12 +133,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScope(bool bShowScope);
 
-	UFUNCTION()
-	void PlayTestMontage();
-
-	UPROPERTY(EditAnywhere, Category = "TestMontage")
-	UAnimMontage* TestMontage;
-
 private:
 	UPROPERTY(VisibleAnywhere)
 	UTFWeaponComponent* WeaponComponent;

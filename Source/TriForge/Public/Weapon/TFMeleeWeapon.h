@@ -40,8 +40,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
-	virtual void OnRep_WeaponState() override;
+
 private:
 	UPROPERTY(EditAnywhere)
 	USceneComponent* TraceStart;

@@ -131,29 +131,6 @@ void ATFMeleeWeapon::EndTrace()
 	StopTraceTimer();
 }
 
-void ATFMeleeWeapon::OnRep_WeaponState()
-{
-	Super::OnRep_WeaponState();
-
-	/*EWeaponState CurrentState = GetWeaponState();
-	switch (CurrentState)
-	{
-	case EWeaponState::Ews_Equipped:
-		SetBoxCollision(true);
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Cyan, "Equipped");
-		}
-		/*CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Overlap);#1#
-		break;
-	case EWeaponState::Ews_Dropped:
-		SetBoxCollision(false);
-		/*CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
-		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);#1#
-		break;
-	}*/
-}
 
 
 

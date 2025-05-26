@@ -13,6 +13,7 @@
 #include "Net/UnrealNetwork.h"
 #include "PlayerState/TFPlayerState.h"
 #include "TriForge/TriForge.h"
+#include "Weapon/TFWeapon.h"
 #include "Weapon/TFWeaponComponent.h"
 
 ATFPlayerCharacter::ATFPlayerCharacter()
@@ -254,6 +255,13 @@ void ATFPlayerCharacter::PostInitializeComponents()
 void ATFPlayerCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
 {
 	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
 }
 
 bool ATFPlayerCharacter::IsWeaponEquipped()
@@ -334,14 +342,16 @@ ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
 	return WeaponComponent->EquippedWeapon;
 }
 
-void ATFPlayerCharacter::PlayTestMontage()
-{
-	GetMesh()->GetAnimInstance()->Montage_Play(TestMontage);
-}
-
 void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
-	
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
 }
 
 
