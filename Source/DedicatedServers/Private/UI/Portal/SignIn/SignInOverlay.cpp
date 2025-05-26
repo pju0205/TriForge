@@ -3,7 +3,7 @@
 
 #include "UI/Portal/SignIn/SignInOverlay.h"
 
-#include "UI/API/GameSessions/JoinGame.h"
+#include "UI/API/GameSessions/QuickMatchGame.h"
 #include "Components/Button.h"
 #include "Components/EditableTextBox.h"
 #include "Components/TextBlock.h"

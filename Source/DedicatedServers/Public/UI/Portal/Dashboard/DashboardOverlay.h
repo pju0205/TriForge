@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "DashboardOverlay.generated.h"
 
+class UGameSessionsManager;
 class UGameStatsManager;
 class UWidgetSwitcher;
 class UGamePage;
@@ -46,12 +47,21 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameStatsManager> GameStatsManagerClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameSessionsManager> GameSessionsManagerClass;
+
+	// unreal의 Ptr 형식 전부 알아두자.
 
 protected:
 	virtual void NativeConstruct() override;
 private:
 	UPROPERTY()
 	TObjectPtr<UGameStatsManager> GameStatsManager;
+
+	UPROPERTY()
+	TObjectPtr<UGameSessionsManager> GameSessionsManager;
+
+	
 	
 	UFUNCTION()
 	void ShowGamePage();

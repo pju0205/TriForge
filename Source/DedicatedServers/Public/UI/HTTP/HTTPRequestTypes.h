@@ -110,6 +110,14 @@ struct FDSGameSession
  
 	UPROPERTY()
 	FString TerminationTime{};
+
+	bool operator==(const FDSGameSession& Other) const
+	{
+		return GameSessionId == Other.GameSessionId &&
+			   CurrentPlayerSessionCount == Other.CurrentPlayerSessionCount &&
+			   MaximumPlayerSessionCount == Other.MaximumPlayerSessionCount &&
+			   CreatorId == Other.CreatorId;
+	}
  
 	void Dump() const;
 };

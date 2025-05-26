@@ -15,7 +15,7 @@
 #include "Player/DSLocalPlayerSubsystem.h"
 
 // QuickMatch 코드
-void UGameSessionsManager::JoinGameSession()
+void UGameSessionsManager::QuickMatchGameSession()
 {
 	BroadcastGameSessionMessage.Broadcast(TEXT("Searching for Game Session..."), false);
 
@@ -65,40 +65,30 @@ void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Requ
 		const FString GameSessionId = GameSession.GameSessionId;
 		const FString GameSessionStatus = GameSession.Status;
 		HandleGameSessionStatus(GameSessionStatus, GameSessionId);
+		OnGameSessionCreated.Broadcast(GameSession);		// 사용자 정의 델리게이트로 위젯에 전달
 	}
 }
 
 // Host GameSession 코드
 void UGameSessionsManager::HostGameSession()
 {
-	BroadcastGameSessionMessage.Broadcast(TEXT("Creating a Game Session..."), false);
+	BroadcastGameSessionMessage.Broadcast(TEXT("Searching for Game Session..."), false);
 
-	check(APIData); // API 경로 정보 확인
-	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();
+	check(APIData);	// 유효성 검사
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();	// HTTP 요청 객체 생성
 
+	// HTTP 응답 완료 시 호출할 콜백 바인딩
 	Request->OnProcessRequestComplete().BindUObject(this, &UGameSessionsManager::HostGameSession_Response);
-
+	// 호출할 REST API의 URL 가져오기 (엔드포인트는 APIData에 저장된 게임 세션 찾기 URL)
 	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::GameSessionsAPI::CreateGameSession);
+	
+	// 요청 세팅
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->ProcessRequest();
 
-	/*UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
-	if (IsValid(LocalPlayerSubsystem))
-	{
-		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
 
-		// JSON 본문 구성
-		TMap<FString, FString> Params = {
-			{ TEXT("hostUsername"), LocalPlayerSubsystem->Username }, // 방장 이름
-			{ TEXT("maxPlayers"), TEXT("2") } // 최대 인원
-		};
-
-		const FString Content = SerializeJsonContent(Params);
-		Request->SetContentAsString(Content);
-		Request->ProcessRequest();
-	}*/
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
@@ -108,50 +98,87 @@ void UGameSessionsManager::HostGameSession()
 
 void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
-	// 요청 실패시
+	UE_LOG(LogTemp, Warning, TEXT("HostGameSession Response: %s"), *Response->GetContentAsString());
+	// 요청 실패 시
 	if (!bWasSuccessful)
 	{
-		BroadcastGameSessionMessage.Broadcast(TEXT("Failed to create game session."), true);
-		return;
+		BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
 
+	// HTTP 응답을 JSON 객체로 변환
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
-		if (ContainsErrors(JsonObject))
+		if (ContainsErrors(JsonObject))	// 응답 내부에 에러 정보가 있으면 처리
 		{
-			BroadcastGameSessionMessage.Broadcast(TEXT("Error in response while creating session."), true);
-			return;
+			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 		}
-
+		
 		FDSGameSession GameSession;															// 람다에서 적용했던 것 처럼 GameSession 데이터가 여기 저장됨
 		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
-		GameSession.Dump();
 		
 		const FString GameSessionId = GameSession.GameSessionId;
-
-		if (GameSessionId.IsEmpty())
+		
+		if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
 		{
-			UE_LOG(LogTemp, Error, TEXT("GameSessionId is empty after GameSession creation!"));
+			TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, GameSessionId);
+			OnGameSessionCreated.Broadcast(GameSession);								// 사용자 정의 델리게이트로 위젯에 전달
 		}
-		else
-		{
-			BroadcastGameSessionMessage.Broadcast(TEXT("Create a Game Session. Creating a Player Session..."), false);
+	}
+}
 
-			if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
-			{
-				TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, GameSessionId);
-			}
+void UGameSessionsManager::RetrieveGameSessions()
+{
+	BroadcastGameSessionMessage.Broadcast(TEXT("Retrieving for Game Session..."), false);
+
+	check(APIData);	// 유효성 검사
+	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();	// HTTP 요청 객체 생성
+
+	// HTTP 응답 완료 시 호출할 콜백 바인딩
+	Request->OnProcessRequestComplete().BindUObject(this, &UGameSessionsManager::RetrieveGameSession_Response);
+	// 호출할 REST API의 URL 가져오기 (엔드포인트는 APIData에 저장된 게임 세션 찾기 URL)
+	const FString APIUrl = APIData->GetAPIEndpoint(DedicatedServersTags::GameSessionsAPI::RetrieveGameSession);
+	
+	// 요청 세팅
+	Request->SetURL(APIUrl);
+	Request->SetVerb(TEXT("POST"));
+	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+	Request->ProcessRequest();
+
+
+	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
+	if (IsValid(LocalPlayerSubsystem))
+	{
+		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
+	}
+}
+
+void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	// 요청 실패 시
+	if (!bWasSuccessful)
+	{
+		BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+	}
+
+	// HTTP 응답을 JSON 객체로 변환
+	TSharedPtr<FJsonObject> JsonObject;
+	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
+	{
+		if (ContainsErrors(JsonObject))	// 응답 내부에 에러 정보가 있으면 처리
+		{
+			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 		}
 		
-		// 여기서 Widget에 띄워줄 데이터는 GameSessionId, Name, PlayerCount 등
-		// 예시: "Alex's Room", "1/2"
+		FDSGameSession GameSession;															// 람다에서 적용했던 것 처럼 GameSession 데이터가 여기 저장됨
+		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
 		
-
-		// OnGameSessionCreated.Broadcast(GameSession); // 사용자 정의 델리게이트로 위젯에 전달 / 아직 안쓰는 곳
-
-		// ✅ 여기 추가: 방 만든 사람이 본인도 들어가도록 플레이어 세션 생성 시도
+		/*const FString GameSessionId = GameSession.GameSessionId;
+		const FString GameSessionStatus = GameSession.Status;*/
+		
+		OnRetrieveGameSession.Broadcast(GameSession);		// 사용자 정의 델리게이트로 위젯에 전달
 	}
 }
 
@@ -191,18 +218,19 @@ void UGameSessionsManager::HandleGameSessionStatus(const FString& Status, const 
 	else if (Status.Equals(TEXT("ACTIVATING")))		// GameSession을 초기화 중이라면
 	{
 		FTimerDelegate CreateSessionDelegate;
-		CreateSessionDelegate.BindUObject(this, &ThisClass::JoinGameSession);
+		CreateSessionDelegate.BindUObject(this, &ThisClass::QuickMatchGameSession);
 		APlayerController* LocalPlayerController = GEngine->GetFirstLocalPlayerController(GetWorld());
  		
 		if (IsValid(LocalPlayerController))
 		{
 			// 0.5초 뒤에 재시도 (델리게이트)
-			UE_LOG(LogTemp, Warning, TEXT("Call back JoinGameSession current Status : ACTIVATING"))
+			UE_LOG(LogTemp, Warning, TEXT("Call back JoinGameSession current Status : ACTIVATING"));
 			LocalPlayerController->GetWorldTimerManager().SetTimer(CreateSessionTimer, CreateSessionDelegate, 0.5f, false);
 		}
 	}
 	else	// 아무것도 아니면 에러 출력
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Call back JoinGameSession current Status : nullptr"));
 		BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
 }

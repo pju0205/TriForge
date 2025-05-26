@@ -8,7 +8,7 @@
 
 
 class UPortalManager;
-class UJoinGame;
+class UQuickMatchGame;
 class UWidgetSwitcher;
 class USignInPage;
 class USignUpPage;
