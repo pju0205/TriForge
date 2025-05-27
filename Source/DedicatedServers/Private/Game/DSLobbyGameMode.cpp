@@ -43,7 +43,7 @@ void ADSLobbyGameMode::InitSeamlessTravelPlayer(AController* NewController)
 {
     Super::InitSeamlessTravelPlayer(NewController);
  
-    CheckAndStartLobbyCountdown();
+    /*CheckAndStartLobbyCountdown();*/
 
     // 로비 상태가 맵 변경중이 아니라면 실행
     if (LobbyStatus != ELobbyStatus::SeamlessTravelling)

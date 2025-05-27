@@ -17,7 +17,6 @@ class DEDICATEDSERVERS_API UQuickMatchGame : public UUserWidget
 	GENERATED_BODY()
 
 public:
- 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> Button_QuickMatchGame;
 };

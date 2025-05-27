@@ -5,11 +5,15 @@
 
 #include "UI/API/GameSessions/QuickMatchGame.h"
 #include "Components/Button.h"
+#include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Game/DSGameInstanceSubsystem.h"
 #include "UI/API/GameSessions/HostGame.h"
 #include "UI/API/GameSessions/JoinGame.h"
 #include "UI/GameSessions/GameSessionsManager.h"
+#include "UI/HTTP/HTTPRequestTypes.h"
+#include "Player/DSLocalPlayerSubsystem.h"
+#include "UI/Portal/Dashboard/Game/GameListCard.h"
 #include "UI/Portal/Dashboard/Game/StatusMessage.h"
 
 void UGamePage::NativeConstruct()
@@ -18,21 +22,15 @@ void UGamePage::NativeConstruct()
  
 	GameSessionsManager = NewObject<UGameSessionsManager>(this, GameSessionsManagerClass);
 	GameSessionsManager->BroadcastGameSessionMessage.AddDynamic(this, &UGamePage::SetStatusMessage);
- 
+	GameSessionsManager->OnRetrieveGameSession.AddDynamic(this, &UGamePage::UpdateSessionListUI);			// 추가
+
+	// 버튼 클릭 바인딩
 	QuickMatchGameWidget->Button_QuickMatchGame->OnClicked.AddDynamic(this, &UGamePage::QuickMatchGameButtonClicked);
 	HostGameWidget->Button_HostGame->OnClicked.AddDynamic(this, &UGamePage::HostGameButtonClicked);
 	JoinGameWidget->Button_JoinGame->OnClicked.AddDynamic(this, &UGamePage::JoinGameButtonClicked);
+	RefreshButtonWidget->OnClicked.AddDynamic(this, &UGamePage::RefreshButtonClicked);
 
-	/*if (UGameInstance* GI = GetGameInstance())
-	{
-		if (UDSGameInstanceSubsystem* SessionSubsystem = GI->GetSubsystem<UDSGameInstanceSubsystem>())
-		{
-			SessionSubsystem->OnGameSessionsUpdated.AddDynamic(this, &UGamePage::UpdateSessionListUI);
-
-			// 초기 갱신도 요청
-			SessionSubsystem->UpdateSessionsFromServer();
-		}
-	}*/
+	
 }
 
 void UGamePage::QuickMatchGameButtonClicked()
@@ -50,7 +48,33 @@ void UGamePage::HostGameButtonClicked()
 void UGamePage::JoinGameButtonClicked()
 {
 	ButtonSetIsEnabled(false);
-	// 만들기
+
+	if (!bHasSelectedSession)
+	{
+		SetStatusMessage(TEXT("Please select a session."), true);
+		return;
+	}
+
+	
+	if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GameSessionsManager->GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
+	{
+		FString Username = DSLocalPlayerSubsystem->Username; // 또는 GetPlayerId() 등
+		FString SessionId = SelectedGameSessionID;
+
+		GameSessionsManager->TryCreatePlayerSession(Username, SessionId);
+	}
+	else
+	{
+		SetStatusMessage(TEXT("Player session limit reached"), true);
+	}
+}
+
+void UGamePage::RefreshButtonClicked()			// 추가
+{
+	ButtonSetIsEnabled(false);
+	ScrollBox_GameList->ClearChildren(); // 목록 초기화 하고
+	
+	GameSessionsManager->RetrieveGameSessions();	 // 다시 리스트 요청
 }
 
 void UGamePage::ButtonSetIsEnabled(bool bClicked)
@@ -60,15 +84,43 @@ void UGamePage::ButtonSetIsEnabled(bool bClicked)
 		HostGameWidget->Button_HostGame->SetIsEnabled(bClicked);
 		QuickMatchGameWidget->Button_QuickMatchGame->SetIsEnabled(bClicked);
 		JoinGameWidget->Button_JoinGame->SetIsEnabled(bClicked);
+		RefreshButtonWidget->SetIsEnabled(bClicked);
 	}
 	else
 	{
 		HostGameWidget->Button_HostGame->SetIsEnabled(bClicked);
 		QuickMatchGameWidget->Button_QuickMatchGame->SetIsEnabled(bClicked);
 		JoinGameWidget->Button_JoinGame->SetIsEnabled(bClicked);
+		RefreshButtonWidget->SetIsEnabled(bClicked);
 	}
 }
 
+
+// 이건 카드 위젯만 생성하기
+void UGamePage::UpdateSessionListUI(const FDSGameSession& GameSession)
+{
+	if (!GameListCardClass || !ScrollBox_GameList) return;
+
+	// 새로운 카드 위젯 생성
+	UGameListCard* GameListCard = CreateWidget<UGameListCard>(this, GameListCardClass);
+	if (!GameListCard) return;
+
+	// 카드에 세션 정보 입력
+	const FString SessionName = GameSession.Name; // 서버에서 온 이름
+	const int32 PlayerCount = GameSession.CurrentPlayerSessionCount; // 당신 구조체에 따라 변경
+	const int32 MaxPlayerCount = GameSession.MaximumPlayerSessionCount;
+
+	GameListCard->SetSessionInfo(SessionName, PlayerCount, MaxPlayerCount);
+
+	// GameSessionId 저장해두면 클릭 시 활용 가능
+	GameListCard->GameSessionId = GameSession.GameSessionId;
+
+	// 클릭 이벤트 바인딩 (선택적으로 필요)
+	GameListCard->OnCardSelected.AddDynamic(this, &UGamePage::HandleCardSelected);
+
+	// ScrollBox에 추가
+	ScrollBox_GameList->AddChild(GameListCard);
+}
 
 void UGamePage::SetStatusMessage(const FString& Message, bool bShouldResetWidgets)
 {
@@ -76,33 +128,39 @@ void UGamePage::SetStatusMessage(const FString& Message, bool bShouldResetWidget
 	ButtonSetIsEnabled(bShouldResetWidgets);
 }
 
-/*void UGamePage::UpdateSessionListUI()
+
+void UGamePage::HandleCardSelected(const FString& GameSessionID)
 {
-	if (!GameListCardClass || !ScrollBox_GameList) return;
-
-	// 기존 아이템 제거
-	ScrollBox_GameList->ClearChildren();
-	
-	
-	if (UGameInstance* GI = GetGameInstance())
+	// 같은 카드 눌렀을 경우 선택 해제
+	if (SelectedCard && SelectedCard->GameSessionId == GameSessionID)
 	{
-		if (UDSGameInstanceSubsystem* SessionSubsystem = GI->GetSubsystem<UDSGameInstanceSubsystem>())
+		SelectedCard->SetSelected(false);
+		SelectedCard = nullptr;
+		SelectedGameSessionID = TEXT("");
+		bHasSelectedSession = false;
+		return;
+	}
+
+	// 이전 선택된 카드 비활성화
+	if (SelectedCard)
+	{
+		SelectedCard->SetSelected(false);
+	}
+
+	// 새로운 카드 선택
+	for (UWidget* Widget : ScrollBox_GameList->GetAllChildren())
+	{
+		if (UGameListCard* Card = Cast<UGameListCard>(Widget))
 		{
-			// SessionSubsystem->CachedGameSessions 사용해서 ListView 갱신
-			for (const auto& Pair : SessionSubsystem->CachedGameSessions)
+			if (Card->GameSessionId == GameSessionID)
 			{
-				const FDSGameSession& Session = Pair.Value;
-
-				// 카드 위젯 생성
-				UGameListCard* Card = CreateWidget<UGameListCard>(this, GameListCardClass);
-				if (!Card) continue;
-
-				// 세션 정보 전달
-				Card->SetSessionInfo(Session.Name, Session.CurrentPlayerSessionCount, Session.MaximumPlayerSessionCount);
-
-				// 패널에 추가
-				ScrollBox_GameList->AddChild(Card);
+				SelectedCard = Card;
+				SelectedCard->SetSelected(true);
+				SelectedGameSessionID = GameSessionID;
+				bHasSelectedSession = true;
+				// 이 상태로 선택된 채로 JoinGame 버튼을 누르면 실행됨
+				break;
 			}
 		}
 	}
-}*/
+}

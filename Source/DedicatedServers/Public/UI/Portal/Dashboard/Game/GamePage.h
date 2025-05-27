@@ -7,6 +7,8 @@
 #include "GamePage.generated.h"
 
 
+struct FDSGameSession;
+class UButton;
 class UJoinGame;
 class UGameListCard;
 class UScrollBox;
@@ -35,6 +37,9 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UStatusMessage> StatusMessageWidget;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UButton> RefreshButtonWidget;			// 추가
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameSessionsManager> GameSessionsManagerClass;
@@ -43,14 +48,11 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UScrollBox> ScrollBox_GameList;
 
-	// UPROPERTY(meta = (BindWidget))
-	// TObjectPtr<UTextBlock> TextBlock_StatusMessage;	따로 구현해둠
-
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameListCard> GameListCardClass;
 	
-	/*UFUNCTION(BlueprintCallable)
-	void UpdateSessionListUI();*/
+	UFUNCTION()
+	void UpdateSessionListUI( const FDSGameSession& GameSession);
 
 	// Host, QuickMatch, Join시 상태 메세지
 	UFUNCTION()
@@ -71,7 +73,18 @@ private:
 
 	UFUNCTION()
 	void JoinGameButtonClicked();
+
+	UFUNCTION()
+	void RefreshButtonClicked();
+
+	UFUNCTION()
+	void HandleCardSelected(const FString& GameSessionID);
+
+	UPROPERTY()
+	UGameListCard* SelectedCard = nullptr;
 	
+	FString SelectedGameSessionID;
+	bool bHasSelectedSession = false;
  
 	UPROPERTY()
 	TObjectPtr<UGameSessionsManager> GameSessionsManager;

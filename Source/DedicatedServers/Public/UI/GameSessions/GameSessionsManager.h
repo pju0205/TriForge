@@ -34,6 +34,9 @@ public:
 	void QuickMatchGameSession();
 	void HostGameSession();
 	void RetrieveGameSessions();
+
+	// 서버에 접속 시도하는 중요한 함수
+	void TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
 private:
 	
 	void FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
@@ -42,7 +45,7 @@ private:
 	void CreatePlayerSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	FString GetUniquePlayerId() const;
 	void HandleGameSessionStatus(const FString& Status, const FString& SessionId);
-	void TryCreatePlayerSession(const FString& PlayerId, const FString& GameSessionId);
+	
  
 	FTimerHandle CreateSessionTimer;
 };

@@ -33,7 +33,8 @@ void UGameSessionsManager::QuickMatchGameSession()
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->ProcessRequest();
 
-
+	// 현재 로그인된 로컬 유저의 인증 토큰(AccessToken)을 HTTP 요청 헤더에 포함시키는 작업
+	// 유효한 유저가 요청한 작업인가 체크
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
@@ -123,7 +124,6 @@ void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHt
 		if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
 		{
 			TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, GameSessionId);
-			OnGameSessionCreated.Broadcast(GameSession);								// 사용자 정의 델리게이트로 위젯에 전달
 		}
 	}
 }
@@ -146,7 +146,7 @@ void UGameSessionsManager::RetrieveGameSessions()
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->ProcessRequest();
 
-
+	// 현재 로그인된 로컬 유저의 인증 토큰(AccessToken)을 HTTP 요청 헤더에 포함시키는 작업
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
@@ -165,20 +165,37 @@ void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request,
 	// HTTP 응답을 JSON 객체로 변환
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+
+	FDSGameSessionResponse ResponseStruct;
+
+	// 활성화된 방 없으면
+	if (ResponseStruct.sessions.Num() == 0)
+	{
+		BroadcastGameSessionMessage.Broadcast(TEXT("No active game sessions found."), true);
+		return;
+	}
+
+	// 활성화된 방 있으면
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
-		if (ContainsErrors(JsonObject))	// 응답 내부에 에러 정보가 있으면 처리
+		if (ContainsErrors(JsonObject))
 		{
 			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+			return;
 		}
-		
-		FDSGameSession GameSession;															// 람다에서 적용했던 것 처럼 GameSession 데이터가 여기 저장됨
-		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
-		
-		/*const FString GameSessionId = GameSession.GameSessionId;
-		const FString GameSessionStatus = GameSession.Status;*/
-		
-		OnRetrieveGameSession.Broadcast(GameSession);		// 사용자 정의 델리게이트로 위젯에 전달
+
+		BroadcastGameSessionMessage.Broadcast(TEXT("Adding game session list.."), false);
+
+		// 전체 응답 구조체로 변환
+		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &ResponseStruct);
+
+		// 배열 처리
+		for (const FDSGameSession& GameSession : ResponseStruct.sessions)
+		{
+			OnRetrieveGameSession.Broadcast(GameSession); // 여러 개를 개별적으로 위젯에 전달 가능
+		}
+
+		BroadcastGameSessionMessage.Broadcast(TEXT("Successfully added Game Session list"), true);
 	}
 }
 

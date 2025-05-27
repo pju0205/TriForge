@@ -3,10 +3,43 @@
 
 #include "UI/Portal/Dashboard/Game/GameListCard.h"
 
+#include "Components/Button.h"
 #include "Components/TextBlock.h"
+
+void UGameListCard::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+
+	if (Button_Session)
+	{
+		Button_Session->OnClicked.AddDynamic(this, &UGameListCard::HandleClick);
+	}
+}
+
+// GameList Button 클릭하면 델리게이트 실행 -> GamePage로
+void UGameListCard::HandleClick()
+{
+	OnCardSelected.Broadcast(GameSessionId);
+}
 
 void UGameListCard::SetSessionInfo(const FString& SessionName, int32 Player, int32 MaxPlayer) const
 {
 	TextBlock_SessionName->SetText(FText::FromString(SessionName));
 	TextBlock_Players->SetText(FText::FromString(Player + "/" + MaxPlayer));
+}
+
+void UGameListCard::SetSelected(bool bSelected)
+{
+	bIsSelected = bSelected;
+
+	// 시각적 처리 (예: 배경 색상 변경)
+	if (bIsSelected)
+	{
+		// 예시: 선택되었을 때 배경색 변경
+		SetColorAndOpacity(FLinearColor(0.2f, 0.5f, 1.0f, 1.0f));
+	}
+	else
+	{
+		SetColorAndOpacity(FLinearColor::White);
+	}
 }
