@@ -20,6 +20,7 @@ void UPlayerLabel::SetReadyState(bool bIsReady)
 {
  	if (TextBlock_ReadyStatus)
  	{
+ 		TextBlock_ReadyStatus->SetColorAndOpacity(bIsReady ? FColor::Green : FColor::Red);
  		TextBlock_ReadyStatus->SetText(FText::FromString(bIsReady ? TEXT("Ready") : TEXT("Not Ready")));
  	}
 }

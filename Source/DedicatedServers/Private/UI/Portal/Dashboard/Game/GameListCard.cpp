@@ -24,15 +24,15 @@ void UGameListCard::HandleClick()
 
 void UGameListCard::SetSessionInfo(const FString& SessionName, int32 Player, int32 MaxPlayer) const
 {
-	TextBlock_SessionName->SetText(FText::FromString(SessionName));
-	TextBlock_Players->SetText(FText::FromString(Player + "/" + MaxPlayer));
+	TextBlock_SessionName->SetText(FText::FromString(SessionName + TEXT("'s Room")));
+	TextBlock_Players->SetText(FText::FromString(FString::FromInt(Player) + TEXT("/") + FString::FromInt(MaxPlayer)));
 }
 
 void UGameListCard::SetSelected(bool bSelected)
 {
 	bIsSelected = bSelected;
 
-	// 시각적 처리 (예: 배경 색상 변경)
+	// 시각적 처리 (배경 색상 변경)
 	if (bIsSelected)
 	{
 		// 예시: 선택되었을 때 배경색 변경

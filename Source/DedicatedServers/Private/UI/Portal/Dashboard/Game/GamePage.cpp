@@ -30,7 +30,7 @@ void UGamePage::NativeConstruct()
 	JoinGameWidget->Button_JoinGame->OnClicked.AddDynamic(this, &UGamePage::JoinGameButtonClicked);
 	RefreshButtonWidget->OnClicked.AddDynamic(this, &UGamePage::RefreshButtonClicked);
 
-	
+	RefreshButtonClicked();
 }
 
 void UGamePage::QuickMatchGameButtonClicked()
@@ -96,7 +96,7 @@ void UGamePage::ButtonSetIsEnabled(bool bClicked)
 }
 
 
-// 이건 카드 위젯만 생성하기
+// Card Widget 생성용
 void UGamePage::UpdateSessionListUI(const FDSGameSession& GameSession)
 {
 	if (!GameListCardClass || !ScrollBox_GameList) return;
@@ -106,16 +106,14 @@ void UGamePage::UpdateSessionListUI(const FDSGameSession& GameSession)
 	if (!GameListCard) return;
 
 	// 카드에 세션 정보 입력
-	const FString SessionName = GameSession.Name; // 서버에서 온 이름
-	const int32 PlayerCount = GameSession.CurrentPlayerSessionCount; // 당신 구조체에 따라 변경
+	const FString SessionName = GameSession.CreatorId;
+	const int32 PlayerCount = GameSession.CurrentPlayerSessionCount;
 	const int32 MaxPlayerCount = GameSession.MaximumPlayerSessionCount;
 
 	GameListCard->SetSessionInfo(SessionName, PlayerCount, MaxPlayerCount);
 
-	// GameSessionId 저장해두면 클릭 시 활용 가능
+	// GameSessionId 저장
 	GameListCard->GameSessionId = GameSession.GameSessionId;
-
-	// 클릭 이벤트 바인딩 (선택적으로 필요)
 	GameListCard->OnCardSelected.AddDynamic(this, &UGamePage::HandleCardSelected);
 
 	// ScrollBox에 추가

@@ -31,15 +31,42 @@ void UGameSessionsManager::QuickMatchGameSession()
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
 
 	// 현재 로그인된 로컬 유저의 인증 토큰(AccessToken)을 HTTP 요청 헤더에 포함시키는 작업
 	// 유효한 유저가 요청한 작업인가 체크
-	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
+	/*UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
 		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
+	}*/
+	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
+	if (IsValid(LocalPlayerSubsystem))
+	{
+		// 인증 헤더 설정 (Cognito 인증 토큰)
+		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
+
+		// SON 바디 생성 (username 포함)
+		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+		JsonObject->SetStringField(TEXT("username"), LocalPlayerSubsystem->Username);
+
+		FString RequestBody;
+		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+		FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+
+		// Content-Length 명시적으로 설정
+		Request->SetHeader(TEXT("Content-Length"), FString::FromInt(FTCHARToUTF8(*RequestBody).Length()));  // UTF-8 기준 길이로 설정 권장
+
+		Request->SetContentAsString(RequestBody);
+
+		UE_LOG(LogTemp, Warning, TEXT("RequestBody: %s"), *RequestBody);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("LocalPlayerSubsystem is invalid"));
+		return;
+	}
+	
+	Request->ProcessRequest();
 }
 
 void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -60,13 +87,24 @@ void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Requ
 			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 		}
 		
+		TSharedPtr<FJsonObject> GameSessionJson = JsonObject->GetObjectField(TEXT("gameSession"));
+		
 		FDSGameSession GameSession;															// 람다에서 적용했던 것 처럼 GameSession 데이터가 여기 저장됨
-		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
+		// FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
+		if (!FJsonObjectConverter::JsonObjectToUStruct(GameSessionJson.ToSharedRef(), &GameSession))
+		{
+			UE_LOG(LogTemp, Error, TEXT("GameSession 변환 실패"));
+			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+			return;
+		}
+		GameSession.Dump();
 		
 		const FString GameSessionId = GameSession.GameSessionId;
 		const FString GameSessionStatus = GameSession.Status;
+
+		UE_LOG(LogTemp, Warning, TEXT("Game Session Status: %s"), *GameSessionStatus);
+		UE_LOG(LogTemp, Warning, TEXT("Game Session ID: %s"), *GameSessionId);
 		HandleGameSessionStatus(GameSessionStatus, GameSessionId);
-		OnGameSessionCreated.Broadcast(GameSession);		// 사용자 정의 델리게이트로 위젯에 전달
 	}
 }
 
@@ -87,14 +125,35 @@ void UGameSessionsManager::HostGameSession()
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
-
-
+	
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
+		// 인증 헤더 설정 (Cognito 인증 토큰)
 		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
+
+		// SON 바디 생성 (username 포함)
+		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+		JsonObject->SetStringField(TEXT("username"), LocalPlayerSubsystem->Username);
+
+		FString RequestBody;
+		TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+		FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+
+		// Content-Length 명시적으로 설정
+		Request->SetHeader(TEXT("Content-Length"), FString::FromInt(FTCHARToUTF8(*RequestBody).Length()));  // UTF-8 기준 길이로 설정 권장
+
+		Request->SetContentAsString(RequestBody);
+
+		UE_LOG(LogTemp, Warning, TEXT("RequestBody: %s"), *RequestBody);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("LocalPlayerSubsystem is invalid"));
+		return;
+	}
+
+	Request->ProcessRequest();
 }
 
 void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -109,7 +168,37 @@ void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHt
 	// HTTP 응답을 JSON 객체로 변환
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+
+	// JSON 파싱 성공 후	(새로운 구조)
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
+	{
+		if (ContainsErrors(JsonObject)) {
+			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+		}
+    
+		// 1) "gameSession" 필드만 추출 ★
+		TSharedPtr<FJsonObject> GameSessionJson = JsonObject->GetObjectField(TEXT("gameSession"));
+
+		// 2) gameSession 오브젝트만 FDSGameSession 구조체에 변환
+		FDSGameSession GameSession;
+		if (!FJsonObjectConverter::JsonObjectToUStruct(GameSessionJson.ToSharedRef(), &GameSession))
+		{
+			UE_LOG(LogTemp, Error, TEXT("GameSession 변환 실패"));
+			BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
+			return;
+		}
+		GameSession.Dump();
+
+		const FString GameSessionId = GameSession.GameSessionId;
+
+		if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
+		{
+			TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, GameSessionId);
+		}
+	}
+
+	// 기존 구조
+	/*if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
 		if (ContainsErrors(JsonObject))	// 응답 내부에 에러 정보가 있으면 처리
 		{
@@ -118,14 +207,16 @@ void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHt
 		
 		FDSGameSession GameSession;															// 람다에서 적용했던 것 처럼 GameSession 데이터가 여기 저장됨
 		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &GameSession);	// GameSession 응답 정보를 구조체로 파싱
+		GameSession.Dump();
 		
 		const FString GameSessionId = GameSession.GameSessionId;
+		UE_LOG(LogTemp, Warning, TEXT("Creator: %s"), *GameSession.CreatorId);
 		
 		if (UDSLocalPlayerSubsystem* DSLocalPlayerSubsystem = GetDSLocalPlayerSubsystem(); IsValid(DSLocalPlayerSubsystem))
 		{
 			TryCreatePlayerSession(DSLocalPlayerSubsystem->Username, GameSessionId);
 		}
-	}
+	}*/
 }
 
 void UGameSessionsManager::RetrieveGameSessions()
@@ -144,14 +235,15 @@ void UGameSessionsManager::RetrieveGameSessions()
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	Request->ProcessRequest();
-
+	
 	// 현재 로그인된 로컬 유저의 인증 토큰(AccessToken)을 HTTP 요청 헤더에 포함시키는 작업
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
 		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
 	}
+	
+	Request->ProcessRequest();
 }
 
 void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
@@ -167,15 +259,7 @@ void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request,
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 
 	FDSGameSessionResponse ResponseStruct;
-
-	// 활성화된 방 없으면
-	if (ResponseStruct.sessions.Num() == 0)
-	{
-		BroadcastGameSessionMessage.Broadcast(TEXT("No active game sessions found."), true);
-		return;
-	}
-
-	// 활성화된 방 있으면
+	
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
 		if (ContainsErrors(JsonObject))
@@ -184,11 +268,19 @@ void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request,
 			return;
 		}
 
-		BroadcastGameSessionMessage.Broadcast(TEXT("Adding game session list.."), false);
-
-		// 전체 응답 구조체로 변환
+		// 전체 응답 구조체로 변환 ResponseStruct
 		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &ResponseStruct);
 
+		
+		// 활성화된 방 없으면
+		if (ResponseStruct.sessions.Num() == 0)
+		{
+			BroadcastGameSessionMessage.Broadcast(TEXT("No active game sessions found."), true);
+			return;
+		}
+
+		BroadcastGameSessionMessage.Broadcast(TEXT("Adding game session list.."), false);
+		
 		// 배열 처리
 		for (const FDSGameSession& GameSession : ResponseStruct.sessions)
 		{
@@ -196,6 +288,10 @@ void UGameSessionsManager::RetrieveGameSession_Response(FHttpRequestPtr Request,
 		}
 
 		BroadcastGameSessionMessage.Broadcast(TEXT("Successfully added Game Session list"), true);
+	}
+	else
+	{
+		BroadcastGameSessionMessage.Broadcast(HTTPStatusMessages::SomethingWentWrong, true);
 	}
 }
 
