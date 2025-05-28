@@ -9,7 +9,7 @@
 void ATFHUD::DrawHUD()
 {
 	Super::DrawHUD();
-
+	
 	FVector2D ViewportSize;
 	if (GEngine)
 	{
