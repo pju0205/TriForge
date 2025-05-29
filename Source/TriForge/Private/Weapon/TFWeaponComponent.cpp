@@ -10,6 +10,7 @@
 #include "Character/TFPlayerCharacter.h"
 #include "Character/TFPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Weapon/TFMeleeWeapon.h"
 #include "Weapon/TFRangedWeapon.h"
 #include "Weapon/TFWeapon.h"
@@ -29,6 +30,8 @@ void UTFWeaponComponent::BeginPlay()
 		DefaultFOV = PlayerCharacter->GetCamera()->FieldOfView;
 		CurrentFOV = DefaultFOV;
 	}
+	
+	ZERO_INIT(float, RecoilOffset);
 }
 
 void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -40,6 +43,16 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	{
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
+	}
+	// 연사 가능 무기 (bAutomatic = true)에만 recoil 적용 
+	if (bAttackButtonPressed && EquippedWeapon && EquippedWeapon->bAutomatic)
+	{
+		ApplyRecoil(DeltaTime);
+	}
+	else if (!bAttackButtonPressed)
+	{
+		RecoilOffset.X = FMath::FInterpTo(RecoilOffset.X, 0.f, DeltaTime, 10.f);
+		RecoilOffset.X = FMath::FInterpTo(RecoilOffset.Y, 0.f, DeltaTime, 10.f);
 	}
 	
 }
@@ -190,9 +203,19 @@ void UTFWeaponComponent::Attacking()
 		
 		EquippedWeapon->Attack();
 		
+		
 		StartAttackTimer();
 	}
 	
+}
+
+
+void UTFWeaponComponent::ApplyRecoil(float DeltaTime)
+{
+	RecoilOffset.X += FMath::Clamp(RecoilOffset.X + FMath::FRandRange(-0.2, -0.1), 0, -3.f);
+	RecoilOffset.Y += FMath::FRandRange(-0.3, 0.3);
+	PlayerController->AddYawInput(RecoilOffset.X * DeltaTime);
+	PlayerController->AddPitchInput(RecoilOffset.Y * DeltaTime);
 }
 
 bool UTFWeaponComponent::CanAttack()
@@ -229,6 +252,7 @@ bool UTFWeaponComponent::CanAttack()
 void UTFWeaponComponent::StartAttackTimer()
 {
 	if (EquippedWeapon == nullptr || PlayerCharacter == nullptr) return;
+	bIsFiring = true;
 	PlayerCharacter->GetWorldTimerManager().SetTimer(
 		AttackTimer,
 		this,
@@ -244,6 +268,7 @@ void UTFWeaponComponent::AttackTimerFinished()
 	if (bAttackButtonPressed && EquippedWeapon->bAutomatic)
 	{
 		Attacking();
+		bIsFiring = false;
 	}
 }
 

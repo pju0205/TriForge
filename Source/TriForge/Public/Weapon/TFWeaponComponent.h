@@ -89,4 +89,11 @@ private:
 	float ZoomInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
+
+	UPROPERTY()
+	FVector2D RecoilOffset;
+
+	void ApplyRecoil(float DeltaTime);
+
+	bool bIsFiring;
 };
