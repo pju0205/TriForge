@@ -7,7 +7,6 @@
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/TFPlayerController.h"
-#include "Character/Component/TFEliminationComponent.h"
 #include "Character/Component/TFPlayerHealthComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -17,7 +16,6 @@
 #include "HUD/TFHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "PlayerState/TFPlayerState.h"
 #include "TriForge/TriForge.h"
 #include "Weapon/TFWeapon.h"
 #include "Weapon/TFWeaponComponent.h"
@@ -38,10 +36,6 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	// Weapon
 	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
 	WeaponComponent->SetIsReplicated(true);
-
-	// 데이터 처리
-	EliminationComponent = CreateDefaultSubobject<UTFEliminationComponent>("EliminationComponent");
-	EliminationComponent->SetIsReplicated(false);
 
 	// Health 관련
 	HealthComponent = CreateDefaultSubobject<UTFPlayerHealthComponent>("Health");

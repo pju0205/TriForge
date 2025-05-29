@@ -50,6 +50,7 @@ void UGameStatsManager::RecordMatchStats_Response(FHttpRequestPtr Request, FHttp
 void UGameStatsManager::RetrieveMatchStats()
 {
 	// 유저 정보 가져옴
+	RetrieveMatchStatsStatusMesssage.Broadcast(TEXT("Retrieving match stats..."), false);
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (!IsValid(LocalPlayerSubsystem)) return;
 	check(APIData);
@@ -77,6 +78,7 @@ void UGameStatsManager::RetrieveMatchStats_Response(FHttpRequestPtr Request, FHt
 	if (!bWasSuccessful)
 	{
 		OnRetrieveMatchStatsResponseReceived.Broadcast(FDSRetrieveMatchStatsResponse());
+		RetrieveMatchStatsStatusMesssage.Broadcast(HTTPStatusMessages::SomethingWentWrong, false);
 		return;
 	}
 
@@ -87,6 +89,7 @@ void UGameStatsManager::RetrieveMatchStats_Response(FHttpRequestPtr Request, FHt
 		if (ContainsErrors(JsonObject))
 		{
 			OnRetrieveMatchStatsResponseReceived.Broadcast(FDSRetrieveMatchStatsResponse());
+			RetrieveMatchStatsStatusMesssage.Broadcast(HTTPStatusMessages::SomethingWentWrong, false);
 			return;
 		}
 
@@ -95,6 +98,7 @@ void UGameStatsManager::RetrieveMatchStats_Response(FHttpRequestPtr Request, FHt
 		RetrieveMatchStatsResponse.Dump();
 
 		OnRetrieveMatchStatsResponseReceived.Broadcast(RetrieveMatchStatsResponse);
+		RetrieveMatchStatsStatusMesssage.Broadcast(TEXT("Match stats retrieved."), false);
 	}
 }
 

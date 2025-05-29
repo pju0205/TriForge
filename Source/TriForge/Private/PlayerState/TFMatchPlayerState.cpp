@@ -11,16 +11,16 @@ ATFMatchPlayerState::ATFMatchPlayerState()
 {
 	NetUpdateFrequency = 100.f; // let's not be sluggish, alright?
 
-	Hits	= 0;
-	Misses = 0;
+	// 기록 용 변수들
+	// Hits	= 0;
+	// Misses = 0;
 	Kills = 0;
 	Deaths = 0;
 	RoundScore = 0;
 	MatchScore = 0;
-	Defeats = 0;
 	bWinner = false;
 
-	// 초기화 시키기
+	// 로컬 변수들
 	RoundWins = 0;
 	MyMatchWins = 0;
 	OpponentMatchWins = 0;
@@ -35,8 +35,10 @@ void ATFMatchPlayerState::OnMatchEnded(const FString& Username)
 	RecordMatchStatsInput.username = Username;
 
 	// Hit, miss, kill, death 넣어야됨
+	RecordMatchStatsInput.matchStats.kills = Kills;
+	RecordMatchStatsInput.matchStats.deaths = Deaths;
 	RecordMatchStatsInput.matchStats.roundScore = RoundScore;
-	RecordMatchStatsInput.matchStats.defeats = Defeats;
+	RecordMatchStatsInput.matchStats.matchScore = RoundScore;
 	RecordMatchStatsInput.matchStats.matchWins = bWinner ? 1 : 0;
 	RecordMatchStatsInput.matchStats.matchLosses = bWinner ? 0 : 1;
 	
@@ -50,13 +52,10 @@ void ATFMatchPlayerState::CopyProperties(APlayerState* NewPlayerState)
 
 	if (ATFMatchPlayerState* NewTFPS = Cast<ATFMatchPlayerState>(NewPlayerState))
 	{
-		NewTFPS->Hits = this->Hits;
-		NewTFPS->Misses = this->Misses;
 		NewTFPS->Kills = this->Kills;
 		NewTFPS->Deaths = this->Deaths;
 		NewTFPS->RoundScore = this->RoundScore;
 		NewTFPS->MatchScore = this->MatchScore;
-		NewTFPS->Defeats = this->Defeats;
 		NewTFPS->bWinner = this->bWinner;
 
 		NewTFPS->MyMatchWins = this->MyMatchWins;
@@ -65,17 +64,17 @@ void ATFMatchPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	}
 }
 
-// 맞춘 횟수
-void ATFMatchPlayerState::AddHit()
-{
-	++Hits;
-}
-
-// 빗맞춘 횟수
-void ATFMatchPlayerState::AddMiss()
-{
-	++Misses;
-}
+// // 맞춘 횟수
+// void ATFMatchPlayerState::AddHit()
+// {
+// 	++Hits;
+// }
+//
+// // 빗맞춘 횟수
+// void ATFMatchPlayerState::AddMiss()
+// {
+// 	++Misses;
+// }
 
 // 킬 횟수
 void ATFMatchPlayerState::AddKill()
@@ -107,12 +106,8 @@ void ATFMatchPlayerState::IsTheWinner()
 	bWinner = true;
 }
 
-void ATFMatchPlayerState::Client_RoundScored_Implementation(int32 InRoundScore)
-{
-}
 
-// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ 라운드 관련 시작 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-// 잘됨
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ 라운드 관련 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 void ATFMatchPlayerState::AddRoundResult(bool bWon)
 {
 	RoundResults.Add(bWon);
@@ -124,9 +119,6 @@ void ATFMatchPlayerState::Client_RoundResult_Implementation(const TArray<bool>& 
 {
 	OnRoundResultChanged.Broadcast(InRoundResults);
 }
-// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ 라운드 관련 끝 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-
-
 
 // ㅡㅡㅡㅡㅡㅡㅡㅡㅡ Match 관련 시작 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 void ATFMatchPlayerState::AddMatchResult(bool bWon)
@@ -143,8 +135,6 @@ void ATFMatchPlayerState::Client_MatchResult_Implementation(bool bWon, int32 MyS
 {
 	OnMatchResultChanged.Broadcast(bWon, MyScore, OpponentScore);
 }
-// ㅡㅡㅡㅡㅡㅡㅡㅡㅡ Match 관련 끝 ㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
-
 
 // 값 멀티 처리
 void ATFMatchPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

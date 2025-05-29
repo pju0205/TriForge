@@ -39,6 +39,8 @@ void UGameSessionsManager::QuickMatchGameSession()
 	{
 		Request->SetHeader(TEXT("Authorization"), LocalPlayerSubsystem->GetAuthResult().AccessToken);
 	}*/
+
+	// API Gateway에서 Lambda 프록시 통합을 활성화해야 추가 정보도 포함시킨 Json 파일 보낼 수 있음
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
@@ -125,7 +127,8 @@ void UGameSessionsManager::HostGameSession()
 	Request->SetURL(APIUrl);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	
+
+	// API Gateway에서 Lambda 프록시 통합을 활성화해야 추가 정보도 포함시킨 Json 파일 보낼 수 있음
 	UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 	if (IsValid(LocalPlayerSubsystem))
 	{
@@ -169,7 +172,7 @@ void UGameSessionsManager::HostGameSession_Response(FHttpRequestPtr Request, FHt
 	TSharedPtr<FJsonObject> JsonObject;
 	TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
 
-	// JSON 파싱 성공 후	(새로운 구조)
+	// JSON 파싱 성공 후 (새로운 구조)
 	if (FJsonSerializer::Deserialize(JsonReader, JsonObject))
 	{
 		if (ContainsErrors(JsonObject)) {

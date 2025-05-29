@@ -137,19 +137,13 @@ void FDSCodeDeliveryDetails::Dump() const
 void FDSRetrieveMatchStatsResponse::Dump() const
 {
 	UE_LOG(LogDedicatedServers, Log, TEXT("FDSRetrieveMatchStatsResponse:"));
-	UE_LOG(LogDedicatedServers, Log, TEXT("  highestStreak: %d"), highestStreak);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  dethroneElims: %d"), dethroneElims);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  gotFirstBlood: %d"), gotFirstBlood);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  defeats: %d"), defeats);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  RoundScores: %d"), roundScore);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  email: %s"), *email);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  misses: %d"), misses);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  revengeElims: %d"), revengeElims);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  matchLosses: %d"), matchLosses);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  showstopperElims: %d"), showstopperElims);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  databaseid: %s"), *databaseid);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  headShotElims: %d"), headShotElims);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  username: %s"), *username);
-	UE_LOG(LogDedicatedServers, Log, TEXT("  hits: %d"), hits);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  roundScore: %d"), roundScore);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  matchScore: %d"), matchScore);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  kills: %d"), kills);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  deaths: %d"), deaths);
 	UE_LOG(LogDedicatedServers, Log, TEXT("  matchWins: %d"), matchWins);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  matchLosses: %d"), matchLosses);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  databaseid: %s"), *databaseid);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  username: %s"), *username);
+	UE_LOG(LogDedicatedServers, Log, TEXT("  email: %s"), *email);
 }

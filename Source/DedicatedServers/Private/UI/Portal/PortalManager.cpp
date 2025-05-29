@@ -64,7 +64,7 @@ void UPortalManager::SignIn_Response(FHttpRequestPtr Request, FHttpResponsePtr R
  
 		FDSInitiateAuthResponse InitiateAuthResponse;	// 액세스 토큰, ID 토큰 가짐
 		FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), &InitiateAuthResponse);
-		
+		InitiateAuthResponse.Dump();
  
 		UDSLocalPlayerSubsystem* LocalPlayerSubsystem = GetDSLocalPlayerSubsystem();
 		if (IsValid(LocalPlayerSubsystem))

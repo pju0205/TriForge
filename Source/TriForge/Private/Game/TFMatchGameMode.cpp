@@ -3,6 +3,7 @@
 
 #include "Game/TFMatchGameMode.h"
 
+#include "Game/TFMatchGameState.h"
 #include "GameFramework/GameStateBase.h"
 #include "Player/DSPlayerController.h"
 #include "PlayerState/TFMatchPlayerState.h"
@@ -104,15 +105,20 @@ void ATFMatchGameMode::HandleMatchWin(APlayerController* Loser, APlayerControlle
 	if (WinnerPS && WinnerPS->MyMatchWins >= MaxMatch)
 	{
 		bIsEndedMatch = true;
-		UE_LOG(LogTemp, Display, TEXT("bIsEndedMatch = true"));
 	}
 	
 	// MaxMatch 횟수 다 채웠으면 Winner 승리로 간주
 	if (bIsEndedMatch)
 	{
+		ATFMatchGameState* GS = GetGameState<ATFMatchGameState>();
+		if (IsValid(GS))
+		{
+			GS->UpdateLeader(); // 최종 승자 업데이트
+		}
+		
 		// 완전 종료 게임 끝
 		WinnerPS->IsTheWinner();				// 승리자로 기록
-		/* OnMatchEnded();						// 이게 모두한테 실행이 되나? 일단 보류 */
+		OnMatchEnded();						// 이게 모두한테 실행이 되나? 일단 보류
 		
 		StopCountdownTimer(RoundTimer);
 		MatchStatus = EMatchStatus::GameOver;
@@ -176,6 +182,7 @@ void ATFMatchGameMode::PrepareNextRound()
 // TFGameMode에서 실행
 void ATFMatchGameMode::PlayerEliminated()
 {
+	
 }
 
 void ATFMatchGameMode::NextRandomTravelMap()

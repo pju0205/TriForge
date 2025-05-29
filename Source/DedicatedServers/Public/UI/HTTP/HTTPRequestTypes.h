@@ -298,37 +298,28 @@ struct FDSMatchStats
 	int32 roundScore{};			// 씀
 
 	UPROPERTY()
-	int32 defeats{};			// 씀
+	int32 matchScore{};			// 씀
 
 	UPROPERTY()
-	int32 hits{};
+	int32 kills{};			// 씀
 
 	UPROPERTY()
-	int32 misses{};
-
-	UPROPERTY()
-	int32 headShotElims{};
-
-	UPROPERTY()
-	int32 highestStreak{};
-
-	UPROPERTY()
-	int32 revengeElims{};
-
-	UPROPERTY()
-	int32 dethroneElims{};
-
-	UPROPERTY()
-	int32 showstopperElims{};
-
-	UPROPERTY()
-	int32 gotFirstBlood{};
+	int32 deaths{};			// 씀
 
 	UPROPERTY()
 	int32 matchWins{};			// 씀
 
 	UPROPERTY()
 	int32 matchLosses{};		// 씀
+	
+	/* CombatComponent 사용해야됨 
+	 *
+	 * UPROPERTY()
+	 * int32 hits{};
+	 *
+	 * UPROPERTY()
+	 * int32 misses{};
+	 */
 };
 
 USTRUCT()
@@ -348,50 +339,35 @@ struct FDSRetrieveMatchStatsResponse
 {
 	GENERATED_BODY()
 
+	// 기록할 데이터
 	UPROPERTY()
-	int32 highestStreak{};
+	int32 kills{};
+	
+	UPROPERTY()
+	int32 deaths{};
 
 	UPROPERTY()
-	int32 dethroneElims{};
+	int32 matchScore{};
 
 	UPROPERTY()
-	int32 gotFirstBlood{};
+	int32 roundScore{};
 
 	UPROPERTY()
-	int32 defeats{};			// 씀
-
-	UPROPERTY()
-	int32 roundScore{};		// 씀
-
-	UPROPERTY()
-	FString email{};
-
-	UPROPERTY()
-	int32 misses{};
-
-	UPROPERTY()
-	int32 revengeElims{};
+	int32 matchWins{};
 
 	UPROPERTY()
 	int32 matchLosses{};
 
-	UPROPERTY()
-	int32 showstopperElims{};
-
+	// 개인 정보
 	UPROPERTY()
 	FString databaseid{};
 
 	UPROPERTY()
-	int32 headShotElims{};
+	FString username{};
 
 	UPROPERTY()
-	FString username{};		// 씀
-
-	UPROPERTY()
-	int32 hits{};
-
-	UPROPERTY()
-	int32 matchWins{};		// 씀
+	FString email{};
+	
 
 	void Dump() const;
 };

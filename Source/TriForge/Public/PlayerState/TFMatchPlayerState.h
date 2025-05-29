@@ -23,21 +23,20 @@ public:
 	virtual void OnMatchEnded(const FString& Username) override;
 	virtual void CopyProperties(APlayerState* NewPlayerState) override;
 	
-	void AddHit();
-	void AddMiss();
+	// void AddHit();
+	// void AddMiss();
 	void AddKill();
 	void AddDeath();
 	void AddRoundScore();
 	void AddMatchScore();
-	// void AddDefeat();
 	void IsTheWinner();
 
 	bool GetMatchResult() const { return MatchResults; }
 	int32 GetRoundScore() const { return RoundScore; }
 	int32 GetMatchScore() const { return MatchScore; }
 
-	UFUNCTION(Client, Reliable)
-	void Client_RoundScored(int32 InRoundScore);
+	/*UFUNCTION(Client, Reliable)
+	void Client_RoundScored(int32 InRoundScore);*/
 
 	UPROPERTY(BlueprintAssignable)
 	FOnScoreChanged OnScoreChanged;
@@ -74,17 +73,16 @@ protected:
 
 private:
 	// 기록 할 데이터
-	int32 Hits;
-	int32 Misses;
+	// int32 Hits;
+	// int32 Misses;
 	int32 Kills;
-	int32 Deaths;
 	int32 RoundScore;
 	int32 MatchScore;
-	int32 Defeats;
+	int32 Deaths;
 	bool bWinner;
 	
 public:
-	// GameMatch에서 쓸 데이터
+	// MatchGameMode에서 쓸 데이터
 	UPROPERTY()
 	int32 RoundWins;
 

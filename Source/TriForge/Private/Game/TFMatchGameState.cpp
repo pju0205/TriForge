@@ -31,30 +31,24 @@ void ATFMatchGameState::UpdateLeader()
 	{
 		const ATFMatchPlayerState* PlayerA = Cast<ATFMatchPlayerState>(&A);
 		const ATFMatchPlayerState* PlayerB = Cast<ATFMatchPlayerState>(&B);
-		return PlayerA->GetRoundScore() > PlayerB->GetRoundScore();
+		return PlayerA->GetMatchScore() > PlayerB->GetMatchScore();
 	});
 
 	Leaders.Empty();
 	
 	if (SortedPlayers.Num() > 0)
 	{
-		int32 HighestScore = 0;
 		for (APlayerState* PlayerState : SortedPlayers)
 		{
 			ATFMatchPlayerState* Player = Cast<ATFMatchPlayerState>(PlayerState);
 			if (IsValid(Player))
 			{
-				int32 PlayerScore = Player->GetRoundScore();
+				int32 PlayerScore = Player->GetMatchScore();
                 
 				// On the first iteration, set the highest score
 				if (Leaders.Num() == 0)
 				{
-					HighestScore = PlayerScore;
 					Leaders.Add(Player);
-				}
-				else if (PlayerScore == HighestScore)
-				{
-					Leaders.Add(Player); // Add to leaders if scores are tied
 				}
 				else
 				{

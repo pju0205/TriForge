@@ -158,9 +158,6 @@ private:
 // Health 관련
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UTFEliminationComponent> EliminationComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UTFPlayerHealthComponent> HealthComponent;
 
 	// 사망 처리 함수 - HealthComponent에서 호출
