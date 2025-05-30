@@ -93,7 +93,8 @@ private:
 	UPROPERTY()
 	FVector2D RecoilOffset;
 
+	float RecoilYawBias = 0.f;
 	void ApplyRecoil(float DeltaTime);
 
-	bool bIsFiring;
+	
 };

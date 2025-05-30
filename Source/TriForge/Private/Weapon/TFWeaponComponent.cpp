@@ -44,15 +44,18 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
 	}
+	
 	// 연사 가능 무기 (bAutomatic = true)에만 recoil 적용 
-	if (bAttackButtonPressed && EquippedWeapon && EquippedWeapon->bAutomatic)
+	if (bAttackButtonPressed && EquippedWeapon && EquippedWeapon->bAutomatic && CanAttack())
 	{
 		ApplyRecoil(DeltaTime);
 	}
-	else if (!bAttackButtonPressed)
+	else if (!bAttackButtonPressed && RecoilOffset.Size() > 0)
 	{
 		RecoilOffset.X = FMath::FInterpTo(RecoilOffset.X, 0.f, DeltaTime, 10.f);
-		RecoilOffset.X = FMath::FInterpTo(RecoilOffset.Y, 0.f, DeltaTime, 10.f);
+		RecoilOffset.Y = FMath::FInterpTo(RecoilOffset.Y, 0.f, DeltaTime, 10.f);
+
+		RecoilYawBias = FMath::FInterpTo(RecoilYawBias, 0.f, DeltaTime, 10.f);
 	}
 	
 }
@@ -145,8 +148,7 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (WeaponSocket)
 	{
 		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
-
-		/*WeaponSocket->RelativeLocation*/
+		
 		EquippedWeapon->SetActorRelativeLocation(EquippedWeapon->RightHandOffsetLocation);
 		EquippedWeapon->SetActorRelativeRotation(EquippedWeapon->RightHandOffsetRotation);
 	}
@@ -203,19 +205,25 @@ void UTFWeaponComponent::Attacking()
 		
 		EquippedWeapon->Attack();
 		
-		
 		StartAttackTimer();
 	}
 	
 }
 
-
 void UTFWeaponComponent::ApplyRecoil(float DeltaTime)
 {
-	RecoilOffset.X += FMath::Clamp(RecoilOffset.X + FMath::FRandRange(-0.2, -0.1), 0, -3.f);
-	RecoilOffset.Y += FMath::FRandRange(-0.3, 0.3);
-	PlayerController->AddYawInput(RecoilOffset.X * DeltaTime);
-	PlayerController->AddPitchInput(RecoilOffset.Y * DeltaTime);
+	RecoilOffset.X = FMath::Clamp(RecoilOffset.X + FMath::FRandRange(-0.2,-0.1), -2.f, 0.f);
+	PlayerController->AddPitchInput(RecoilOffset.X * DeltaTime); // 위아래
+
+	// 단순히 Random으로 하면 좌우 반동 보다 한쪽으로 치우치는 경우가 많음
+	// 편향값을 두어 한쪽으로 치우치면 반대값이 나오게끔 하였다.
+	float YawRandom = FMath::FRandRange(-3.f, 3.f);
+	float BiasStrength = 0.5f;  // 편향 적용 강도 0 ~ 1
+	float BalancedYaw = YawRandom - RecoilYawBias * BiasStrength;
+	RecoilOffset.Y += BalancedYaw;
+	RecoilYawBias += BalancedYaw;
+	
+	PlayerController->AddYawInput(RecoilOffset.Y * DeltaTime); // 좌우
 }
 
 bool UTFWeaponComponent::CanAttack()
@@ -252,7 +260,7 @@ bool UTFWeaponComponent::CanAttack()
 void UTFWeaponComponent::StartAttackTimer()
 {
 	if (EquippedWeapon == nullptr || PlayerCharacter == nullptr) return;
-	bIsFiring = true;
+
 	PlayerCharacter->GetWorldTimerManager().SetTimer(
 		AttackTimer,
 		this,
@@ -268,7 +276,6 @@ void UTFWeaponComponent::AttackTimerFinished()
 	if (bAttackButtonPressed && EquippedWeapon->bAutomatic)
 	{
 		Attacking();
-		bIsFiring = false;
 	}
 }
 
