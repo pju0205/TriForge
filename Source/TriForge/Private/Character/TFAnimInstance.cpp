@@ -10,6 +10,7 @@
 #include "PoseSearch/PoseSearchTrajectoryTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryLibrary.h"
 #include "PoseSearch/PoseSearchDatabase.h"
+#include "Weapon/TFRangedWeapon.h"
 #include "Weapon/TFWeapon.h"
 
 
@@ -65,7 +66,10 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	
 	bWeaponEquipped = TFPlayerCharacter->IsWeaponEquipped();
 	EquippedWeapon = TFPlayerCharacter->GetEquippedWeapon();
-
+	if (bWeaponEquipped)
+	{
+		bRangedWeapon = EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon;
+	}
 	
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
@@ -74,7 +78,7 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	// 무기 왼손위치를 무기의 LeftHandSocket을 만들어 고정 시키기 위한 함수
 	// LeftHandSocket Transform을 월드 상에서 구한 후 BoneSpace에서 오른 손에 대한 상대적위치로 변환 후
 	// OutPosition, OutRotation으로 LeftHand를 이동.
-	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && TFPlayerCharacter->GetMesh())
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && TFPlayerCharacter->GetMesh() && bRangedWeapon)
 	{
 		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), RTS_World);
 		FVector OutPosition;
@@ -82,6 +86,18 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		TFPlayerCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		// 무기가 Crosshair를 향하도록 하는 코드, RightHandRotation을 이용하여 Transform Bone노드를 이용해 AnimBlueprint에서 적용 가능
+		// 본인에게만 적용되고 클라이언트에서는 적용 안 됨, FHitResult를 Replicate되게 하면 할 수 있는데 네트워크 량이 너무 많아짐
+		/*if (TFPlayerCharacter->IsLocallyControlled())
+		{ 
+			ATFRangedWeapon* RangedWeapon = Cast<ATFRangedWeapon>(EquippedWeapon);
+			FHitResult Hit;
+			RangedWeapon->TraceEnemy(Hit);
+			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), RTS_World);
+			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(),
+				RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - Hit.ImpactPoint));
+		}*/
 	}
 
 	if (CurrentSelectedDatabase != nullptr)
@@ -181,6 +197,7 @@ void UTFAnimInstance::UpdateEssentialValues()
 		{
 			CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
 		}
+		
 	}
 }
 
@@ -326,11 +343,14 @@ E_EquippedWeaponType UTFAnimInstance::CheckWeaponType(EWeaponType CurrentWeaponT
 	case EWeaponType::Ewt_Rifle:
 		EquippedWeaponType = E_EquippedWeaponType::Rifle;
 		break;
-	case EWeaponType::EWt_Pistol:
+	case EWeaponType::Ewt_Pistol:
 		EquippedWeaponType = E_EquippedWeaponType::Pistol;
 		break;
 	case EWeaponType::Ewt_ShotGun:
-		EquippedWeaponType = E_EquippedWeaponType::ShotGun;
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
+		break;
+	case EWeaponType::Ewt_SniperRifle:
+		EquippedWeaponType = E_EquippedWeaponType::Rifle;
 		break;
 	case EWeaponType::Ewt_Knife:
 		EquippedWeaponType = E_EquippedWeaponType::UnEquipped;

@@ -4,12 +4,13 @@
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "HUD/TFHUD.h"
-#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "Camera/CameraComponent.h"
 #include "Character/TFPlayerCharacter.h"
 #include "Character/TFPlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Weapon/TFMeleeWeapon.h"
 #include "Weapon/TFRangedWeapon.h"
 #include "Weapon/TFWeapon.h"
@@ -23,8 +24,14 @@ UTFWeaponComponent::UTFWeaponComponent()
 void UTFWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (PlayerCharacter && PlayerCharacter->GetCamera())
+	{
+		DefaultFOV = PlayerCharacter->GetCamera()->FieldOfView;
+		CurrentFOV = DefaultFOV;
+	}
 	
-	
+	ZERO_INIT(float, RecoilOffset);
 }
 
 void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -35,6 +42,20 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (PlayerCharacter && PlayerCharacter->IsLocallyControlled())
 	{
 		SetHUDCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
+	}
+	
+	// 연사 가능 무기 (bAutomatic = true)에만 recoil 적용 
+	if (bAttackButtonPressed && EquippedWeapon && EquippedWeapon->bAutomatic && CanAttack())
+	{
+		ApplyRecoil(DeltaTime);
+	}
+	else if (!bAttackButtonPressed && RecoilOffset.Size() > 0)
+	{
+		RecoilOffset.X = FMath::FInterpTo(RecoilOffset.X, 0.f, DeltaTime, 10.f);
+		RecoilOffset.Y = FMath::FInterpTo(RecoilOffset.Y, 0.f, DeltaTime, 10.f);
+
+		RecoilYawBias = FMath::FInterpTo(RecoilYawBias, 0.f, DeltaTime, 10.f);
 	}
 	
 }
@@ -49,13 +70,42 @@ void UTFWeaponComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 
 void UTFWeaponComponent::SetAiming(bool bIsAiming)
 {
+	if (PlayerCharacter == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
+	if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+	{
+		PlayerCharacter->ShowSniperScope(bIsAiming);
+	}
 }
 
 void UTFWeaponComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
+}
+
+void UTFWeaponComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+
+	if (bAiming)
+	{
+		// 무기에 따라 줌되는 속도가 다름
+		CurrentFOV = FMath::FInterpTo(
+			CurrentFOV,
+			EquippedWeapon->GetZoomedFOV(),
+			DeltaTime, EquippedWeapon->GetZoomInterpSpeed()
+		);
+	}
+	else
+	{
+		// 무기에 따라 줌 아웃되는 속도는 같음
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+	}
+	if (PlayerCharacter && PlayerCharacter->GetCamera())
+	{
+		PlayerCharacter->GetCamera()->SetFieldOfView(CurrentFOV);
+	}
 }
 
 void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
@@ -67,12 +117,26 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	{
 		EquippedWeapon->Dropped();
 		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
-		bCanAttack = true; 
-		EquippedWeapon = nullptr;
+		bCanAttack = true;
+		CurrentFOV = DefaultFOV;
+		SetAiming(false);
+		
+		/*if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+		{
+			PlayerCharacter->ShowSniperScope(false);
+		}*/
+		
+		if (PlayerCharacter && PlayerCharacter->GetCamera())
+		{
+			PlayerCharacter->GetCamera()->SetFieldOfView(DefaultFOV);
+		}
+		
 		if (PlayerController)
 		{
 			PlayerController->SetHUDAmmo(0);
 		}
+		
+		EquippedWeapon = nullptr;
 	}
 
 	if (WeaponToEquip == nullptr) return;
@@ -84,6 +148,9 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (WeaponSocket)
 	{
 		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
+		
+		EquippedWeapon->SetActorRelativeLocation(EquippedWeapon->RightHandOffsetLocation);
+		EquippedWeapon->SetActorRelativeRotation(EquippedWeapon->RightHandOffsetRotation);
 	}
 	
 	EquippedWeapon->SetOwner(PlayerCharacter);
@@ -123,7 +190,7 @@ void UTFWeaponComponent::AttackButtonPressed(bool bPressed)
 	bAttackButtonPressed = bPressed;
 	
 	if (EquippedWeapon == nullptr) return;
-	if (bAttackButtonPressed)
+	if (bAttackButtonPressed && bCanAttack)
 	{
 		Attacking();
 	}
@@ -141,6 +208,22 @@ void UTFWeaponComponent::Attacking()
 		StartAttackTimer();
 	}
 	
+}
+
+void UTFWeaponComponent::ApplyRecoil(float DeltaTime)
+{
+	RecoilOffset.X = FMath::Clamp(RecoilOffset.X + FMath::FRandRange(-0.2,-0.1), -2.f, 0.f);
+	PlayerController->AddPitchInput(RecoilOffset.X * DeltaTime); // 위아래
+
+	// 단순히 Random으로 하면 좌우 반동 보다 한쪽으로 치우치는 경우가 많음
+	// 편향값을 두어 한쪽으로 치우치면 반대값이 나오게끔 하였다.
+	float YawRandom = FMath::FRandRange(-3.f, 3.f);
+	float BiasStrength = 0.5f;  // 편향 적용 강도 0 ~ 1
+	float BalancedYaw = YawRandom - RecoilYawBias * BiasStrength;
+	RecoilOffset.Y += BalancedYaw;
+	RecoilYawBias += BalancedYaw;
+	
+	PlayerController->AddYawInput(RecoilOffset.Y * DeltaTime); // 좌우
 }
 
 bool UTFWeaponComponent::CanAttack()
@@ -177,6 +260,7 @@ bool UTFWeaponComponent::CanAttack()
 void UTFWeaponComponent::StartAttackTimer()
 {
 	if (EquippedWeapon == nullptr || PlayerCharacter == nullptr) return;
+
 	PlayerCharacter->GetWorldTimerManager().SetTimer(
 		AttackTimer,
 		this,

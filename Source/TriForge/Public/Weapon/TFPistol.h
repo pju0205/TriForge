@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Weapon/TFRangedWeapon.h"
+#include "Weapon/TFProjectileWeapon.h"
 #include "TFPistol.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TRIFORGE_API ATFPistol : public ATFRangedWeapon
+class TRIFORGE_API ATFPistol : public ATFProjectileWeapon
 {
 	GENERATED_BODY()
 

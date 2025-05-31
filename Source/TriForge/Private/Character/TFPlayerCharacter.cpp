@@ -270,6 +270,13 @@ void ATFPlayerCharacter::PostInitializeComponents()
 void ATFPlayerCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
 {
 	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
 }
 
 bool ATFPlayerCharacter::IsWeaponEquipped()
@@ -352,7 +359,14 @@ ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
 
 void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
-	
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
 }
 
 void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator)

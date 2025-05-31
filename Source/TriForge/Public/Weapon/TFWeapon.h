@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "TFWeapon.generated.h"
 
+class UWidgetComponent;
 class USphereComponent;
 
 UENUM(BlueprintType)
@@ -31,7 +32,8 @@ enum class EWeaponType : uint8
 {
 	Ewt_Rifle UMETA(DisplayName = "Rifle"),
 	Ewt_ShotGun UMETA(DisplayName = "ShotGun"),
-	EWt_Pistol UMETA(DisplayName = "Pistol"),
+	Ewt_Pistol UMETA(DisplayName = "Pistol"),
+	Ewt_SniperRifle UMETA(DisplayName = "Sniper"),
 	Ewt_Knife UMETA(DisplayName = "Knife"),
 	Ewt_Hammer UMETA(DisplayName = "Hammer"),
 
@@ -80,14 +82,12 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
-
-
-
+	
 	UFUNCTION()
 	virtual void OnRep_WeaponState();
+	
 public:	
 	virtual void Tick(float DeltaTime) override;
-
 	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
@@ -97,6 +97,9 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
 	
 	FORCEINLINE USphereComponent* GetWeaponSphere() const {return WeaponSphere;}
+
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -112,15 +115,35 @@ public:
 	
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() {return WeaponMesh;}
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	float AttackDelay = .15;;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	bool bAutomatic = false;;
 	
 	// 무기 자체의 애니메이션
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Settings")
 	UAnimationAsset* RangedWeaponAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	FVector RightHandOffsetLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	FRotator RightHandOffsetRotation;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	USoundCue* DropSound;
+
+	UFUNCTION()
+	void PlayEquipSound();
+	
+	UFUNCTION()
+	void PlayDropSound();
+	
+	void ShowPickupWidget(bool bShow);
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -136,9 +159,17 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	EWeaponType WeaponType;
-	
-	
-	
-	
-	
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	float ZoomInterpSpeed = 20.f;
+
+	 /* PickupWidget Settings in Blueprint
+	 Category = "User Interface"
+	 Space : Screen, WidgetClass : WBP_PickupWidget
+	 Draw at Desired Size = true */
+	UPROPERTY(VisibleAnywhere, Category = "Settings")
+	UWidgetComponent* PickupWidget;
 };
