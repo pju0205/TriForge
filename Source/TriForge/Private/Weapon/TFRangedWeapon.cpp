@@ -1,14 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Weapon/TFRangedWeapon.h"
 
 #include "Character/TFPlayerCharacter.h"
 #include "Character/TFPlayerController.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "Weapon/TFProjectile.h"
+
 
 
 ATFRangedWeapon::ATFRangedWeapon()
@@ -16,81 +14,7 @@ ATFRangedWeapon::ATFRangedWeapon()
 	SetWeaponClass(EWeaponClass::Ewc_RangedWeapon);
 }
 
-void ATFRangedWeapon::Attack()
-{
-	FHitResult Result;
-	float Length = 8000.f;
-	TraceEnemy(Result, Length);
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
-	FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-	FVector SocketLocation = SocketTransform.GetLocation();
-
-	ServerAttack(Result, SocketLocation);
-}
-
-void ATFRangedWeapon::ServerAttack_Implementation(const FHitResult& HitResult, const FVector& SocketLocation)
-{
-	// 디버깅용 코드
-	/*if (GEngine)
-	{
-		FVector aa = HitResult.ImpactPoint;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
-			FString::Printf(TEXT("%f, %f, %f"), aa.X, aa.Y, aa.Z));
-		GEngine->AddOnScreenDebugMessage(-1,5.f, FColor::Cyan,
-			FString::Printf(TEXT("%f, %f, %f"),HitResult.TraceEnd.X, HitResult.TraceEnd.Y, HitResult.TraceEnd.Z));
-	}
-	DrawDebugSphere(GetWorld(), SocketLocation, 12.f, 5, FColor::Green, false);
-	DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 12.f, 5, FColor::Blue, false);
-	DrawDebugLine(GetWorld(), SocketLocation, HitResult.ImpactPoint, FColor::Red, false, 3.f);
-	DrawDebugLine(GetWorld(), SocketLocation, HitResult.TraceEnd, FColor::Yellow, false, 3.f);*/
-
-	//TODO: WeaponComponent => Attack() => 무기클래스의 Attack()함수 안에서 LineTrace => ServerAttack(HitResult&) 으로 구조 바꾸기
-	//TODO: ServerAttack()에서 LineTrace값 받아서 SpawnActor로 Projectile 발사
-	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
-	if (HitResult.bBlockingHit)
-	{
-		if (ProjectileClass && InstigatorPawn)
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = GetOwner();
-			SpawnParams.Instigator = InstigatorPawn;
-			UWorld* World = GetWorld();
-			if (World)
-			{
-				World->SpawnActor<ATFProjectile>(
-					ProjectileClass,
-					SocketLocation,
-					(HitResult.ImpactPoint-SocketLocation).Rotation(),
-					SpawnParams
-				);
-			}
-		}
-	}
-	else
-	{
-		if (ProjectileClass && InstigatorPawn)
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = GetOwner();
-			SpawnParams.Instigator = InstigatorPawn;
-			UWorld* World = GetWorld();
-			if (World)
-			{
-				World->SpawnActor<ATFProjectile>(
-					ProjectileClass,
-					SocketLocation,
-					(HitResult.TraceEnd - SocketLocation).Rotation(),
-					SpawnParams
-				);
-			}
-		}
-	}
-	AttackEffects();
-
-	SpendAmmo();
-}
-
-void ATFRangedWeapon::TraceEnemy(FHitResult& TraceHitResult, float TraceLength)
+void ATFRangedWeapon::TraceEnemy(FHitResult& TraceHitResult)
 {
 	if (TFOwnerCharacter == nullptr) return;
 	// 화면 중앙 Trace
@@ -122,13 +46,13 @@ void ATFRangedWeapon::TraceEnemy(FHitResult& TraceHitResult, float TraceLength)
 	{
 		FVector Start = CrosshairWorldPosition;
 		// 끝지점 = 시작 지점 + WorldDirection 방향으로 곱한 값만큼의 좌표 
-		FVector End = Start + CrosshairWorldDirection * TraceLength;
+		FVector End = Start + CrosshairWorldDirection * TRACELENGTH;
 
 		if (TFOwnerCharacter)
 		{
 			float DistanceToCharacter = (TFOwnerCharacter->GetActorLocation() - Start).Size();
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
-			DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
+			//DrawDebugSphere(GetWorld(), Start, 15.f, 12, FColor::Red, false);
 		}
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(GetOwner());
@@ -146,12 +70,6 @@ void ATFRangedWeapon::TraceEnemy(FHitResult& TraceHitResult, float TraceLength)
 	}
 }
 
-
-void ATFRangedWeapon::AttackEffects_Implementation()
-{
-	PlayAttackMontage();
-	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
-}
 void ATFRangedWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -213,3 +131,8 @@ void ATFRangedWeapon::Dropped()
 	Super::Dropped();
 }
 
+void ATFRangedWeapon::MultiAttackEffects_Implementation()
+{
+	PlayAttackMontage();
+	GetWeaponMesh()->PlayAnimation(RangedWeaponAnimation, false);
+}

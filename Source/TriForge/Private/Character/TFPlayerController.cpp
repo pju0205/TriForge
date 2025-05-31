@@ -80,6 +80,7 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &ATFPlayerController::EquipWeapon);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ATFPlayerController::WeaponAttackStarted);
 	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &ATFPlayerController::WeaponAttackReleased);
+
 }
 
 void ATFPlayerController::Move(const struct FInputActionValue& InputActionValue)
@@ -218,7 +219,7 @@ void ATFPlayerController::AimingStarted(const struct FInputActionValue& AimActio
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
 		if (TFCharacter)
 		{
-			
+			TFCharacter->AimButtonPressed();
 		}
 	}
 }
@@ -230,7 +231,7 @@ void ATFPlayerController::AimingReleased(const struct FInputActionValue& AimActi
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
 		if (TFCharacter)
 		{
-			
+			TFCharacter->AimButtonReleased();
 		}
 	}
 }

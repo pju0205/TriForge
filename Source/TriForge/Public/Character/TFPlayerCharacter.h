@@ -133,6 +133,11 @@ public:
 
 	ATFWeapon* GetEquippedWeapon();
 
+	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScope(bool bShowScope);
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UTFWeaponComponent* WeaponComponent;

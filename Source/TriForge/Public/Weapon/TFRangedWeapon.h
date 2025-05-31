@@ -5,6 +5,8 @@
 #include "Weapon/TFWeapon.h"
 #include "TFRangedWeapon.generated.h"
 
+#define TRACELENGTH 80000.f
+
 class ATFPlayerController;
 class ATFPlayerCharacter;
 class ATFWeaponPlayerController;
@@ -13,27 +15,15 @@ class ATFProjectile;
 /**
  * 
  */
+
+
 UCLASS()
 class TRIFORGE_API ATFRangedWeapon : public ATFWeapon
 {
 	GENERATED_BODY()
 
 protected:
-
-private:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ATFProjectile> ProjectileClass;
-
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
-	int32 Ammo;
-
-	UFUNCTION()
-	void OnRep_Ammo();
-
-	void SpendAmmo();
-	
-	UPROPERTY(EditAnywhere)
-	int32 MagCapacity;
+	virtual void SpendAmmo();
 
 	UPROPERTY()
 	ATFPlayerCharacter* TFOwnerCharacter;
@@ -41,22 +31,19 @@ private:
 	UPROPERTY()
 	ATFPlayerController* TFOwnerController;
 
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiAttackEffects();
 	
+
 public:
 	ATFRangedWeapon();
 	
-	UFUNCTION()
-	virtual void Attack() override;
-
-	UFUNCTION(Server, Reliable)
-	void ServerAttack(const FHitResult& HitResult, const FVector& SocketLocation);
-	
-	UFUNCTION(NetMulticast, Reliable)
-	void AttackEffects();
-
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void OnRep_Owner() override;
+
+	virtual void TraceEnemy(FHitResult& TraceHitResult);
 
 	virtual void Dropped() override;
 
@@ -64,5 +51,14 @@ public:
 
 	bool IsAmmoEmpty();
 
-	void TraceEnemy(FHitResult& TraceHitResult, float TraceLength);
+private:
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+	
 };
