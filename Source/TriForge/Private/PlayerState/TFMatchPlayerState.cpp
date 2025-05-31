@@ -24,6 +24,7 @@ ATFMatchPlayerState::ATFMatchPlayerState()
 	RoundWins = 0;
 	MyMatchWins = 0;
 	OpponentMatchWins = 0;
+	MatchResults = false;
 }
 
 // 게임 종료시 유저 데이터 갱신시켜서 전달
@@ -38,7 +39,7 @@ void ATFMatchPlayerState::OnMatchEnded(const FString& Username)
 	RecordMatchStatsInput.matchStats.kills = Kills;
 	RecordMatchStatsInput.matchStats.deaths = Deaths;
 	RecordMatchStatsInput.matchStats.roundScore = RoundScore;
-	RecordMatchStatsInput.matchStats.matchScore = RoundScore;
+	RecordMatchStatsInput.matchStats.matchScore = MatchScore;
 	RecordMatchStatsInput.matchStats.matchWins = bWinner ? 1 : 0;
 	RecordMatchStatsInput.matchStats.matchLosses = bWinner ? 0 : 1;
 	
@@ -50,16 +51,16 @@ void ATFMatchPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 
-	if (ATFMatchPlayerState* NewTFPS = Cast<ATFMatchPlayerState>(NewPlayerState))
+	if (ATFMatchPlayerState* TFPS = Cast<ATFMatchPlayerState>(NewPlayerState))
 	{
-		NewTFPS->Kills = this->Kills;
-		NewTFPS->Deaths = this->Deaths;
-		NewTFPS->RoundScore = this->RoundScore;
-		NewTFPS->MatchScore = this->MatchScore;
-		NewTFPS->bWinner = this->bWinner;
+		TFPS->Kills = this->Kills;
+		TFPS->Deaths = this->Deaths;
+		TFPS->RoundScore = this->RoundScore;
+		TFPS->MatchScore = this->MatchScore;
+		TFPS->bWinner = this->bWinner;
 
-		NewTFPS->MyMatchWins = this->MyMatchWins;
-		NewTFPS->OpponentMatchWins = this->OpponentMatchWins;
+		TFPS->MyMatchWins = this->MyMatchWins;
+		TFPS->OpponentMatchWins = this->OpponentMatchWins;
 		// RoundWins 미포함
 	}
 }

@@ -26,6 +26,22 @@ void UGameListCard::SetSessionInfo(const FString& SessionName, int32 Player, int
 {
 	TextBlock_SessionName->SetText(FText::FromString(SessionName + TEXT("'s Room")));
 	TextBlock_Players->SetText(FText::FromString(FString::FromInt(Player) + TEXT("/") + FString::FromInt(MaxPlayer)));
+
+	// 플레이어 수가 가득 찼으면 버튼 비활성화
+	if (Player >= MaxPlayer)
+	{
+		if (IsValid(Button_Session))
+		{
+			Button_Session->SetIsEnabled(false);
+		}
+	}
+	else
+	{
+		if (IsValid(Button_Session))
+		{
+			Button_Session->SetIsEnabled(true);
+		}
+	}
 }
 
 void UGameListCard::SetSelected(bool bSelected)

@@ -16,6 +16,7 @@ UTFPlayerHealthComponent::UTFPlayerHealthComponent()
 	CurrentHealth = 100.f;
 	MaxHealth = 100.f;
 	DeathState = EDeathState::NotDead;
+	DeathCause = EDeathCause::Unknown;
 }
 
 void UTFPlayerHealthComponent::BeginPlay()
@@ -59,10 +60,13 @@ void UTFPlayerHealthComponent::StartDeath(AActor* Instigator)
 
 	DeathState = EDeathState::DeathStarted;
 
+	if (Instigator == nullptr) DeathCause = EDeathCause::Fall;	// 낙사
+	else DeathCause = EDeathCause::Combat;						// 전투
+
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	// TFPlayerChacter 에서 바인딩 되어 있는 함수 실행
+	// TFPlayerCharacter 에서 바인딩 되어 있는 함수 실행
 	OnDeathStarted.Broadcast(Owner, Instigator);
 
 	Owner->ForceNetUpdate();
@@ -76,6 +80,7 @@ void UTFPlayerHealthComponent::FinishDeath(AActor* Instigator)
 	}
 
 	DeathState = EDeathState::DeathFinished;
+	DeathCause = EDeathCause::Unknown;
 
 	AActor* Owner = GetOwner();
 	check(Owner);
@@ -136,4 +141,13 @@ void UTFPlayerHealthComponent::OnRep_DeathState(EDeathState OldDeathState)
 				(uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
 		}
 	}
+}
+
+
+void UTFPlayerHealthComponent::OnRep_DeathCause(EDeathCause OldDeathCause)
+{
+	/*const EDeathCause NewDeathCause = DeathCause;
+	DeathCause = OldDeathCause;*/
+
+	// 일단 보류 필요해지면 사용
 }

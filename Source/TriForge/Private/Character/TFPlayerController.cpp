@@ -17,6 +17,7 @@
 ATFPlayerController::ATFPlayerController()
 {
 	bQuitMenuOpen = false;	// Quit 버튼 상태
+	bPawnAlive = true;
 }
 
 void ATFPlayerController::BeginPlay()
@@ -33,7 +34,7 @@ void ATFPlayerController::BeginPlay()
 void ATFPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
+	bPawnAlive = true;
 	TFHUD = Cast<ATFHUD>(GetHUD());
 }
 

@@ -357,7 +357,7 @@ void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 
 void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator)
 {
-	if (!HealthComponent || HealthComponent->DeathState == EDeathState::NotDead) return;
+	if (!HealthComponent || HealthComponent->DeathState == EDeathState::NotDead || HealthComponent->DeathCause == EDeathCause::Unknown) return;
 
 	// 죽는 몽타주 실행
 	PlayDirectionalDeathMontage(DeathInstigator);
@@ -367,6 +367,16 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 	ATFPlayerController* VictimController = Cast<ATFPlayerController>(GetController());
 	if (HasAuthority() && IsValid(VictimController))
 	{
+		// 죽은 유저 가지고 있는 무기 삭제시키기
+		if (IsValid(WeaponComponent))
+		{
+			WeaponComponent->DestroyWeapon();
+		}
+
+		// 죽은 유저 생존 여부 갱신
+		VictimController->bPawnAlive = false;
+
+		// 게임모드에서 진행 갱신
 		if (ATFGameMode* GameMode = Cast<ATFGameMode>(UGameplayStatics::GetGameMode(this)))
 		{
 			ACharacter* InstigatorCharacter = Cast<ACharacter>(DeathInstigator);
@@ -382,16 +392,17 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 		}
 	}
 
-	if (TFPlayerController || TFPlayerController->TFHUD)
+	// 입력 비활성화
+	if (IsValid(VictimController))
 	{
-		// Overlay 초기화 시켜야됨 Ammo, CrossHair
+		DisableInput(VictimController);
 	}
 	
-	// 캐릭터 및 무기 Collision 처리
+	// 캐릭터 Collision 처리
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
 	// 움직임, 입력 등 비활성화
-	/*GetCharacterMovement()->DisableMovement();*/
+	GetCharacterMovement()->DisableMovement();
 }
 
 // DeathMontage 실행 함수

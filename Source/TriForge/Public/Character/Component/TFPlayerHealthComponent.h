@@ -18,6 +18,14 @@ enum class EDeathState : uint8
 	DeathFinished
 };
 
+UENUM(BlueprintType)
+enum class EDeathCause : uint8
+{
+	Unknown,
+	Combat,				// 전투 중 죽었냐
+	Fall				// 낙사로 죽었냐
+};
+
 // Player Health 관련 모든 처리하는 Component
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TRIFORGE_API UTFPlayerHealthComponent : public UActorComponent
@@ -43,6 +51,9 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_DeathState)
 	EDeathState DeathState;
 
+	UPROPERTY(ReplicatedUsing=OnRep_DeathCause)
+	EDeathCause DeathCause;
+
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthCompReplicated OnHealthCompReplicated;
 
@@ -57,6 +68,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_DeathState(EDeathState OldDeathState);
+
+	UFUNCTION()
+	virtual void OnRep_DeathCause(EDeathCause OldDeathCause);
 	
 	UFUNCTION()
 	void OnRep_Health();

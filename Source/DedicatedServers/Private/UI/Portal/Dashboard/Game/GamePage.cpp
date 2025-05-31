@@ -110,6 +110,9 @@ void UGamePage::UpdateSessionListUI(const FDSGameSession& GameSession)
 	const int32 PlayerCount = GameSession.CurrentPlayerSessionCount;
 	const int32 MaxPlayerCount = GameSession.MaximumPlayerSessionCount;
 
+	// 방 안에 아무도 없으면 추가 안하기
+	if (PlayerCount == 0) return;
+	
 	GameListCard->SetSessionInfo(SessionName, PlayerCount, MaxPlayerCount);
 
 	// GameSessionId 저장

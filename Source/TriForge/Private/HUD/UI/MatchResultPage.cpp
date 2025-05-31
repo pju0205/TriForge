@@ -50,10 +50,10 @@ void UMatchResultPage::SetMatchResultName()
 		RightName = TFPlayerController->OpponentUsername;
 	}
 
-	// 내 이름, 점수
+	// 내 이름
 	if (LeftNameText) LeftNameText->SetText(FText::FromString(LeftName));
 	
-	// 상대 이름, 점수
+	// 상대 이름
 	if (RightNameText) RightNameText->SetText(FText::FromString(RightName));
 }
 
@@ -71,7 +71,6 @@ void UMatchResultPage::OnMatchResultChanged(bool bIsWinner, int32 LeftScore, int
 		}
 	}
 }
-
 
 void UMatchResultPage::HideResultPage()
 {

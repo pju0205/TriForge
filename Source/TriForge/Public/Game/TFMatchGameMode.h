@@ -41,4 +41,7 @@ protected:
 	// 게임이 완전히 끝났는지
 	bool bIsEndedRound = false;
 	bool bIsEndedMatch = false;
+
+private:
+	void GetGamePlayerName();	
 };

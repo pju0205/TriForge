@@ -3,6 +3,7 @@
 
 #include "Game/TFMatchGameMode.h"
 
+#include "Character/TFPlayerController.h"
 #include "Game/TFMatchGameState.h"
 #include "GameFramework/GameStateBase.h"
 #include "Player/DSPlayerController.h"
@@ -23,38 +24,29 @@ void ATFMatchGameMode::Tick(float DeltaTime)
 void ATFMatchGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-
-	TArray<ADSPlayerController*> Controllers;
-    
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get());
-		if (PC)
-		{
-			Controllers.Add(PC);
-		}
-	}
-
-	// 두 명이 접속한 경우, 서로의 OpponentUsername 설정
-	if (Controllers.Num() == 2)
-	{
-		ADSPlayerController* PC1 = Controllers[0];
-		ADSPlayerController* PC2 = Controllers[1];
-
-		if (PC1 && PC2)
-		{
-			PC1->OpponentUsername = PC2->Username;
-			PC2->OpponentUsername = PC1->Username;
-
-			// 로그 확인용
-			UE_LOG(LogTemp, Warning, TEXT("PC1(%s) Opponent: %s"), *PC1->Username, *PC1->OpponentUsername);
-			UE_LOG(LogTemp, Warning, TEXT("PC2(%s) Opponent: %s"), *PC2->Username, *PC2->OpponentUsername);
-		}
-	}
 }
 
 void ATFMatchGameMode::HandleRoundEnd(APlayerController* Loser, APlayerController* Winner)
 {
+	if (MatchStatus != EMatchStatus::Round) return;
+	
+	// Winner가 null이면 생존자 찾아서 할당 (낙사와 같은 경우)
+	if (!Winner)
+	{
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			APlayerController* PC = It->Get();
+			if (!IsValid(PC) || PC == Loser) continue;
+
+			ATFPlayerController* TFPC = Cast<ATFPlayerController>(PC);
+			if (IsValid(TFPC) && TFPC->bPawnAlive)
+			{
+				Winner = TFPC;
+				break;
+			}
+		}
+	}
+	
 	ATFMatchPlayerState* WinnerPS = Winner ? Cast<ATFMatchPlayerState>(Winner->PlayerState) : nullptr;
 	ATFMatchPlayerState* LoserPS = Loser ? Cast<ATFMatchPlayerState>(Loser->PlayerState) : nullptr;
 
@@ -200,6 +192,40 @@ void ATFMatchGameMode::NextRandomTravelMap()
 
 			// Map 이동 로그 출력
 			UE_LOG(LogTemp, Display, TEXT("Map Index: %d, Path: %s"), RandomIndex, *SelectedMap.ToString());
+		}
+	}
+}
+
+void ATFMatchGameMode::GetGamePlayerName()
+{
+	TArray<ADSPlayerController*> Controllers;
+    
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get());
+		if (PC)
+		{
+			Controllers.Add(PC);
+		}
+	}
+
+	// 두 명이 접속한 경우, 서로의 OpponentUsername 설정
+	if (Controllers.Num() == 2)
+	{
+		ADSPlayerController* PC1 = Controllers[0];
+		ADSPlayerController* PC2 = Controllers[1];
+
+		if (PC1 && PC2)
+		{
+			if (PC1->Username != PC2->Username)
+			{
+				PC1->OpponentUsername = PC2->Username;
+				PC2->OpponentUsername = PC1->Username;
+
+				UE_LOG(LogTemp, Warning, TEXT("PC1(%s) Opponent: %s"), *PC1->Username, *PC1->OpponentUsername);
+				UE_LOG(LogTemp, Warning, TEXT("PC2(%s) Opponent: %s"), *PC2->Username, *PC2->OpponentUsername);
+			}
+			// 로그 확인용
 		}
 	}
 }

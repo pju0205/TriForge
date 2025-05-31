@@ -81,6 +81,7 @@ public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
 
+	bool bPawnAlive;	// 해당 Pawn 살아있는지 여부
 
 	UFUNCTION(BlueprintCallable)
 	UTFPlayerHealthComponent* GetHealthComponent() const;
