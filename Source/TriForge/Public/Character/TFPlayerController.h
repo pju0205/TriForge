@@ -36,6 +36,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "input")
 	TObjectPtr<UInputAction> SlideAction; 
 
+	UPROPERTY(EditAnywhere, Category = "input")
+	TObjectPtr<UInputAction> TestAction;
+	
 	UPROPERTY(EditAnywhere, Category="Input") // Quit 버튼 설정
 	TObjectPtr<UInputAction> QuitAction;
 	
@@ -49,6 +52,7 @@ private:
 	void SprintEnd(const struct FInputActionValue& InputActionValue);
 	void Jump(const struct FInputActionValue& InputActionValue);
 	void Slide(const struct FInputActionValue& InputActionValue);
+	void Test(const struct FInputActionValue& InputActionValue);
 
 	// Quit 버튼 관련
 	void Input_Quit();		// Server

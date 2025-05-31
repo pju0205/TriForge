@@ -83,17 +83,35 @@ protected:
 	
 	UAnimMontage* SlideMontage;
 
-	
+
+	// 벽 체크 함수
+	void CheckForWallRun();
+	bool TraceWall(const FVector& Start, const FVector& Direction, float Distance, FVector& OutHitNormal);
+	void StartWallRun(EWallRunSide Side, const FVector& InWallNormal);
+	void StopWallRun();
+	UPROPERTY()
 	EWallRunSide WallRunSide = EWallRunSide::None;
+
+	UPROPERTY()
+	FVector WallNormal;
+
+	UPROPERTY()
+	FVector WallRunDirection;
+
+	// 마지막 벽
+	UPROPERTY()
+	AActor* LastWallActor = nullptr;
+
+	UPROPERTY()
+	AActor* HitWallActor = nullptr;
 	
+
+	
+public:
+	void TESTS();
 	// 벽타기 상태 여부 (애니메이션 블루프린트에서 사용)
 	UPROPERTY(BlueprintReadOnly, Category = "WallRun")
 	bool bIsWallRunning = false;
-	
-	// 내부 사용
-	FVector WallNormal;
-	FVector WallRunDirection;
-public:
 	
 	ATFPlayerCharacter();
 
@@ -114,11 +132,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastPlaySlideMontage();
 
-	void StopWallRun();
+	
+	// 벽 점프 호출용
 	void WallRunJump();
-	void StartWallRun(EWallRunSide Side);
-	bool TraceWall(const FVector& Start, const FVector& Direction, float Distance, FVector& OutHitNormal);
-	void CheckForWallRun();
 	
 	UFUNCTION(BlueprintPure)
 	EWallRunSide GetWallRunSide() const { return WallRunSide; }

@@ -12,6 +12,19 @@
 #include "Curves/CurveFloat.h"
 #include "Net/UnrealNetwork.h"
 
+void ATFPlayerCharacter::TESTS()
+{
+	GEngine->AddOnScreenDebugMessage(30, 1.5f, FColor::Red, TEXT("TEST Called SUC!"));
+	GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow, TEXT("[T] Manual Launch Triggered"));
+
+	FVector SafeOffset = GetActorForwardVector() * -50.f;
+	SetActorLocation(GetActorLocation() + SafeOffset, false, nullptr, ETeleportType::TeleportPhysics);
+
+	FVector LaunchDir = FVector(1, 0, 1).GetSafeNormal();
+	LaunchCharacter(LaunchDir * 1500.f, true, true);
+
+}
+
 ATFPlayerCharacter::ATFPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -44,103 +57,92 @@ void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 벽타기 중 W 떼면 중단
-	if (bIsWallRunning)
-	{
-		float ForwardValue = GetInputAxisValue("MoveForward");
-		if (FMath::IsNearlyZero(ForwardValue))
-		{
-			StopWallRun();
-			return;
-		}
-	}
-
-	// 점프 중일 때 벽 체크
 	if (GetCharacterMovement()->IsFalling())
 	{
-		CheckForWallRun();
+		if (!bIsWallRunning)
+		{
+			CheckForWallRun(); // 벽 타고 있지 않을 때만 감지
+		}
+		else
+		{
+			// 벽이 여전히 존재하는지 확인
+			FVector Start = GetActorLocation();
+			FVector DirToCheck = (WallRunSide == EWallRunSide::Right) ? GetActorRightVector() : -GetActorRightVector();
+			FVector DummyNormal;
+
+			if (!TraceWall(Start, DirToCheck, 100.f, DummyNormal))
+			{
+				StopWallRun(); // 벽이 끝나면 떨어짐
+			}
+		}
 	}
 	UpdateMovement();
 }
 void ATFPlayerCharacter::CheckForWallRun()
 {
-	if (bIsWallRunning)
-		return;
-
 	FVector Start = GetActorLocation();
-	FVector RightDir = GetActorRightVector();
-	FVector LeftDir = -RightDir;
-	float TraceDistance = 100.f;
+	FVector Right = GetActorRightVector();
+	FVector Left = -Right;
 
-	if (TraceWall(Start, RightDir, TraceDistance, WallNormal))
+	FVector HitNormal;
+	if (TraceWall(Start, Right, 100.f, HitNormal))
 	{
-		StartWallRun(EWallRunSide::Right);
+		StartWallRun(EWallRunSide::Right, HitNormal);
 	}
-	else if (TraceWall(Start, LeftDir, TraceDistance, WallNormal))
+	else if (TraceWall(Start, Left, 100.f, HitNormal))
 	{
-		StartWallRun(EWallRunSide::Left);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No wall detected for wall run"));
+		StartWallRun(EWallRunSide::Left, HitNormal);
 	}
 }
 
-bool ATFPlayerCharacter::TraceWall(const FVector& Start, const FVector& Direction, float Distance, FVector& OutHitNormal)
+// .cpp - TraceWall 함수 수정
+bool ATFPlayerCharacter::TraceWall(const FVector& Start, const FVector& Dir, float Distance, FVector& OutHitNormal)
 {
+	if (bIsWallRunning) return false; // 벽 타는 중엔 감지 자체 안함
+
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
-	FVector End = Start + Direction * Distance;
+	FVector End = Start + Dir * Distance;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
-
-	if (bHit && Hit.bBlockingHit)
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
 	{
+		if (Hit.GetActor() == LastWallActor)
+			return false; // 같은 벽이면 무시
+
 		OutHitNormal = Hit.ImpactNormal;
-		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.0f);
+		HitWallActor = Hit.GetActor();
 		return true;
 	}
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f);
 	return false;
 }
 
-void ATFPlayerCharacter::StartWallRun(EWallRunSide Side)
+void ATFPlayerCharacter::StartWallRun(EWallRunSide Side, const FVector& InWallNormal)
 {
 	bIsWallRunning = true;
+	LastWallActor = HitWallActor;
+	WallNormal = InWallNormal;
 	WallRunSide = Side;
 
-	// 달릴 방향 계산 + 뒤로 가는 문제 방지
-	WallRunDirection = FVector::CrossProduct(WallNormal, FVector::UpVector);
-	if (FVector::DotProduct(GetActorForwardVector(), WallRunDirection) < 0)
-	{
-		WallRunDirection *= -1;
-	}
+	FVector Dir = FVector::CrossProduct(WallNormal, FVector::UpVector);
+	if (FVector::DotProduct(GetActorForwardVector(), Dir) < 0)
+		Dir *= -1;
 
-	// 중력 제거
-	GetCharacterMovement()->GravityScale = 0.0f;
-
-	// 일정 속도로 벽 따라 이동
-	GetCharacterMovement()->Velocity = WallRunDirection * 600.f;
+	GetCharacterMovement()->GravityScale = 0.f;
+	GetCharacterMovement()->Velocity = Dir * 600.f;
 }
 
 void ATFPlayerCharacter::WallRunJump()
 {
-	if (!bIsWallRunning)
-		return;
+	if (!bIsWallRunning) return;
 
-	StopWallRun();
+	FVector LaunchDir = (-WallNormal + FVector::UpVector).GetSafeNormal();
+	LaunchCharacter(LaunchDir * 1500.f, true, true);
 
-	// 튕겨나가는 방향: 반대 벽 + 위로
-	FVector JumpDirection = -WallNormal + FVector::UpVector;
-	JumpDirection.Normalize();
-
-	LaunchCharacter(JumpDirection * 800.f, true, true);
-
-	UE_LOG(LogTemp, Warning, TEXT("Wall Run Jump Executed"));
+	
+	StopWallRun(); // 벽 점프 후 벽타기 종료
 }
-
 void ATFPlayerCharacter::StopWallRun()
 {
 	if (!bIsWallRunning)
@@ -148,9 +150,8 @@ void ATFPlayerCharacter::StopWallRun()
 
 	bIsWallRunning = false;
 	WallRunSide = EWallRunSide::None;
-
-	// 중력 복구
 	GetCharacterMovement()->GravityScale = 1.0f;
+	
 
 	UE_LOG(LogTemp, Warning, TEXT("Wall Run Stopped"));
 }

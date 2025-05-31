@@ -36,6 +36,7 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(RotationAction, ETriggerEvent::Triggered, this, &ATFPlayerController::Rotation);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATFPlayerController::Jump);
 	EnhancedInputComponent->BindAction(SlideAction, ETriggerEvent::Started, this, &ATFPlayerController::Slide);
+	EnhancedInputComponent->BindAction(TestAction, ETriggerEvent::Started, this, &ATFPlayerController::Test);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ATFPlayerController::CrouchStart);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ATFPlayerController::CrouchEnd);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
@@ -106,8 +107,9 @@ void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
 {
 	if (ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(GetPawn()))
 	{
-		if (TFCharacter->GetIsWallRunning())
+		if (TFCharacter->bIsWallRunning)
 		{
+			GEngine->AddOnScreenDebugMessage(30, 1.5f, FColor::Red, TEXT("WallRunJump Called!"));
 			TFCharacter->WallRunJump();
 		}
 		else
@@ -139,6 +141,16 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 		}
 	}
 }
+
+void ATFPlayerController::Test(const struct FInputActionValue& InputActionValue)
+{
+	if (ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(GetPawn()))
+	{
+			TFCharacter->TESTS();
+		GEngine->AddOnScreenDebugMessage(30, 1.5f, FColor::Red, TEXT("TEST Called!"));
+	}
+}
+
 //
 //
 // void ATFPlayerController::CrouchStart(const FInputActionValue& InputActionValue)
