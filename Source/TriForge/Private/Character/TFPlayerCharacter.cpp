@@ -3,9 +3,10 @@
 
 #include "Character/TFPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
+#include "Character/TFPlayerController.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
@@ -23,22 +24,135 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(GetMesh(), FName("head"));
 	Camera->bUsePawnControlRotation = true;
-
+	
 	
 	WalkSpeed = FVector(300.0f, 275.0f, 250.0f);
 	SprintSpeed = FVector(700.0f, 575.0f, 550.0f);
 	ECurrentGait = E_Gait::Walk;
 	bSprinting = false;
 	bWalking = true;
+	bSliding = false;
 	bJustLanded = false;
 	LandVelocity = FVector(0.0f, 0.0f, 0.0f);
 	SlideMontage = nullptr;
+
+
+	WallRunSide = EWallRunSide::None;
 }
 
 void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// 벽타기 중 W 떼면 중단
+	if (bIsWallRunning)
+	{
+		float ForwardValue = GetInputAxisValue("MoveForward");
+		if (FMath::IsNearlyZero(ForwardValue))
+		{
+			StopWallRun();
+			return;
+		}
+	}
+
+	// 점프 중일 때 벽 체크
+	if (GetCharacterMovement()->IsFalling())
+	{
+		CheckForWallRun();
+	}
 	UpdateMovement();
+}
+void ATFPlayerCharacter::CheckForWallRun()
+{
+	if (bIsWallRunning)
+		return;
+
+	FVector Start = GetActorLocation();
+	FVector RightDir = GetActorRightVector();
+	FVector LeftDir = -RightDir;
+	float TraceDistance = 100.f;
+
+	if (TraceWall(Start, RightDir, TraceDistance, WallNormal))
+	{
+		StartWallRun(EWallRunSide::Right);
+	}
+	else if (TraceWall(Start, LeftDir, TraceDistance, WallNormal))
+	{
+		StartWallRun(EWallRunSide::Left);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No wall detected for wall run"));
+	}
+}
+
+bool ATFPlayerCharacter::TraceWall(const FVector& Start, const FVector& Direction, float Distance, FVector& OutHitNormal)
+{
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	FVector End = Start + Direction * Distance;
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
+
+	if (bHit && Hit.bBlockingHit)
+	{
+		OutHitNormal = Hit.ImpactNormal;
+		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.0f);
+		return true;
+	}
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f);
+	return false;
+}
+
+void ATFPlayerCharacter::StartWallRun(EWallRunSide Side)
+{
+	bIsWallRunning = true;
+	WallRunSide = Side;
+
+	// 달릴 방향 계산 + 뒤로 가는 문제 방지
+	WallRunDirection = FVector::CrossProduct(WallNormal, FVector::UpVector);
+	if (FVector::DotProduct(GetActorForwardVector(), WallRunDirection) < 0)
+	{
+		WallRunDirection *= -1;
+	}
+
+	// 중력 제거
+	GetCharacterMovement()->GravityScale = 0.0f;
+
+	// 일정 속도로 벽 따라 이동
+	GetCharacterMovement()->Velocity = WallRunDirection * 600.f;
+}
+
+void ATFPlayerCharacter::WallRunJump()
+{
+	if (!bIsWallRunning)
+		return;
+
+	StopWallRun();
+
+	// 튕겨나가는 방향: 반대 벽 + 위로
+	FVector JumpDirection = -WallNormal + FVector::UpVector;
+	JumpDirection.Normalize();
+
+	LaunchCharacter(JumpDirection * 800.f, true, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("Wall Run Jump Executed"));
+}
+
+void ATFPlayerCharacter::StopWallRun()
+{
+	if (!bIsWallRunning)
+		return;
+
+	bIsWallRunning = false;
+	WallRunSide = EWallRunSide::None;
+
+	// 중력 복구
+	GetCharacterMovement()->GravityScale = 1.0f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Wall Run Stopped"));
 }
 
 void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -49,14 +163,9 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 }
 
 
-void ATFPlayerCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ATFPlayerCharacter::GetDesiredGait()
 {
-	if (bSprinting)
+	if (bSprinting || bSliding)
 	{
 		ECurrentGait = E_Gait::Sprint;
 	}
@@ -115,7 +224,6 @@ void ATFPlayerCharacter::Landed(const FHitResult& Hit)
 	LandVelocity = MovementComponent->Velocity;
 
 	bJustLanded = true;
-
 	FLatentActionInfo LatentActionInfo;
 	LatentActionInfo.CallbackTarget = this;
 	LatentActionInfo.ExecutionFunction = FName("OnDelayComplete");
@@ -132,6 +240,11 @@ void ATFPlayerCharacter::OnDelayComplete()
 	bJustLanded = false;
 }
 
+void ATFPlayerCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void ATFPlayerCharacter::UpdateSprintState(bool bSprint)
 {
 	if (IsLocallyControlled())
@@ -146,61 +259,43 @@ void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
 	bWalking = !bSprint;
 }
 
-void ATFPlayerCharacter::isPlayingSlideMontage(float Forward, float Right)
-{
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
-	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
-	
-	if (Velocity > 1.0f)
-	{
-		SetSlideDir(Forward, Right);
-		PlaySlidMontage();
-	}
-}
-
 void ATFPlayerCharacter::PlaySlidMontage()
 {
-	if (SlideMontage)
+	// 조건을 만족할 때만 서버에 요청
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
+
+	if (Velocity > 1.0f && IsLocallyControlled())
 	{
-		PlayAnimMontage(SlideMontage);
+		ServerRequestSlide();
 	}
 }
 
-void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
+void ATFPlayerCharacter::ServerRequestSlide_Implementation()
 {
-	SlideMontage = nullptr;
+	// Velocity 체크 - 서버에서도 안전하게 조건 확인
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
 
-	if (Forward == 0)
+	if (Velocity > 1.0f)
 	{
-		if (Right)
-		{
-			if (Right > 0)
-			{
-				SlideMontage = RightSlide_Montage;
-				if (GEngine)
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Right"));
-			}
-			else
-			{
-				SlideMontage = LeftSlide_Montage;
-				if (GEngine)
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Left"));
-			}
-		}
+		bSliding = true; // 슬라이딩 상태 시작
+		MulticastPlaySlideMontage();
 	}
-	else
+}
+void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
+{
+	if (SlideMontage && GetMesh())
 	{
-		if (Forward > 0)
+		
+		float Duration = PlayAnimMontage(SlideMontage);
+
+		// 슬라이딩 종료 예약
+		FTimerHandle SlideEndTimerHandle;
+		GetWorldTimerManager().SetTimer(SlideEndTimerHandle, [this]()
 		{
-			SlideMontage = ForwardSlide_Montage;
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Forward"));
-		}
-		else
-		{
-			SlideMontage = BackSlide_Montage;
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Backward"));
-		}
+			bSliding = false;
+			
+		}, Duration, false);
 	}
 }

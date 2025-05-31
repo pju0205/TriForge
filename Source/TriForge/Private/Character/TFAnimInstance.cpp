@@ -48,7 +48,14 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		if (TFPlayerCharacter)
 		{
 			TFCharacterMovement = TFPlayerCharacter->GetCharacterMovement();
+			WallRunSide = TFPlayerCharacter->GetWallRunSide();
 		}
+	}
+
+	if (TFPlayerCharacter)
+	{
+		WallRunSide = TFPlayerCharacter->GetWallRunSide();
+		bIsWallRunning = TFPlayerCharacter->GetIsWallRunning();
 	}
 	
 	UpdateEssentialValues();
@@ -73,6 +80,15 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 				FString::Printf(TEXT("Database: %s | Tag: %s"), *CurrentSelectedDatabase->GetName(), *Tag.ToString())
 			);
 		}
+	}
+
+	if (Gait == E_Gait::Walk)
+	{
+		GEngine->AddOnScreenDebugMessage(11, 1, FColor::Blue, TEXT("Anim Walk"));
+	}
+	else if (Gait == E_Gait::Sprint)
+	{
+		GEngine->AddOnScreenDebugMessage(11, 1, FColor::Blue, TEXT("Anim Sprint"));
 	}
 }
 
@@ -233,7 +249,16 @@ void UTFAnimInstance::UpdateStates()
 		case EMovementMode::MOVE_None:
 		case EMovementMode::MOVE_Walking:
 		case EMovementMode::MOVE_NavWalking:
-				MovementMode = E_MovementMode::OnGorund;
+			{
+				if (bIsWallRunning == true)
+				{
+					MovementMode = E_MovementMode::InAir;
+				}
+				else
+				{
+					MovementMode = E_MovementMode::OnGorund;
+				}
+			}
 			break;
 
 		case EMovementMode::MOVE_Falling:
@@ -256,6 +281,7 @@ void UTFAnimInstance::UpdateStates()
 	
 		MovementStateLastFrame = MovementState;
 		bool bisMoving = isMoving();
+		GEngine->AddOnScreenDebugMessage(15, 2.0f, FColor::Blue, bisMoving ? TEXT("Moving : True") : TEXT("Moving : False"));
 		if (bisMoving)
 		{
 			MovementState = E_MovementState::Moving;
@@ -297,9 +323,9 @@ bool UTFAnimInstance::isStarting()
 		bisStarting = true;
 	}
 
-	GEngine->AddOnScreenDebugMessage(4, 1, FColor::Green,bisMoving ? TEXT("bisMoving : true") : TEXT("bisMoving : false"));
-	GEngine->AddOnScreenDebugMessage(5, 1, FColor::Green,bHasPivotTag ? TEXT("bHasPivotTag : true") : TEXT("bHasPivotTag : false"));
-	GEngine->AddOnScreenDebugMessage(6, 1, FColor::Green,bisStarting ? TEXT("bisStarting : true") : TEXT("bisStarting : false"));
+	// GEngine->AddOnScreenDebugMessage(4, 1, FColor::Green,bisMoving ? TEXT("bisMoving : true") : TEXT("bisMoving : false"));
+	// GEngine->AddOnScreenDebugMessage(5, 1, FColor::Green,bHasPivotTag ? TEXT("bHasPivotTag : true") : TEXT("bHasPivotTag : false"));
+	// GEngine->AddOnScreenDebugMessage(6, 1, FColor::Green,bisStarting ? TEXT("bisStarting : true") : TEXT("bisStarting : false"));
 	return bisMoving && bHasPivotTag && bisStarting;
 }
 

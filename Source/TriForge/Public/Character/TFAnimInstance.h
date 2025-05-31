@@ -44,6 +44,8 @@ struct FChooserTableIn
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bisPivoting;
+
+	
 };
 
 
@@ -154,6 +156,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait GaitLastFrame;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	EWallRunSide WallRunSide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	bool bIsWallRunning = false;
 	
 	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
 	bool isMoving();
@@ -188,4 +196,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FAnimNodeReference OffsetRootNode;
 
+	float GetSpeed2D() const{return Speed2D;}
 };

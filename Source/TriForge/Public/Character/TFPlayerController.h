@@ -63,4 +63,6 @@ public:
 	
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
+
+	FVector2d GetMoveDir() { return MoveDir; }
 };

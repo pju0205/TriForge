@@ -2,6 +2,7 @@
 
 
 #include "Character/TFPlayerController.h"
+#include "GameFramework/Character.h"
 #include "Character/TFCharacter.h"
 #include "Character/TFAnimInstance.h"
 #include "EnhancedInputSubsystems.h"
@@ -101,13 +102,15 @@ void ATFPlayerController::SprintEnd(const FInputActionValue& InputActionValue)
 		}
 	}
 }
-
 void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
 {
-	if (APawn* ControlledPawn = GetPawn<APawn>())
+	if (ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(GetPawn()))
 	{
-		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
-		if (TFCharacter)
+		if (TFCharacter->GetIsWallRunning())
+		{
+			TFCharacter->WallRunJump();
+		}
+		else
 		{
 			TFCharacter->Jump();
 		}
@@ -119,9 +122,20 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
-		if (TFCharacter)
+		if (!TFCharacter) return;
+
+		if (TFCharacter->GetGait() == E_Gait::Sprint && TFCharacter->GetIsSliding() == false)
 		{
-			TFCharacter->isPlayingSlideMontage(MoveDir.Y, MoveDir.X);
+			FVector Velocity = TFCharacter->GetVelocity().GetSafeNormal2D();
+			FVector Forward = TFCharacter->GetActorForwardVector().GetSafeNormal2D();
+
+			float Dot = FVector::DotProduct(Forward, Velocity);
+
+			// 앞을 보고 있을 때만 실행 
+			if (Dot >= 0.8f)
+			{
+				TFCharacter->PlaySlidMontage();
+			}
 		}
 	}
 }

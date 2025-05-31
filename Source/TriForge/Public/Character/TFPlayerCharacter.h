@@ -19,6 +19,14 @@ enum class E_Gait : uint8
 	Sprint	UMETA(DisplayName = "Sprint")
 };
 
+UENUM(BlueprintType)
+enum class EWallRunSide : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Left UMETA(DisplayName = "Left"),
+	Right UMETA(DisplayName = "Right")
+};
+
 UCLASS()
 class TRIFORGE_API ATFPlayerCharacter : public ATFCharacter
 {
@@ -40,7 +48,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
 	TObjectPtr<UCameraComponent> Camera = nullptr;
-
+	
 	// UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	// UTFAnimInstance* TFAnimInstance;
 
@@ -59,6 +67,9 @@ protected:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bWalking;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bSliding;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCurveFloat* StrafeSpeedMapCurve;
 
@@ -69,22 +80,23 @@ protected:
 	FVector LandVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	
 	UAnimMontage* SlideMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* ForwardSlide_Montage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* BackSlide_Montage; 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* RightSlide_Montage; 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* LeftSlide_Montage; 
 	
+	EWallRunSide WallRunSide = EWallRunSide::None;
+	
+	// 벽타기 상태 여부 (애니메이션 블루프린트에서 사용)
+	UPROPERTY(BlueprintReadOnly, Category = "WallRun")
+	bool bIsWallRunning = false;
+	
+	// 내부 사용
+	FVector WallNormal;
+	FVector WallRunDirection;
 public:
+	
 	ATFPlayerCharacter();
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
@@ -92,13 +104,33 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerUpdateSprintState(bool isSprint);
 	
-	void SetSlideDir(float Forward, float Right); 
-	void isPlayingSlideMontage(float Forward, float Right); 
 	void PlaySlidMontage();
 	
+	// 슬라이딩 요청 (클라이언트 -> 서버)
+	UFUNCTION(Server, Reliable)
+	void ServerRequestSlide();
+
+	// 서버에서 슬라이딩 재생 (서버 -> 모든 클라이언트)
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySlideMontage();
+
+	void StopWallRun();
+	void WallRunJump();
+	void StartWallRun(EWallRunSide Side);
+	bool TraceWall(const FVector& Start, const FVector& Direction, float Distance, FVector& OutHitNormal);
+	void CheckForWallRun();
+	
+	UFUNCTION(BlueprintPure)
+	EWallRunSide GetWallRunSide() const { return WallRunSide; }
+	
+	UFUNCTION(BlueprintPure)
+	bool GetIsWallRunning() const { return bIsWallRunning; }
+
 	E_Gait GetGait() const {return ECurrentGait;};
+	bool GetIsSliding() const {return bSliding;};
 	bool GetJustLanded() const {return bJustLanded;};
 	FVector GetLandVelocity() {return LandVelocity;};
+
 	
 };
 
