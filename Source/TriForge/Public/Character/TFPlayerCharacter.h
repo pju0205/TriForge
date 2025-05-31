@@ -66,6 +66,9 @@ protected:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bWalking;
 
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bSliding;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	UCurveFloat* StrafeSpeedMapCurve;
 
@@ -78,35 +81,57 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* SlideMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* ForwardSlide_Montage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* BackSlide_Montage; 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* RightSlide_Montage; 
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* LeftSlide_Montage; 
-	
 public:
 	ATFPlayerCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	// Walk < - >Sprint Start -------------
 	
 	void UpdateSprintState(bool isSprint);
+	
 	UFUNCTION(Server, Reliable)
+	
 	void ServerUpdateSprintState(bool isSprint);
 	
-	void SetSlideDir(float Forward, float Right); 
-	void isPlayingSlideMontage(float Forward, float Right); 
+	// ------------- Walk < - >Sprint Start 
+
+
+	void CustomJump();
+
+	
+	// Slide Montage Start -------------
+	
 	void PlaySlidMontage();
 	
-	E_Gait GetGait() const {return ECurrentGait;};
-	bool GetJustLanded() const {return bJustLanded;};
-	FVector GetLandVelocity() {return LandVelocity;};
+	// Slide Request (Client -> Server)
+	UFUNCTION(Server, Reliable)
+	void ServerRequestSlide();
 
+	// Play Server Slide (Server -> All Client)
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySlideMontage();
+	
+	//  ------------- Slide Montage Start
+
+	
+	// Getter Start ------------
+	
+	E_Gait GetGait() const { return ECurrentGait; };
+	
+	bool GetJustLanded() const { return bJustLanded; };
+	
+	FVector GetLandVelocity() { return LandVelocity; };
+
+	bool GetIsSliding() const { return bSliding; };
+
+	bool GetIsSprinting() const { return bSprinting; }
+
+	bool GetIsSWaking() const { return bWalking; }
+	
+	// ------------- Getter End
+
+	
 	void CleanupBeforeMapTravel();
 
 //Weapon

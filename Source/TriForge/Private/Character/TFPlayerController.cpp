@@ -9,6 +9,7 @@
 #include "Character/Component/TFPlayerHealthComponent.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
 #include "HUD/UI/RoundIndicator.h"
@@ -70,6 +71,8 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(SlideAction, ETriggerEvent::Started, this, &ATFPlayerController::Slide);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ATFPlayerController::CrouchStart);
 	// EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ATFPlayerController::CrouchEnd);
+	// EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
+	// EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
 	EnhancedInputComponent->BindAction(QuitAction, ETriggerEvent::Started, this, &ATFPlayerController::Input_Quit);	// Quit 버튼
@@ -120,6 +123,7 @@ void ATFPlayerController::Rotation(const FInputActionValue& InputActionValue)
 
 void ATFPlayerController::SprintStart(const FInputActionValue& InputActionValue)
 {
+	UE_LOG(LogTemp, Warning, TEXT(">> SprintStart Triggered"));
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
@@ -149,7 +153,8 @@ void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
 		if (TFCharacter)
 		{
-			TFCharacter->Jump();
+			TFCharacter->CustomJump();
+			// TFCharacter->Jump();
 		}
 	}
 }
@@ -159,13 +164,25 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
 		ATFPlayerCharacter* TFCharacter = Cast<ATFPlayerCharacter>(ControlledPawn);
-		if (TFCharacter)
+		if (!TFCharacter) return;
+
+		if (TFCharacter->GetGait() == E_Gait::Sprint && TFCharacter->GetIsSliding() == false &&  !TFCharacter->GetCharacterMovement()->IsFalling())
+			// 현재 캐릭터가 달리는 중이고 && 슬라이딩 중이 아니고 && 공중이 아닐 때
 		{
-			TFCharacter->isPlayingSlideMontage(MoveDir.Y, MoveDir.X);
+			FVector Velocity = TFCharacter->GetVelocity().GetSafeNormal2D();
+			FVector Forward = TFCharacter->GetActorForwardVector().GetSafeNormal2D();
+
+			float Dot = FVector::DotProduct(Forward, Velocity);
+
+			// 앞을 보고 있을 때만 실행 
+			if (Dot >= 0.8f)
+			{
+				TFCharacter->PlaySlidMontage();
+			}
 		}
 	}
 }
-//
+
 //
 // void ATFPlayerController::CrouchStart(const FInputActionValue& InputActionValue)
 // {

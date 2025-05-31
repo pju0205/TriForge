@@ -68,6 +68,7 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
 	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
+	DOREPLIFETIME(ATFPlayerCharacter, bSliding);
 
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
@@ -89,6 +90,9 @@ void ATFPlayerCharacter::BeginPlay()
 	}
 }
 
+
+// Update Movement Start -----------------------------
+// Gait 값을 업데이트하고 이를 사용하여 캐릭터 이동 컴포넌트의 최대 이동 속도를 설정하는 데 사용
 void ATFPlayerCharacter::GetDesiredGait()
 {
 	if (bSprinting)
@@ -104,6 +108,7 @@ void ATFPlayerCharacter::GetDesiredGait()
 	}
 }
 
+// 이동 방향에 따라 다른 속도로 설정 (뒤로 걸으면 속도가 느림)
 float ATFPlayerCharacter::CalculateMaxSpeed(float& StrafeSpeedMap)
 {
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
@@ -140,6 +145,36 @@ void ATFPlayerCharacter::UpdateMovement()
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	MovementComponent->MaxWalkSpeed = CurrentSpeed;
 }
+//  ----------------------------- Update Movement End
+
+
+// Jump an Lande Start -------------------------
+// ChooserTable에서 사용할 데이터를 계산하기 위함
+// TFAnimInstance Class에서 JustLandedLight, JustLandedHeavy 함수에서 bJustLanded 데이터를 사용함
+
+void ATFPlayerCharacter::CustomJump()
+{
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(7, 2, FColor::Red, "Call CustomJump");
+	if (bSliding)
+	{
+		
+		// 슬라이딩 중일 때는 방향성 점프
+		FVector Forward = GetActorForwardVector();
+		FVector LaunchVelocity = Forward * 600.f + FVector(0, 0, 400.f); // 앞으로 + 위로 튀기기
+		Jump();
+		LaunchCharacter(LaunchVelocity, true, true);
+
+		// 슬라이딩 중단
+		bSliding = false;
+
+	}
+	else
+	{
+		// 일반 점프
+		Jump();
+	}
+}
 
 void ATFPlayerCharacter::Landed(const FHitResult& Hit)
 {
@@ -166,79 +201,92 @@ void ATFPlayerCharacter::OnDelayComplete()
 	// 0.3초 후에 Just Landed를 false로 설정
 	bJustLanded = false;
 }
+// ------------------------- Jump an Lande End
 
+
+// Walk and Sprint Start --------------------------
 void ATFPlayerCharacter::UpdateSprintState(bool bSprint)
 {
+
+	/*	if (HasAuthority()) // 나는 서버이고, 내 캐릭터니까 바로 상태 갱신
+		 {
+			bSprinting = bSprint;
+			bWalking = !bSprint;
+		}
+		else if (IsLocallyControlled()) // 클라이언트일 경우 → 서버에 요청
+		{
+			/ServerUpdateSprintState(bSprint);
+		}
+		=> 서버인 플레이어가 없는 데디게이트 서버일 때는 사용 X */
+
+
+	// 로컬 입력 받는 클라이언트에서만 서버에 요청하도록 함
+	// 일종의 안정 장치. (내가 내 캐릭터만 조작 할 수 있도록 함)
 	if (IsLocallyControlled())
 	{
+		// Server에 값을 변경할 것이라 요청
+		// 내 변수 값만 바뀌면 다른 플레이은 모르기 때문.
 		ServerUpdateSprintState(bSprint);
 	}
 }
 
 void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
 {
-	bSprinting = bSprint;
-	bWalking = !bSprint;
-}
-
-void ATFPlayerCharacter::isPlayingSlideMontage(float Forward, float Right)
-{
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
-	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
-	
-	if (Velocity > 1.0f)
+	// 서버에서 모든 값들을 바꿈
+	// 이때 이 값들은 DOREPLIFETIME 되어 있기 때문에 모든 클라이언트에 복사됨
+	if (bSprinting != bSprint)
 	{
-		SetSlideDir(Forward, Right);
-		PlaySlidMontage();
+		bSprinting = bSprint;
+		bWalking = !bSprint;
 	}
 }
+// -------------------------- Walk and Sprint End
 
+// Slide Montage Start -------------------
 void ATFPlayerCharacter::PlaySlidMontage()
 {
-	if (SlideMontage)
+	// 조건을 만족할 때만 서버에 요청
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
+
+	if (Velocity > 1.0f && IsLocallyControlled())
 	{
-		PlayAnimMontage(SlideMontage);
+		ServerRequestSlide();
 	}
 }
 
-void ATFPlayerCharacter::SetSlideDir(float Forward, float Right)
+void ATFPlayerCharacter::ServerRequestSlide_Implementation()
 {
-	SlideMontage = nullptr;
+	// Velocity 체크 - 서버에서도 안전하게 조건 확인
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
 
-	if (Forward == 0)
+	if (Velocity > 1.0f)
 	{
-		if (Right)
-		{
-			if (Right > 0)
-			{
-				SlideMontage = RightSlide_Montage;
-				if (GEngine)
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Right"));
-			}
-			else
-			{
-				SlideMontage = LeftSlide_Montage;
-				if (GEngine)
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Left"));
-			}
-		}
-	}
-	else
-	{
-		if (Forward > 0)
-		{
-			SlideMontage = ForwardSlide_Montage;
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Forward"));
-		}
-		else
-		{
-			SlideMontage = BackSlide_Montage;
-			if (GEngine)
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Slide Backward"));
-		}
+		bSliding = true; // 슬라이딩 상태 시작
+
+		MulticastPlaySlideMontage();
 	}
 }
+
+void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
+{
+	if (SlideMontage && GetMesh())
+	{
+		
+		float Duration = PlayAnimMontage(SlideMontage);
+
+		// 슬라이딩 종료 예약
+		FTimerHandle SlideEndTimerHandle;
+		GetWorldTimerManager().SetTimer(SlideEndTimerHandle, [this]()
+		{
+			bSliding = false;
+		}, Duration, false);
+	}
+}
+// -------------- Slide Montage End
+
+
 // 데미지 처리 함수
 void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
