@@ -4,6 +4,7 @@
 #include "Character/TFPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Character/TFAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/TFPlayerController.h"
@@ -73,7 +74,7 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
-//
+
 // // TFPlayerCharacter.cpp
 // void ATFPlayerCharacter::OnRep_ReplicatedRootTransform()
 // {

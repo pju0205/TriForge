@@ -119,8 +119,8 @@ public:
 	//
 	// UFUNCTION()
 	// void OnRep_ReplicatedRootTransform();
-	//
-	//
+	
+	
 	// Getter Start ------------
 	
 	E_Gait GetGait() const { return ECurrentGait; };

@@ -134,40 +134,6 @@ void UTFAnimInstance::SetRootTransform()
 
 	if (OffsetRootBoneEnabled)
 	{
-		/*
-		// Animation Blueprint에서 실행됨
-		SetOffsetRootNode();
-
-		// Animation Blueprint의 OffsetRoot Node의 결과값을 가져옴
-		FTransform OffsetRootNodeTransform = UAnimationWarpingLibrary::GetOffsetRootTransform(OffsetRootNode);
-
-		// 언리얼에서 캐릭터의 Z축은 애니메이션 파일들에 비해 대게 90도 틀어져있음
-		// OffsetRoot Node의 기능이 애니메이션 실행 시 루트 본을 캐릭터의 캡슐(캐릭터의 트랜스폼)과 맞추어 주는것
-		// -> 여기서 애니메이션 재생 시 루트 본의 위치와 회전은 현재 캐릭터의 캡슐에 맞게 조정 된것
-		// -> 그렇기 때문에 이후 90도 틀어진 것을 맞춰주기 위해 90도 더한 TransFrom을 주는 것
-		FVector OffsetRootNode_Location = OffsetRootNodeTransform.GetLocation();
-		FRotator OffsetRootNode_Rotation = OffsetRootNodeTransform.Rotator();
-
-
-		FRotator Make_OffsetRootNode_Rotation = FRotator(OffsetRootNode_Rotation.Pitch, OffsetRootNode_Rotation.Yaw + 90.0f, OffsetRootNode_Rotation.Roll);
-		RootTransform = UKismetMathLibrary::MakeTransform(OffsetRootNode_Location, Make_OffsetRootNode_Rotation);
-		
-		// 디버깅
-		//GEngine->AddOnScreenDebugMessage(355, 1, FColor::Emerald, TEXT("OffsetRootBoneEnabled True"));
-		// FRotator CharacterRotation = CharacterTransform.Rotator();
-		// GEngine->AddOnScreenDebugMessage(700, 2.f, FColor::Cyan,
-		// 	FString::Printf(TEXT("Character Transform Rotation: Pitch=%.2f Yaw=%.2f Roll=%.2f"), 
-		// 	CharacterRotation.Pitch, CharacterRotation.Yaw, CharacterRotation.Roll));
-		//
-		// GEngine->AddOnScreenDebugMessage(701, 2.f, FColor::Cyan,
-		// 	FString::Printf(TEXT("Offset Transform Rotation: Pitch=%.2f Yaw=%.2f Roll=%.2f"), 
-		// 	OffsetRootNodeTransform.Rotator().Pitch, OffsetRootNodeTransform.Rotator().Yaw, OffsetRootNodeTransform.Rotator().Roll));
-		//
-		// GEngine->AddOnScreenDebugMessage(702, 2.f, FColor::Cyan,
-		// 	FString::Printf(TEXT("Root Transform Rotation: Pitch=%.2f Yaw=%.2f Roll=%.2f"), 
-		// 	RootTransform.Rotator().Pitch, RootTransform.Rotator().Yaw, RootTransform.Rotator().Roll));
-		*/
-
 		// Animation Blueprint에서 실행됨
 		SetOffsetRootNode();
 		
@@ -178,6 +144,7 @@ void UTFAnimInstance::SetRootTransform()
 		FTransform OffsetRootNodeTransform = UAnimationWarpingLibrary::GetOffsetRootTransform(OffsetRootNode);
 		FVector OffsetLocation = OffsetRootNodeTransform.GetLocation();
 		FRotator OffsetRotation = OffsetRootNodeTransform.Rotator();
+		
 		FRotator AdjustedRotation = FRotator(OffsetRotation.Pitch, OffsetRotation.Yaw + 90.0f, OffsetRotation.Roll);
 
 		// ***** 오류 해결 :  머리가 90도 돌아가있던 가장 큰 이유 중 하나 *****
@@ -185,26 +152,14 @@ void UTFAnimInstance::SetRootTransform()
 		// OffsetRoot Node로 변경된 Transform은 다른 클라에서 모름. 그래서 직접 멀티 처리를 해줘야 함.  
 		// 그래서 Transform 값을 멀티로 처리해서 동기화 하니까 정상 작동 
 		FTransform LocalRootTransform = FTransform(AdjustedRotation, OffsetLocation);
-
-		// 로컬 컨트롤러만 서버에 전달
-		// if (TFPlayerCharacter->HasAuthority())
-		// {
-		// 	GEngine->AddOnScreenDebugMessage(59, 1, FColor::Blue, FString::Printf(TEXT("HasAutority")));
-		// 	TFPlayerCharacter->ReplicatedRootTransform = LocalRootTransform;
-		// }
-
+		
 		// 로컬이면 직접 계산된 값 사용, 아니면 복제된 값 사용
 		if (TFPlayerCharacter->IsLocallyControlled())
 		{
-			GEngine->AddOnScreenDebugMessage(59, 1, FColor::Blue, FString::Printf(TEXT("IsLocal")));
 			RootTransform = LocalRootTransform;
 		}
-		// else
-		// {
-		// 	RootTransform = TFPlayerCharacter->ReplicatedRootTransform;
-		// }
 
-		// 디버깅 메시지 출력
+		// // 디버깅 메시지 출력
 		// if (GEngine)
 		// {
 		// 	const FRotator CharacterRotation = CharacterTransform.Rotator();
