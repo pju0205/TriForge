@@ -9,6 +9,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "TriForge/TriForge.h"
 
 ATFHitScanWeapon::ATFHitScanWeapon()
 {
@@ -36,10 +37,24 @@ void ATFHitScanWeapon::Attack()
 		{
 			End = Start + (HitResult.TraceEnd - Start) * 1.25;
 		}
-		
 		FHitResult HitScanHit;
 		UWorld* World = GetWorld();
+		FCollisionObjectQueryParams ObjectParams;
+		ObjectParams.AddObjectTypesToQuery(ECC_SkeletalMesh);
+		ObjectParams.AddObjectTypesToQuery(ECC_WorldStatic);
+		ObjectParams.AddObjectTypesToQuery(ECC_Visibility);
+		
 		if (World)
+		{
+			World->LineTraceSingleByObjectType(
+				HitScanHit,
+				Start,
+				End,
+				ObjectParams,
+				FCollisionQueryParams()
+			);
+		}
+		/*if (World)
 		{
 			World->LineTraceSingleByChannel(
 				HitScanHit,
@@ -47,7 +62,7 @@ void ATFHitScanWeapon::Attack()
 				End,
 				ECC_Visibility
 			); 
-		}
+		}*/
 		ServerAttack(HitScanHit);
 	}
 	
@@ -71,6 +86,13 @@ void ATFHitScanWeapon::ServerAttack_Implementation(const FHitResult& Hit)
 				this,
 				UDamageType::StaticClass()
 			);
+		}
+		else
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, "NoDamagedChar");
+			}
 		}
 		ImpactEffects(Hit);
 	}

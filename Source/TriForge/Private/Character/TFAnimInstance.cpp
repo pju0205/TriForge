@@ -30,6 +30,7 @@ UTFAnimInstance::UTFAnimInstance()
 	AccelerationAmount = 0.0f;
 	Speed2D = 0.0f;
 	HeayLandSpeedThreshold = 700.0f;
+	bSliding = false;
 
 }
 
@@ -70,6 +71,7 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	{
 		bRangedWeapon = EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon;
 	}
+	bSliding = TFPlayerCharacter->GetIsSliding();
 	
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
