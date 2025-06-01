@@ -28,6 +28,7 @@ protected:
 	virtual void PlayerEliminated();
 	void PrepareNextRound();
 	void NextRandomTravelMap();
+	void DestroyAllDroppedWeapons();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Maps")
 	TArray<TSoftObjectPtr<UWorld>> CombatMaps;

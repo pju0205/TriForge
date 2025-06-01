@@ -3,6 +3,7 @@
 
 #include "Game/TFGameMode.h"
 
+#include "Character/TFPlayerCharacter.h"
 #include "Game/TFMatchGameState.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerStart.h"
@@ -34,11 +35,15 @@ void ATFGameMode::PlayerEliminated()
 		if (PC)
 		{
 			// 현재 있는 캐릭터들 전부 초기화
-			APawn* Pawn = PC->GetPawn();
+			ATFPlayerCharacter* Pawn = Cast<ATFPlayerCharacter>(PC->GetPawn());
 			if (Pawn)
 			{
-				PC->UnPossess();
+				Pawn->Reset();
 				Pawn->Destroy();
+				if (Pawn->IsWeaponEquipped())
+				{
+					Pawn->DroppedWeapon();
+				}
 			}
 
 			// 게임이 끝난게 아니라면 리스폰

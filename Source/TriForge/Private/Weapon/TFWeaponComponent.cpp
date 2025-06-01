@@ -116,7 +116,7 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
-		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다. 
+		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다.
 		bCanAttack = true;
 		CurrentFOV = DefaultFOV;
 		SetAiming(false);
@@ -318,14 +318,11 @@ void UTFWeaponComponent::SetHUDCrosshairs(float DeltaTime)
 	}
 }
 
-// 손에 들고 있는 무기 전부 삭제
-void UTFWeaponComponent::DestroyWeapon()
+// 손에 들고 있는 무기 삭제
+void UTFWeaponComponent::DropWeapon()
 {
-	for (ATFWeapon* Weapon : Inventory)
+	if (EquippedWeapon)
 	{
-		if (IsValid(Weapon))
-		{
-			Weapon->Destroy();
-		}
+		EquippedWeapon->Dropped();
 	}
 }

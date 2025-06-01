@@ -6,13 +6,15 @@
 #include "Blueprint/UserWidget.h"
 #include "HUD/TFOverlay.h"
 #include "HUD/UI/MatchResultPage.h"
+#include "HUD/UI/PlayerHealthBar.h"
 
 void ATFHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
 	AddCharacterOverlay();
-	
+
+	CharacterOverlay->PlayerHealthBar->OnHealthCompInitialized();
 }
 
 void ATFHUD::AddCharacterOverlay()

@@ -31,7 +31,10 @@ void ATFWeaponSpawner::Tick(float DeltaTime)
 
 	// 매 틱마다 생성된 무기의 위치가 변경되었는지 체크
 	// 위치가 변경되었다면 Delay로 설정한 초 이후에 다시 무기 생성
-	CheckWeaponLocation();
+	if (HasAuthority())
+	{
+		CheckWeaponLocation();
+	}
 }
 
 void ATFWeaponSpawner::CheckWeaponLocation_Implementation()
@@ -44,6 +47,8 @@ void ATFWeaponSpawner::CheckWeaponLocation_Implementation()
 
 bool ATFWeaponSpawner::IsSpawnedWeaponEquipped()
 {
+	if (!IsValid(SpawnedWeapon)) return false;
+	
 	if (SpawnedWeapon)
 	{
 		FVector SpawnedWeaponLocation = SpawnedWeapon->GetActorLocation();

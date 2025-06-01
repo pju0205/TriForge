@@ -277,7 +277,7 @@ void UTFAnimInstance::UpdateStates()
 		
 		MovementModeLastFrame = MovementMode;
 		EMovementMode CurrentMovementMode = TFCharacterMovement->MovementMode;
-		UE_LOG(LogTemp, Warning, TEXT("bSprinting: %d, bWalking: %d, Gait: %d"), TFPlayerCharacter->GetIsSprinting(), TFPlayerCharacter->GetIsSWaking(), TFPlayerCharacter->GetGait());
+		/*UE_LOG(LogTemp, Warning, TEXT("bSprinting: %d, bWalking: %d, Gait: %d"), TFPlayerCharacter->GetIsSprinting(), TFPlayerCharacter->GetIsSWaking(), TFPlayerCharacter->GetGait());*/
 		switch(CurrentMovementMode)
 		{
 		case EMovementMode::MOVE_None:

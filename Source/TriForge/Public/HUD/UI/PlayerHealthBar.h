@@ -19,6 +19,7 @@ class TRIFORGE_API UPlayerHealthBar : public UUserWidget
 
 public:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 	void SetHealthBar();
 	
@@ -32,9 +33,15 @@ public:
 	UProgressBar* HealthBar;
 
 	UTFPlayerHealthComponent* GetPlayerComp() const;
-protected:
-	
+
+	void BindToHealthComponent(UTFPlayerHealthComponent* NewComp);
 	
 	UFUNCTION()
 	void OnHealthCompInitialized();
+protected:
+	
+
+private:
+	UPROPERTY()
+	UTFPlayerHealthComponent* CachedHealthComponent = nullptr;
 };

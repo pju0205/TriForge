@@ -6,8 +6,10 @@
 #include "Character/TFPlayerController.h"
 #include "Game/TFMatchGameState.h"
 #include "GameFramework/GameStateBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/DSPlayerController.h"
 #include "PlayerState/TFMatchPlayerState.h"
+#include "Weapon/TFWeapon.h"
 
 ATFMatchGameMode::ATFMatchGameMode()
 {
@@ -109,7 +111,7 @@ void ATFMatchGameMode::HandleMatchWin(APlayerController* Loser, APlayerControlle
 		}
 		
 		// 완전 종료 게임 끝
-		WinnerPS->IsTheWinner();				// 승리자로 기록
+		WinnerPS->IsTheWinner();			// 승리자로 기록
 		OnMatchEnded();						// 이게 모두한테 실행이 되나? 일단 보류
 		
 		StopCountdownTimer(RoundTimer);
@@ -122,6 +124,7 @@ void ATFMatchGameMode::HandleMatchWin(APlayerController* Loser, APlayerControlle
 		StopCountdownTimer(RoundTimer);
 		MatchStatus = EMatchStatus::PostMatch;
 		StartCountdownTimer(PostMatchTimer);
+		
 	}
 }
 
@@ -139,6 +142,7 @@ void ATFMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	}
 	if (Type == ECountdownTimerType::Round)
 	{
+		StopCountdownTimer(RoundTimer);
 		MatchStatus = EMatchStatus::PostRound;
 		StartCountdownTimer(PostRoundTimer);
 		SetClientInputEnabled(false);
@@ -149,6 +153,7 @@ void ATFMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 		MatchStatus = EMatchStatus::PreRound;
 		SetClientInputEnabled(false);
 		PrepareNextRound();								// 다음 라운드 준비
+		DestroyAllDroppedWeapons();
 	}
 	
 	// Match 관련
@@ -196,6 +201,26 @@ void ATFMatchGameMode::NextRandomTravelMap()
 	}
 }
 
+void ATFMatchGameMode::DestroyAllDroppedWeapons()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	TArray<AActor*> FoundWeapons;
+	UGameplayStatics::GetAllActorsOfClass(World, ATFWeapon::StaticClass(), FoundWeapons);
+
+	for (AActor* Weapon : FoundWeapons)
+	{
+		if (Weapon)
+		{
+			Weapon->Destroy();
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Dropped Weapons Destroyed: %d"), FoundWeapons.Num());
+}
+
+// 제대로 적용 안됨.
 void ATFMatchGameMode::GetGamePlayerName()
 {
 	TArray<ADSPlayerController*> Controllers;

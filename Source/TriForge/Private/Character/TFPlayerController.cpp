@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
+#include "HUD/UI/PlayerHealthBar.h"
 #include "HUD/UI/RoundIndicator.h"
 #include "PlayerState/TFMatchPlayerState.h"
 
@@ -37,6 +38,13 @@ void ATFPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	bPawnAlive = true;
 	TFHUD = Cast<ATFHUD>(GetHUD());
+
+	if (HealthBar)
+	{
+		HealthBar->SetHealthBar();
+	}
+
+	InitializeHealthBar(InPawn);
 }
 
 void ATFPlayerController::OnRep_PlayerState()
@@ -316,4 +324,23 @@ void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActo
 	{
 		ActorList.Add(PS);
 	}
+}
+
+void ATFPlayerController::InitializeHealthBar(AActor* InPawn)
+{
+	if (ATFPlayerCharacter* TFChar = Cast<ATFPlayerCharacter>(InPawn))
+	{
+		if (HealthBar)
+		{
+			HealthBar->BindToHealthComponent(GetHealthComponent());
+		}
+	}
+}
+
+// PlayerController.cpp
+void ATFPlayerController::ClientRestart_Implementation(APawn* NewPawn)
+{
+	Super::ClientRestart_Implementation(NewPawn);
+	
+	InitializeHealthBar(NewPawn);
 }

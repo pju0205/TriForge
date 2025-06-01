@@ -13,22 +13,49 @@ void UPlayerHealthBar::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	SetHealthBar();
-
-	// 초기화 시켜놓기
+	// 초기화 시도
 	if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(GetOwningPlayer()))
 	{
-		UTFPlayerHealthComponent* HealthComp = TFPC->GetHealthComponent();
-		if (IsValid(HealthComp))
-		{
-			HealthComp->OnHealthChanged.AddDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
-			SetHealthBar();
-		}
-		else
-		{
-			TFPC->OnPlayerStateReplicated.AddUniqueDynamic(this, &UPlayerHealthBar::OnHealthCompInitialized);
-		}
+		TFPC->OnPawnReinitialized.AddDynamic(this, &UPlayerHealthBar::OnHealthCompInitialized);
+
+		// 처음에도 시도
+		OnHealthCompInitialized();
 	}
+}
+
+void UPlayerHealthBar::NativeDestruct()
+{
+	Super::NativeDestruct();
+	
+	if (IsValid(CachedHealthComponent))
+	{
+		CachedHealthComponent->OnHealthChanged.RemoveDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
+	}
+}
+
+void UPlayerHealthBar::BindToHealthComponent(UTFPlayerHealthComponent* NewComp)
+{
+	if (!IsValid(NewComp)) return;
+
+	if (CachedHealthComponent == NewComp)
+	{
+		// 이미 바인딩된 상태라면 중복 방지
+		UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: NewComp is INVALID"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: NewComp is %s"), *GetNameSafe(NewComp));
+
+	// 기존 바인딩 제거
+	if (IsValid(CachedHealthComponent))
+	{
+		CachedHealthComponent->OnHealthChanged.RemoveDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
+	}
+
+	CachedHealthComponent = NewComp;
+
+	CachedHealthComponent->OnHealthChanged.AddDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
+	UpdateHealthBar(CachedHealthComponent->GetCurrentHealth(), CachedHealthComponent->GetMaxHealth());
 }
 
 void UPlayerHealthBar::SetHealthBar()
@@ -73,22 +100,11 @@ UTFPlayerHealthComponent* UPlayerHealthBar::GetPlayerComp() const
 
 void UPlayerHealthBar::OnHealthCompInitialized()
 {
-	if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(GetOwningPlayer()))
-	{
-		UTFPlayerHealthComponent* HealthComp = TFPC->GetHealthComponent();
-		if (IsValid(HealthComp))
-		{
-			HealthComp->OnHealthChanged.AddDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
-			SetHealthBar();
-		}
-	}
+	UTFPlayerHealthComponent* HealthComp = GetPlayerComp();
+	UE_LOG(LogTemp, Warning, TEXT("OnHealthCompInitialized -> NewComp: %s"), *GetNameSafe(HealthComp));
 
-	if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(GetOwningPlayer()))
+	if (IsValid(HealthComp))
 	{
-		UTFPlayerHealthComponent* HealthComp = TFPC->GetHealthComponent();
-		if (IsValid(HealthComp))
-		{
-			TFPC->OnPlayerStateReplicated.RemoveDynamic(this, &UPlayerHealthBar::OnHealthCompInitialized);
-		}
+		BindToHealthComponent(HealthComp);
 	}
 }

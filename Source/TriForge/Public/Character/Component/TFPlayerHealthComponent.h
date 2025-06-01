@@ -79,6 +79,8 @@ protected:
 	void OnRep_MaxHealth();
 
 public:
+	UPROPERTY()
+	ATFPlayerCharacter* PlayerCharacter;
 
 	UPROPERTY(BlueprintAssignable)
 	FHealth_AttributeChanged OnHealthChanged;

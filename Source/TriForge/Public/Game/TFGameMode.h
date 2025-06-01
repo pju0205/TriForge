@@ -23,7 +23,6 @@ public:
 	// 스폰 중복 방지를 위한 PlayerStart 선택 함수
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	
-	
 	UPROPERTY()
 	TMap<APlayerController*, FTimerHandle> Timers;
 	

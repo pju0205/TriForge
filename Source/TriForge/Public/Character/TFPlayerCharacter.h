@@ -130,10 +130,6 @@ public:
 	bool GetIsSWaking() const { return bWalking; }
 	
 	// ------------- Getter End
-
-	
-	void CleanupBeforeMapTravel();
-
 //Weapon
 private:
 	// 데미지 함수
@@ -176,7 +172,6 @@ private:
 	UPROPERTY()
 	ATFPlayerState* TFPlayerState;
 	
-	
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(ATFWeapon* LastWeapon);
 
@@ -195,6 +190,8 @@ public:
 	UFUNCTION()
 	void OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator);
 
+	UFUNCTION()
+	void DroppedWeapon();
 protected:
 	// 사망 애니메이션 재생
 	void PlayDirectionalDeathMontage(AActor* DeathInstigator);

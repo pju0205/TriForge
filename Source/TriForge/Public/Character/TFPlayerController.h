@@ -7,12 +7,14 @@
 #include "HUD/TFHUD.h"
 #include "TFPlayerController.generated.h"
 
+class UPlayerHealthBar;
 class UMatchResultPage;
 class ATFMatchPlayerState;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPawnReinitialized);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerStateReplicated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuitMenuOpen, bool, bOpen);		// Server
 UCLASS()
@@ -76,10 +78,14 @@ protected:
 
 	// PlayerState 복제 시점 확인용
 	virtual void OnRep_PlayerState() override;
-
+	
+	// ClientRestart는 서버가 클라이언트에게 호출하는 RPC이므로 Server → Client 방향
+	virtual void ClientRestart_Implementation(APawn* NewPawn) override;
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
+
+	void InitializeHealthBar(AActor* InPawn);
 
 	bool bPawnAlive;	// 해당 Pawn 살아있는지 여부
 
@@ -91,9 +97,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerStateReplicated OnPlayerStateReplicated;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPawnReinitialized OnPawnReinitialized;
 	
 	UPROPERTY()
 	ATFHUD* TFHUD;
+
+	UPROPERTY()
+	UPlayerHealthBar* HealthBar;
 
 	UPROPERTY()
 	ATFMatchPlayerState* TFMatchPS;

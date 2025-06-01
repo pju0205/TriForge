@@ -84,7 +84,7 @@ void ATFPlayerCharacter::BeginPlay()
 	}
 
 	// Death 관련 함수 바인딩
-	if (IsValid(HealthComponent))
+	if (HasAuthority() && IsValid(HealthComponent))
 	{
 		HealthComponent->OnDeathStarted.AddDynamic(this, &ATFPlayerCharacter::OnDeathStarted);
 	}
@@ -313,6 +313,11 @@ void ATFPlayerCharacter::PostInitializeComponents()
 	{
 		WeaponComponent->PlayerCharacter = this;
 	}
+
+	if (HealthComponent)
+	{
+		
+	}
 }
 
 void ATFPlayerCharacter::SetOverlappingWeapon(ATFWeapon* Weapon)
@@ -405,6 +410,11 @@ ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
 	return WeaponComponent->EquippedWeapon;
 }
 
+void ATFPlayerCharacter::DroppedWeapon()
+{
+	GetEquippedWeapon()->Dropped();
+}
+
 void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 {
 	if (OverlappingWeapon)
@@ -422,7 +432,7 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 	if (!HealthComponent || HealthComponent->DeathState == EDeathState::NotDead || HealthComponent->DeathCause == EDeathCause::Unknown) return;
 
 	// 죽는 몽타주 실행
-	PlayDirectionalDeathMontage(DeathInstigator);
+	PlayDirectionalDeathMontage(DyingActor);
 	// 실행 안됨 Montage_Play를 어떻게 실행시키는건지 모르겠네
 	
 	// 라운드 종료 시키기
@@ -432,7 +442,7 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 		// 죽은 유저 가지고 있는 무기 삭제시키기
 		if (IsValid(WeaponComponent))
 		{
-			WeaponComponent->DestroyWeapon();
+			WeaponComponent->DropWeapon();
 		}
 
 		// 죽은 유저 생존 여부 갱신
@@ -507,15 +517,4 @@ UAnimMontage* ATFPlayerCharacter::GetDirectionalDeathMontage(const FVector& HitD
 
 	// 기본적으로 Front
 	return DeathMontage_Front;
-}
-
-
-void ATFPlayerCharacter::CleanupBeforeMapTravel()
-{
-	if (IsValid(WeaponComponent))
-	{
-		WeaponComponent->DestroyWeapon();		// 손에 들고 있는 총기 삭제
-		WeaponComponent->EquippedWeapon->Destroy();
-		WeaponComponent->EquippedWeapon = nullptr;
-	}
 }
