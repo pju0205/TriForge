@@ -84,7 +84,7 @@ void ATFPlayerCharacter::BeginPlay()
 	}
 
 	// Death 관련 함수 바인딩
-	if (HasAuthority() && IsValid(HealthComponent))
+	if (IsValid(HealthComponent))
 	{
 		HealthComponent->OnDeathStarted.AddDynamic(this, &ATFPlayerCharacter::OnDeathStarted);
 	}
@@ -291,7 +291,7 @@ void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
 void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (!IsValid(HealthComponent)) return;
+	/*if (!IsValid(HealthComponent)) return;
 
 	AActor* DamageInstigator = nullptr;
 	if (IsValid(DamageCauser))
@@ -302,6 +302,12 @@ void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 			DamageInstigator = DamageCauser; // Fallback
 		}
 	}
+	HealthComponent->CalcDamage(Damage, DamageInstigator);*/
+
+	if (!IsValid(HealthComponent)) return;
+
+	AActor* DamageInstigator = InstigatedBy ? InstigatedBy->GetPawn() : nullptr;
+
 	HealthComponent->CalcDamage(Damage, DamageInstigator);
 }
 
