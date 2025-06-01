@@ -418,6 +418,13 @@ ATFWeapon* ATFPlayerCharacter::GetEquippedWeapon()
 
 void ATFPlayerCharacter::DroppedWeapon()
 {
+	if (WeaponComponent)
+	{
+		WeaponComponent->SetAiming(false);
+		// 1. SetAiming 내부 if문 중에 IsLocallyControlled() <- 통과 불가
+		// 2. IsLocallyControlled를 없애고 한다 한들 ShowSniperScope 블루 프린트에서 AddViewPort 노드에서 에러 남.
+		// 3. TFGameMode에서 Pawn->Destroy() 혹은 Reset() 보다 먼저 호출하여도 같은 에러 & 안됨.
+	}
 	GetEquippedWeapon()->Dropped();
 }
 
