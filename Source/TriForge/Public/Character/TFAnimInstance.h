@@ -205,7 +205,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FAnimNodeReference OffsetRootNode;
-
+	
 	E_EquippedWeaponType CheckWeaponType(EWeaponType CurrentWeaponType);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))

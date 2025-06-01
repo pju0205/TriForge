@@ -114,7 +114,13 @@ public:
 	
 	//  ------------- Slide Montage Start
 
-	
+	// UPROPERTY(ReplicatedUsing = OnRep_ReplicatedRootTransform)
+	// FTransform ReplicatedRootTransform;
+	//
+	// UFUNCTION()
+	// void OnRep_ReplicatedRootTransform();
+	//
+	//
 	// Getter Start ------------
 	
 	E_Gait GetGait() const { return ECurrentGait; };

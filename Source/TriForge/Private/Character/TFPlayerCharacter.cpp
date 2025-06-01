@@ -69,10 +69,18 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
 	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
 	DOREPLIFETIME(ATFPlayerCharacter, bSliding);
-
+	// DOREPLIFETIME(ATFPlayerCharacter, ReplicatedRootTransform);
+	
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
-
+//
+// // TFPlayerCharacter.cpp
+// void ATFPlayerCharacter::OnRep_ReplicatedRootTransform()
+// {
+// 	// 필요시 로그 출력
+// 	// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("RootTransform Replicated"));
+// }
+//
 
 void ATFPlayerCharacter::BeginPlay()
 {
