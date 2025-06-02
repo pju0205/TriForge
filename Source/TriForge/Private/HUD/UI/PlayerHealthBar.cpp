@@ -16,7 +16,7 @@ void UPlayerHealthBar::NativeConstruct()
 	// 초기화 시도
 	if (ATFPlayerController* TFPC = Cast<ATFPlayerController>(GetOwningPlayer()))
 	{
-		TFPC->OnPawnReinitialized.AddDynamic(this, &UPlayerHealthBar::OnHealthCompInitialized);
+		TFPC->OnPossessedPawnChanged.AddDynamic(this, &UPlayerHealthBar::OnPawnChanged);
 
 		// 처음에도 시도
 		OnHealthCompInitialized();
@@ -33,29 +33,35 @@ void UPlayerHealthBar::NativeDestruct()
 	}
 }
 
-void UPlayerHealthBar::BindToHealthComponent(UTFPlayerHealthComponent* NewComp)
+void UPlayerHealthBar::BindToHealthComponent(UTFPlayerHealthComponent* OldComp, UTFPlayerHealthComponent* NewComp)
 {
 	if (!IsValid(NewComp)) return;
 
 	if (CachedHealthComponent == NewComp)
 	{
-		// 이미 바인딩된 상태라면 중복 방지
-		UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: NewComp is INVALID"));
+		UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: Already bound to %s"), *GetNameSafe(NewComp));
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: NewComp is %s"), *GetNameSafe(NewComp));
+	UE_LOG(LogTemp, Warning, TEXT("BindToHealthComponent: Swapping from %s to %s"), *GetNameSafe(OldComp), *GetNameSafe(NewComp));
 
-	// 기존 바인딩 제거
-	if (IsValid(CachedHealthComponent))
+	if (IsValid(OldComp))
 	{
-		CachedHealthComponent->OnHealthChanged.RemoveDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
+		OldComp->OnHealthChanged.RemoveDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
 	}
 
 	CachedHealthComponent = NewComp;
 
 	CachedHealthComponent->OnHealthChanged.AddDynamic(this, &UPlayerHealthBar::UpdateHealthBar);
 	UpdateHealthBar(CachedHealthComponent->GetCurrentHealth(), CachedHealthComponent->GetMaxHealth());
+}
+
+void UPlayerHealthBar::OnPawnChanged(APawn* OldPawn, APawn* NewPawn)
+{
+	UTFPlayerHealthComponent* OldComp = OldPawn ? OldPawn->FindComponentByClass<UTFPlayerHealthComponent>() : nullptr;
+	UTFPlayerHealthComponent* NewComp = NewPawn ? NewPawn->FindComponentByClass<UTFPlayerHealthComponent>() : nullptr;
+
+	BindToHealthComponent(OldComp, NewComp);
 }
 
 void UPlayerHealthBar::SetHealthBar()
@@ -100,11 +106,15 @@ UTFPlayerHealthComponent* UPlayerHealthBar::GetPlayerComp() const
 
 void UPlayerHealthBar::OnHealthCompInitialized()
 {
-	UTFPlayerHealthComponent* HealthComp = GetPlayerComp();
-	UE_LOG(LogTemp, Warning, TEXT("OnHealthCompInitialized -> NewComp: %s"), *GetNameSafe(HealthComp));
+	UTFPlayerHealthComponent* NewComp = GetPlayerComp();
+	UTFPlayerHealthComponent* OldComp = CachedHealthComponent;
 
-	if (IsValid(HealthComp))
+	UE_LOG(LogTemp, Warning, TEXT("OnHealthCompInitialized -> Old: %s / New: %s"),
+		*GetNameSafe(OldComp),
+		*GetNameSafe(NewComp));
+
+	if (IsValid(NewComp))
 	{
-		BindToHealthComponent(HealthComp);
+		BindToHealthComponent(OldComp, NewComp);
 	}
 }

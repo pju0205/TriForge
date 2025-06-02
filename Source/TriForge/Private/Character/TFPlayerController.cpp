@@ -31,6 +31,8 @@ void ATFPlayerController::BeginPlay()
 	{
 		Subsystem->AddMappingContext(TFCharacterContext, 0);
 	}
+	
+	OnPossessedPawnChanged.AddDynamic(this, &ATFPlayerController::HandlePawnChanged);
 }
 
 void ATFPlayerController::OnPossess(APawn* InPawn)
@@ -43,8 +45,6 @@ void ATFPlayerController::OnPossess(APawn* InPawn)
 	{
 		HealthBar->SetHealthBar();
 	}
-
-	InitializeHealthBar(InPawn);
 }
 
 void ATFPlayerController::OnRep_PlayerState()
@@ -326,21 +326,22 @@ void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActo
 	}
 }
 
-void ATFPlayerController::InitializeHealthBar(AActor* InPawn)
-{
-	if (ATFPlayerCharacter* TFChar = Cast<ATFPlayerCharacter>(InPawn))
-	{
-		if (HealthBar)
-		{
-			HealthBar->BindToHealthComponent(GetHealthComponent());
-		}
-	}
-}
 
-// PlayerController.cpp
-void ATFPlayerController::ClientRestart_Implementation(APawn* NewPawn)
+void ATFPlayerController::HandlePawnChanged(APawn* Old_Pawn, APawn* New_Pawn)
 {
-	Super::ClientRestart_Implementation(NewPawn);
-	
-	InitializeHealthBar(NewPawn);
+	if (!IsValid(HealthBar)) return;
+
+	UTFPlayerHealthComponent* OldComp = nullptr;
+	UTFPlayerHealthComponent* NewComp = nullptr;
+
+	if (IsValid(Old_Pawn))
+	{
+		OldComp = Old_Pawn->FindComponentByClass<UTFPlayerHealthComponent>();
+	}
+	if (IsValid(New_Pawn))
+	{
+		NewComp = New_Pawn->FindComponentByClass<UTFPlayerHealthComponent>();
+	}
+
+	HealthBar->BindToHealthComponent(OldComp, NewComp);
 }

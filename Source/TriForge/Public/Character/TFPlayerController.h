@@ -7,6 +7,7 @@
 #include "HUD/TFHUD.h"
 #include "TFPlayerController.generated.h"
 
+class UTFPlayerHealthComponent;
 class UPlayerHealthBar;
 class UMatchResultPage;
 class ATFMatchPlayerState;
@@ -78,14 +79,18 @@ protected:
 
 	// PlayerState 복제 시점 확인용
 	virtual void OnRep_PlayerState() override;
-	
-	// ClientRestart는 서버가 클라이언트에게 호출하는 RPC이므로 Server → Client 방향
-	virtual void ClientRestart_Implementation(APawn* NewPawn) override;
+
+	UFUNCTION()
+	void HandlePawnChanged(APawn* Old_Pawn, APawn* New_Pawn);
+
+	UPROPERTY()
+	UTFPlayerHealthComponent* BoundHealthComponent;
+
+	UPROPERTY()
+	UPlayerHealthBar* HealthBarWidget; // 블루프린트 UMG 위젯 참조
 public:
 	ATFPlayerController();
 	virtual void Tick(float DeltaTime) override;
-
-	void InitializeHealthBar(AActor* InPawn);
 
 	bool bPawnAlive;	// 해당 Pawn 살아있는지 여부
 

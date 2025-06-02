@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/TFCharacter.h"
+#include "Components/TimelineComponent.h"
 #include "TFPlayerCharacter.generated.h"
 
 
@@ -41,7 +42,7 @@ private:
 	void OnDelayComplete();
 
 	void SetSlideMontage(bool bisSlideDir);
-	
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -85,7 +86,7 @@ public:
 	ATFPlayerCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-
+	virtual void PossessedBy(AController* NewController) override;
 	// Walk < - >Sprint Start -------------
 	
 	void UpdateSprintState(bool isSprint);
@@ -198,31 +199,10 @@ public:
 
 	UFUNCTION()
 	void DroppedWeapon();
-protected:
-	// 사망 애니메이션 재생
-	void PlayDirectionalDeathMontage(AActor* DeathInstigator);
 
-	// 방향에 따른 애니메이션 선택
-	UAnimMontage* GetDirectionalDeathMontage(const FVector& HitDirection) const;
-
-	// 사망 애니메이션들
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_Front;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_Back;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_Left;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_Right;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_FrontLeft;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Death")
-	UAnimMontage* DeathMontage_FrontRight;
+	// 낙사 한번만 받도록 설정한 값
+	bool bIsFallingDamageApplied = false;
+private:
+	// 사망 시 Ragdoll 실행
+	void EnableRagdoll();
 };
-
-

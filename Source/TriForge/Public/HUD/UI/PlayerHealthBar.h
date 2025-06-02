@@ -34,12 +34,14 @@ public:
 
 	UTFPlayerHealthComponent* GetPlayerComp() const;
 
-	void BindToHealthComponent(UTFPlayerHealthComponent* NewComp);
-	
+	UFUNCTION()
+	void BindToHealthComponent(UTFPlayerHealthComponent* OldComp, UTFPlayerHealthComponent* NewComp);
+
+	UFUNCTION()
+	void OnPawnChanged(APawn* OldPawn, APawn* NewPawn);
+
 	UFUNCTION()
 	void OnHealthCompInitialized();
-protected:
-	
 
 private:
 	UPROPERTY()

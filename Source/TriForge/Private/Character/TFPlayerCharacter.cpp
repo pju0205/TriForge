@@ -13,8 +13,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Curves/CurveFloat.h"
+#include "Engine/DamageEvents.h"
 #include "Game/TFGameMode.h"
 #include "HUD/TFHUD.h"
+#include "HUD/UI/PlayerHealthBar.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TriForge/TriForge.h"
@@ -56,12 +58,25 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	bJustLanded = false;
 	LandVelocity = FVector(0.0f, 0.0f, 0.0f);
 	SlideMontage = nullptr;
+	bIsFallingDamageApplied = false;
 }
 
 void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateMovement();
+
+	const float KillZ = -1000.f; // Kill 되는 높이
+
+	if (!bIsFallingDamageApplied && GetActorLocation().Z < KillZ)
+	{
+		bIsFallingDamageApplied = true;	// 데미지 한번만 적용하도록
+
+		FDamageEvent DamageEvent;
+		TakeDamage(999.f, DamageEvent, nullptr, nullptr); // nullptr은 피해를 입힌 Controller/Actor
+
+		UE_LOG(LogTemp, Warning, TEXT("Fell below kill height. Applied damage."));
+	}
 }
 
 void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -73,6 +88,11 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	// DOREPLIFETIME(ATFPlayerCharacter, ReplicatedRootTransform);
 	
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
+}
+
+void ATFPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
 }
 
 // // TFPlayerCharacter.cpp
@@ -300,18 +320,6 @@ void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
 void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType,
 	class AController* InstigatedBy, AActor* DamageCauser)
 {
-	/*if (!IsValid(HealthComponent)) return;
-
-	AActor* DamageInstigator = nullptr;
-	if (IsValid(DamageCauser))
-	{
-		DamageInstigator = DamageCauser->GetInstigator(); // Pawn이나 Character인 경우 보통 이게 공격자
-		if (!IsValid(DamageInstigator))
-		{
-			DamageInstigator = DamageCauser; // Fallback
-		}
-	}
-	HealthComponent->CalcDamage(Damage, DamageInstigator);*/
 
 	if (!IsValid(HealthComponent)) return;
 
@@ -452,10 +460,9 @@ void ATFPlayerCharacter::OnRep_OverlappingWeapon(ATFWeapon* LastWeapon)
 void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator)
 {
 	if (!HealthComponent || HealthComponent->DeathState == EDeathState::NotDead || HealthComponent->DeathCause == EDeathCause::Unknown) return;
-
-	// 죽는 몽타주 실행
-	PlayDirectionalDeathMontage(DyingActor);
-	// 실행 안됨 Montage_Play를 어떻게 실행시키는건지 모르겠네
+	
+	// Ragdoll 실행
+	EnableRagdoll();
 	
 	// 라운드 종료 시키기
 	ATFPlayerController* VictimController = Cast<ATFPlayerController>(GetController());
@@ -483,6 +490,10 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 					GameMode->HandleRoundEnd(VictimController, InstigatorController);
 				}
 			}
+			else // 낙사 되면 가해자 없음 -> nullptr 넣어주기
+			{
+				GameMode->HandleRoundEnd(VictimController, nullptr);
+			}
 		}
 	}
 
@@ -499,44 +510,20 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 	GetCharacterMovement()->DisableMovement();
 }
 
-// DeathMontage 실행 함수
-void ATFPlayerCharacter::PlayDirectionalDeathMontage(AActor* DeathInstigator)
+void ATFPlayerCharacter::EnableRagdoll()
 {
-	if (!DeathInstigator) return;
+	USkeletalMeshComponent* MeshComp = GetMesh();
+	if (!MeshComp) return;
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (!AnimInstance)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AnimInstance Nullptr"));
-		return;
-	}
-	
-	FVector HitDirection = (GetActorLocation() - DeathInstigator->GetActorLocation()).GetSafeNormal();
-	UAnimMontage* SelectedMontage = GetDirectionalDeathMontage(HitDirection);	// 각도 계산
+	// Physics 활성화
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
 
-	if (SelectedMontage)
-	{
-		AnimInstance->Montage_Play(SelectedMontage);
-		UE_LOG(LogTemp, Warning, TEXT("Selected Montage: %s"), *GetNameSafe(SelectedMontage));
-	}
-}
+	// 캡슐 비활성화
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-// 맞은 방향 계산해서 그에 해당하는 Death 몽타주 return
-UAnimMontage* ATFPlayerCharacter::GetDirectionalDeathMontage(const FVector& HitDirection) const
-{
-	FVector Forward = GetActorForwardVector();
-	FVector Right = GetActorRightVector();
-
-	float ForwardDot = FVector::DotProduct(Forward, HitDirection);
-	float RightDot = FVector::DotProduct(Right, HitDirection);
-
-	if (ForwardDot > 0.7f) return DeathMontage_Front;
-	if (ForwardDot < -0.7f) return DeathMontage_Back;
-	if (RightDot > 0.7f) return DeathMontage_Right;
-	if (RightDot < -0.7f) return DeathMontage_Left;
-	if (ForwardDot > 0.f && RightDot > 0.f) return DeathMontage_FrontRight;
-	if (ForwardDot > 0.f && RightDot < 0.f) return DeathMontage_FrontLeft;
-
-	// 기본적으로 Front
-	return DeathMontage_Front;
+	// 현재 위치를 기준으로 물리 적용
+	FName PelvisBone = TEXT("pelvis"); // 스켈레톤에 따라 다를 수 있음
+	FVector Impulse = FVector(0.f, 0.f, 0.f);
+	MeshComp->AddImpulseToAllBodiesBelow(Impulse, PelvisBone, true);
 }
