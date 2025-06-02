@@ -113,13 +113,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastPlaySlideMontage();
 	
-	//  ------------- Slide Montage Start
-
-	// UPROPERTY(ReplicatedUsing = OnRep_ReplicatedRootTransform)
-	// FTransform ReplicatedRootTransform;
-	//
-	// UFUNCTION()
-	// void OnRep_ReplicatedRootTransform();
+	//  ------------- Slide Montage End
 	
 	
 	// Getter Start ------------

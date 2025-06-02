@@ -185,6 +185,8 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 			// 앞을 보고 있을 때만 실행 
 			if (Dot >= 0.8f)
 			{
+				if (GEngine)
+					GEngine->AddOnScreenDebugMessage(10, 1,FColor::Red, "Controller Slid Call");
 				TFCharacter->PlaySlidMontage();
 			}
 		}

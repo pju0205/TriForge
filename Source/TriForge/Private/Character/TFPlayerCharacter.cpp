@@ -85,8 +85,7 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
 	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
 	DOREPLIFETIME(ATFPlayerCharacter, bSliding);
-	// DOREPLIFETIME(ATFPlayerCharacter, ReplicatedRootTransform);
-	
+
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
@@ -94,14 +93,6 @@ void ATFPlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 }
-
-// // TFPlayerCharacter.cpp
-// void ATFPlayerCharacter::OnRep_ReplicatedRootTransform()
-// {
-// 	// 필요시 로그 출력
-// 	// GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("RootTransform Replicated"));
-// }
-//
 
 void ATFPlayerCharacter::BeginPlay()
 {
@@ -271,6 +262,7 @@ void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
 }
 // -------------------------- Walk and Sprint End
 
+
 // Slide Montage Start -------------------
 void ATFPlayerCharacter::PlaySlidMontage()
 {
@@ -280,6 +272,8 @@ void ATFPlayerCharacter::PlaySlidMontage()
 
 	if (Velocity > 1.0f && IsLocallyControlled())
 	{
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(11, 1,FColor::Red, "Character PlaySlidMontage Call");
 		ServerRequestSlide();
 	}
 }
@@ -292,6 +286,9 @@ void ATFPlayerCharacter::ServerRequestSlide_Implementation()
 
 	if (Velocity > 1.0f)
 	{
+		if (GEngine)
+			GEngine->AddOnScreenDebugMessage(12, 1,FColor::Red, "Character ServerRequestSlide_Implementation Call");
+		
 		bSliding = true; // 슬라이딩 상태 시작
 
 		MulticastPlaySlideMontage();

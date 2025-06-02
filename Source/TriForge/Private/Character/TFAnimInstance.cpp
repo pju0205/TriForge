@@ -32,7 +32,6 @@ UTFAnimInstance::UTFAnimInstance()
 	Speed2D = 0.0f;
 	HeayLandSpeedThreshold = 700.0f;
 	bSliding = false;
-
 }
 
 
@@ -153,7 +152,6 @@ void UTFAnimInstance::SetRootTransform()
 		// 그래서 Transform 값을 멀티로 처리해서 동기화 하니까 정상 작동 
 		FTransform LocalRootTransform = FTransform(AdjustedRotation, OffsetLocation);
 		
-		// 로컬이면 직접 계산된 값 사용, 아니면 복제된 값 사용
 		if (TFPlayerCharacter->IsLocallyControlled())
 		{
 			RootTransform = LocalRootTransform;
@@ -491,17 +489,24 @@ bool UTFAnimInstance::ShouldTurnInPlace()
 		RootTransform.GetRotation().Rotator()
 	).Yaw);
 
-	bool bisStop = false;
-	if (MovementState == E_MovementState::Idle && MovementStateLastFrame == E_MovementState::Moving)
-	{
-		bisStop = true;
-	}
-
+	// bool bisStop = false;
+	// if (MovementState == E_MovementState::Idle && MovementStateLastFrame == E_MovementState::Moving)
+	// {
+	// 	bisStop = true;
+	// }
+	//
+	// bool bTurnInPlace = false;
+	// if (RootYawDelta >= 50.0f && bisStop)
+	// {
+	// 	bTurnInPlace = true;
+	// }
+	
 	bool bTurnInPlace = false;
-	if (RootYawDelta >= 50.0f && bisStop)
+	if (RootYawDelta >= 50.0f)
 	{
 		bTurnInPlace = true;
 	}
+	
 	if (GEngine)
 	{
 		// if (bTurnInPlace)	
