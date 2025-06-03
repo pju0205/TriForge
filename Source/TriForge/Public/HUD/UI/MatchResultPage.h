@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(meta = (BindWidget)) UTextBlock* RightNameText;
 	UPROPERTY(meta = (BindWidget)) UTextBlock* RightScoreText;
 
+	UPROPERTY(EditDefaultsOnly)
+	float RateTime = 9;
+
 	ATFMatchPlayerState* GetPlayerState() const;
 
 	UFUNCTION()

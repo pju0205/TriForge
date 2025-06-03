@@ -13,6 +13,7 @@ void UMatchResultPage::NativeConstruct()
 
 	LeftName = "";
 	RightName = "";
+	RateTime = 9;
 	
 	SetVisibility(ESlateVisibility::Hidden);  // 처음엔 숨겨진 상태
 
@@ -51,10 +52,10 @@ void UMatchResultPage::SetMatchResultName()
 	}
 
 	// 내 이름
-	if (LeftNameText) LeftNameText->SetText(FText::FromString(LeftName));
+	if (LeftNameText) LeftNameText->SetText(FText::FromString(TEXT("나")));
 	
 	// 상대 이름
-	if (RightNameText) RightNameText->SetText(FText::FromString(RightName));
+	if (RightNameText) RightNameText->SetText(FText::FromString(TEXT("상대방")));
 }
 
 void UMatchResultPage::OnMatchResultChanged(bool bIsWinner, int32 LeftScore, int32 RightScore)
@@ -96,9 +97,9 @@ void UMatchResultPage::UpdateResultData(bool bIsWinner, int32 LeftScore, int32 R
 	// 위젯 표시
 	SetVisibility(ESlateVisibility::Visible);
 
-	// 5초 후 자동으로 숨기기
+	// RateTime 초 후 자동으로 숨기기
 	FTimerHandle HideTimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(HideTimerHandle, this, &UMatchResultPage::HideResultPage, 5.0f, false);
+	GetWorld()->GetTimerManager().SetTimer(HideTimerHandle, this, &UMatchResultPage::HideResultPage, RateTime, false);
 }
 
 

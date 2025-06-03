@@ -113,7 +113,7 @@ void UGameSessionsManager::FindOrCreateGameSession_Response(FHttpRequestPtr Requ
 // Host GameSession 코드
 void UGameSessionsManager::HostGameSession()
 {
-	BroadcastGameSessionMessage.Broadcast(TEXT("Searching for Game Session..."), false);
+	BroadcastGameSessionMessage.Broadcast(TEXT("Creating for Game Session..."), false);
 
 	check(APIData);	// 유효성 검사
 	TSharedRef<IHttpRequest> Request = FHttpModule::Get().CreateRequest();	// HTTP 요청 객체 생성
