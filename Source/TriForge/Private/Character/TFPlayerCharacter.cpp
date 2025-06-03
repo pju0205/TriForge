@@ -59,17 +59,22 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	LandVelocity = FVector(0.0f, 0.0f, 0.0f);
 	SlideMontage = nullptr;
 	bIsFallingDamageApplied = false;
+	WallRunState = EWallRunState::None;
 }
 
 void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 	UpdateMovement();
-	if (GetCharacterMovement()->IsFalling())
+	
+	if (GetCharacterMovement()->IsFalling()) // 공중에 있을 시
 	{
-		if (GetLastMovementInputVector().IsNearlyZero())
+		if (WallRunState == EWallRunState::None)  // 현재 벽타기를 하고 있지 않다면 벽타기 체크 하기 (벽타기 중에 체크하면 계속해서 현재 타고있는 벽이 탐지되어서 튕기기 점프가 안됨)
+			CheckWallRun(); // 벽 감지 로직 실행
+		
+		if (GetLastMovementInputVector().IsNearlyZero()) // (슬라이딩) 점프 관련 -> 슬라이딩 점프 혹은 기본 점프 시 방향키 떼면 속도 감소
 		{
-			// 방향키 안 누르고 점프 중일 때 감속
 			FVector Velocity = GetCharacterMovement()->Velocity;
 			FVector Horizontal = FVector(Velocity.X, Velocity.Y, 0.f);
 			FVector Slowed = FMath::VInterpTo(Horizontal, FVector::ZeroVector, DeltaTime, 2.0f);
@@ -179,17 +184,141 @@ void ATFPlayerCharacter::UpdateMovement()
 //  ----------------------------- Update Movement End
 
 
+// Wall Run Start -------------------------------------
+void ATFPlayerCharacter::CheckWallRun()
+{
+	const float TraceDistance = 60.f; // 벽 탐지 거리
+	const FVector ActorLocation = GetActorLocation();
+	const FVector RightVector = GetActorRightVector();
+	FHitResult HitLeft, HitRight;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bLeftHit = false;
+	bool bRightHit = false;
+	
+	if (WallRunState == EWallRunState::None || WallRunState == EWallRunState::RightWall) // 왼쪽 벽 감지
+	{
+		FVector Start = ActorLocation;
+		FVector End = Start - RightVector * TraceDistance;
+
+		// DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 0.1f, 0, 2.0f);
+
+		bLeftHit = GetWorld()->LineTraceSingleByChannel(
+			HitLeft, Start, End, ECC_Visibility, Params
+		);
+	}
+	
+	if (WallRunState == EWallRunState::None || WallRunState == EWallRunState::LeftWall) // 오른쪽 벽 감지
+	{
+		FVector Start = ActorLocation;
+		FVector End = Start + RightVector * TraceDistance;
+
+		// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.1f, 0, 2.0f);
+
+		bRightHit = GetWorld()->LineTraceSingleByChannel(
+			HitRight, Start, End, ECC_Visibility, Params
+		);
+	}
+
+	// 디버깅 코드
+	// if (GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(102, 1.5f, FColor::Yellow,
+	// 		FString::Printf(TEXT("bRightHit = %s"), bRightHit ? TEXT("true") : TEXT("false")));
+	// }
+	// if (GEngine)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(103, 1.5f, FColor::Yellow,
+	// 		FString::Printf(TEXT("bLeftHit = %s"), bLeftHit ? TEXT("true") : TEXT("false")));
+	// }
+
+	if (bLeftHit) // 왼쪽 벽 탐지 성공 시
+	{
+		WallRunState = EWallRunState::LeftWall;
+		
+		// 디버깅 코드
+		// if (GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(101, 1.5f, FColor::Cyan, FString::Printf(TEXT("WallRunState = %s"), *UEnum::GetValueAsString(WallRunState)));
+		// }
+		
+		StartWallRun(HitLeft.ImpactNormal);
+	} 
+	else if (bRightHit)  // 오른쪽 벽 탐지 성공 시
+	{
+		WallRunState = EWallRunState::RightWall;
+		
+		// 디버깅 코드
+		// if (GEngine)
+		// {
+		// 	GEngine->AddOnScreenDebugMessage(100, 1.5f, FColor::Cyan, FString::Printf(TEXT("WallRunState = %s"), *UEnum::GetValueAsString(WallRunState)));
+		// }
+		
+		StartWallRun(HitRight.ImpactNormal);
+	}
+}
+
+void ATFPlayerCharacter::StartWallRun( const FVector& WallNormal)
+{
+	GetCharacterMovement()->GravityScale = 0.f; // 중력 제거
+	
+	FVector WallForward;
+
+	if (WallRunState == EWallRunState::LeftWall)
+	{
+		WallForward = FVector::CrossProduct(WallNormal, FVector::UpVector); // 벽 오른쪽 방향
+	}
+	else if (WallRunState == EWallRunState::RightWall)
+	{
+		WallForward = FVector::CrossProduct(FVector::UpVector, WallNormal); // 벽 왼쪽 방향
+	}
+
+	WallForward.Normalize();
+	GetCharacterMovement()->Velocity = WallForward * 600.f;
+
+	// 타이머로 벽 끝나면 자동 해제
+	// 0.5초 내에 점프를 눌러야 날아감 (0.1로 줄이면 벽타기 중 점프가 너무 어려워짐)
+	GetWorldTimerManager().SetTimer(WallRunTimerHandle, this, &ATFPlayerCharacter::StopWallRun, 0.5f, false);
+}
+
+void ATFPlayerCharacter::StopWallRun()
+{
+	WallRunState = EWallRunState::None; // 벽타기 상태 None으로 변경
+	GetCharacterMovement()->GravityScale = 1.f; // 중력 복원
+}
+//  ------------------------------------- Wall Run End
+
+
 // Jump an Lande Start -------------------------
 // ChooserTable에서 사용할 데이터를 계산하기 위함
 // TFAnimInstance Class에서 JustLandedLight, JustLandedHeavy 함수에서 bJustLanded 데이터를 사용함
-
 void ATFPlayerCharacter::CustomJump()
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(7, 2, FColor::Red, "Call CustomJump");
+	// 벽타기 중 점프 시
+	// 내가 바라보고 있는 방향으로 점프
+	if (WallRunState != EWallRunState::None)
+	{
+		// 내가 바라보는 방향 (카메라 기준)
+		FRotator ControlRotation = GetControlRotation();
+		FVector ForwardDir = ControlRotation.Vector(); // = GetForwardVector()
+
+		// 튕겨나갈 방향: 전방 + 위쪽
+		FVector JumpDirection = ForwardDir + FVector::UpVector;
+		JumpDirection.Normalize();
+
+		LaunchCharacter(JumpDirection * 900.f, true, true);
+
+		// 디버깅 라인
+		DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + JumpDirection * 300.0f, FColor::Red, false, 5.5f, 0, 2.0f);
+
+		StopWallRun();
+	}
+	
+	// 슬라이딩 중 점프시
+	// 슬라이딩 종료 -> 점프 애니메이션 출력을 위함
 	if (bSliding)
 	{
-		
 		// 현재 재생 중인 몽타주 확인
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance && AnimInstance->Montage_IsPlaying(SlideMontage))
@@ -206,14 +335,16 @@ void ATFPlayerCharacter::CustomJump()
 		
 		bSliding = false;
 		Jump();
-
 	}
+
+	// 기본 점프 시
 	else
 	{
-		// 일반 점프
 		Jump();
 	}
 }
+
+
 
 void ATFPlayerCharacter::Landed(const FHitResult& Hit)
 {

@@ -27,22 +27,41 @@ enum class E_Gait : uint8
 	Sprint	UMETA(DisplayName = "Sprint")
 };
 
+UENUM(BlueprintType)
+enum class EWallRunState : uint8
+{
+	None,
+	LeftWall,
+	RightWall
+};
+
 UCLASS()
 class TRIFORGE_API ATFPlayerCharacter : public ATFCharacter
 {
 	GENERATED_BODY()
 
 private:
+	// Movement Start --------------------------
 	void GetDesiredGait();
 	float CalculateMaxSpeed(float& StrafeSpeedMap);
 	void UpdateMovement();
-	
+	// -------------------------- Movement End
+
+
+	// Land Start ---------------------------------
+	// 착지 시점에 처리해되어햘 코드
 	virtual void Landed(const FHitResult& Hit) override;
 	UFUNCTION()
 	void OnDelayComplete();
+	// --------------------------------- Land End
 
-	void SetSlideMontage(bool bisSlideDir);
-
+	
+	// Wall Run Start ---------------------------
+	void StartWallRun(const FVector& WallNormal);
+	void StopWallRun();
+	void CheckWallRun();
+	// ---------------------------  Wall Run End
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -82,6 +101,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* SlideMontage;
 
+	EWallRunState WallRunState;
+
+	FTimerHandle WallRunTimerHandle;
+
+
 public:
 	ATFPlayerCharacter();
 	virtual void Tick(float DeltaTime) override;
@@ -100,7 +124,7 @@ public:
 
 	void CustomJump();
 
-	
+
 	// Slide Montage Start -------------
 	
 	void PlaySlidMontage();

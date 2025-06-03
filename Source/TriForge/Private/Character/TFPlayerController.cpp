@@ -162,7 +162,6 @@ void ATFPlayerController::Jump(const FInputActionValue& InputActionValue)
 		if (TFCharacter)
 		{
 			TFCharacter->CustomJump();
-			// TFCharacter->Jump();
 		}
 	}
 }

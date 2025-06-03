@@ -32,6 +32,9 @@ UTFAnimInstance::UTFAnimInstance()
 	Speed2D = 0.0f;
 	HeayLandSpeedThreshold = 700.0f;
 	bSliding = false;
+
+	TrajectoryGenerationDataIdle = FPoseSearchTrajectoryData(0.0, 100.0 ,0.0 );
+	TrajectoryGenerationDataMoving = FPoseSearchTrajectoryData(0.0, 0.0 ,0.0 );
 }
 
 
@@ -272,7 +275,7 @@ void UTFAnimInstance::GenerateTrajectory(float DeltaTime)
 			}
 			else
 			{
-				InTrajectoryData = TrajectoryGenerationDataMoving;
+				InTrajectoryData = TrajectoryGenerationDataIdle;
 			}
 			UPoseSearchTrajectoryLibrary::PoseSearchGenerateTrajectory(
 				AnimInst,
