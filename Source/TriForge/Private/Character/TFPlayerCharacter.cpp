@@ -65,6 +65,17 @@ void ATFPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateMovement();
+	if (GetCharacterMovement()->IsFalling())
+	{
+		if (GetLastMovementInputVector().IsNearlyZero())
+		{
+			// 방향키 안 누르고 점프 중일 때 감속
+			FVector Velocity = GetCharacterMovement()->Velocity;
+			FVector Horizontal = FVector(Velocity.X, Velocity.Y, 0.f);
+			FVector Slowed = FMath::VInterpTo(Horizontal, FVector::ZeroVector, DeltaTime, 2.0f);
+			GetCharacterMovement()->Velocity = FVector(Slowed.X, Slowed.Y, Velocity.Z);
+		}
+	}
 
 	const float KillZ = -1000.f; // Kill 되는 높이
 
@@ -179,14 +190,22 @@ void ATFPlayerCharacter::CustomJump()
 	if (bSliding)
 	{
 		
-		// 슬라이딩 중일 때는 방향성 점프
-		FVector Forward = GetActorForwardVector();
-		FVector LaunchVelocity = Forward * 600.f + FVector(0, 0, 400.f); // 앞으로 + 위로 튀기기
-		Jump();
-		LaunchCharacter(LaunchVelocity, true, true);
+		// 현재 재생 중인 몽타주 확인
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && AnimInstance->Montage_IsPlaying(SlideMontage))
+		{
+			// 슬라이딩 몽타주 중지
+			AnimInstance->Montage_Stop(0.1f, SlideMontage);
 
-		// 슬라이딩 중단
+			// 디버그 메시지 (선택 사항)
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Jumped during Slide - Montage Stopped"));
+			}
+		}
+		
 		bSliding = false;
+		Jump();
 
 	}
 	else
