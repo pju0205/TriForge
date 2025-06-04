@@ -14,7 +14,7 @@
 ATFHitScanWeapon::ATFHitScanWeapon()
 {
 	// 임시로 타입 지정하여 캐릭터 애니메이션 보기
-	SetWeaponType(EWeaponType::Ewt_Rifle);
+	SetWeaponType(EWeaponType::Ewt_Pistol);
 }
 
 void ATFHitScanWeapon::Attack()
@@ -87,13 +87,7 @@ void ATFHitScanWeapon::ServerAttack_Implementation(const FHitResult& Hit)
 				UDamageType::StaticClass()
 			);
 		}
-		else
-		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, "NoDamagedChar");
-			}
-		}
+		
 		ImpactEffects(Hit);
 	}
 	BeamEffects(Hit);

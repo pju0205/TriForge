@@ -4,12 +4,14 @@
 #include "Game/TFGameMode.h"
 
 #include "Character/TFPlayerCharacter.h"
+#include "Character/TFPlayerController.h"
 #include "Game/TFMatchGameState.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/DSPlayerController.h"
 #include "PlayerState/TFMatchPlayerState.h"
+#include "Weapon/TFWeaponComponent.h"
 
 ATFGameMode::ATFGameMode()
 {
@@ -38,12 +40,21 @@ void ATFGameMode::PlayerEliminated()
 			ATFPlayerCharacter* Pawn = Cast<ATFPlayerCharacter>(PC->GetPawn());
 			if (Pawn)
 			{
-				Pawn->Reset();
-				Pawn->Destroy();
+				ATFPlayerController* TFPlayerController = Cast<ATFPlayerController>(Pawn->GetController());
+				if (TFPlayerController)
+				{
+					TFPlayerController->ClientResetAmmo();
+				}
+
+				// Reset, Destroy 이전에 있어야함.
 				if (Pawn->IsWeaponEquipped())
 				{
-					Pawn->DroppedWeapon();
+					Pawn->GetWeaponComponent()->DropWeapon();
 				}
+				
+				Pawn->Reset();
+				Pawn->Destroy();
+				
 			}
 
 			// 게임이 끝난게 아니라면 리스폰

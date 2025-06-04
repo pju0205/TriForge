@@ -42,7 +42,11 @@ void UTFWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	if (PlayerCharacter && PlayerCharacter->IsLocallyControlled())
 	{
 		SetHUDCrosshairs(DeltaTime);
-		InterpFOV(DeltaTime);
+		// 스나이퍼 라이플만 Zoom 기능을 넣음에 따라 조건 추가
+		if (EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+		{
+			InterpFOV(DeltaTime);
+		}
 	}
 	
 	// 연사 가능 무기 (bAutomatic = true)에만 recoil 적용 
@@ -116,15 +120,14 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
-		// TODO: 연속 발사 하는 도중에 총을 버리면 bCanFire가 false로 고정되어 총을 쏠 수 없게 되기에 true로 바꾸었다. 나중에 리팩토링이 필요할 수도 있다.
-		bCanAttack = true;
+
+		InitializeVariables();
+		/*bCanAttack = true;
 		CurrentFOV = DefaultFOV;
-		SetAiming(false);
-		
-		/*if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+		if (bAiming == true)
 		{
-			PlayerCharacter->ShowSniperScope(false);
-		}*/
+			SetAiming(false);
+		}
 		
 		if (PlayerCharacter && PlayerCharacter->GetCamera())
 		{
@@ -134,7 +137,7 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 		if (PlayerController)
 		{
 			PlayerController->SetHUDAmmo(0);
-		}
+		}*/
 		
 		EquippedWeapon = nullptr;
 	}
@@ -318,11 +321,41 @@ void UTFWeaponComponent::SetHUDCrosshairs(float DeltaTime)
 	}
 }
 
-// 손에 들고 있는 무기 삭제
+void UTFWeaponComponent::ClientResetAiming_Implementation()
+{
+	if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
+	{
+		PlayerCharacter->ShowSniperScope(false);
+	}
+	
+}
+
+void UTFWeaponComponent::InitializeVariables()
+{
+	bCanAttack = true;
+	CurrentFOV = DefaultFOV;
+	if (bAiming == true)
+	{
+		SetAiming(false);
+	}
+		
+	if (PlayerCharacter && PlayerCharacter->GetCamera())
+	{
+		PlayerCharacter->GetCamera()->SetFieldOfView(DefaultFOV);
+	}
+		
+	if (PlayerController)
+	{
+		PlayerController->SetHUDAmmo(0);
+	}
+}
+
+// 손에 들고 있는 무기 탈착
 void UTFWeaponComponent::DropWeapon()
 {
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
+		ClientResetAiming();
 	}
 }

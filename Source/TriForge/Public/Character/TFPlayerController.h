@@ -100,6 +100,9 @@ public:
 	UFUNCTION()
 	void SetHUDAmmo(int32 Ammo);
 
+	UFUNCTION(Client, Reliable)
+	void ClientResetAmmo();
+
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerStateReplicated OnPlayerStateReplicated;
 

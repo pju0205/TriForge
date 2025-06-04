@@ -211,8 +211,8 @@ public:
 	UFUNCTION()
 	void OnDeathStarted(AActor* DyingActor, AActor* DeathInstigator);
 
-	UFUNCTION()
-	void DroppedWeapon();
+	/*UFUNCTION()
+	void DroppedWeapon();*/
 
 	// 낙사 한번만 받도록 설정한 값
 	bool bIsFallingDamageApplied = false;

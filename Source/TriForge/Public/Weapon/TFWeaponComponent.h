@@ -35,6 +35,14 @@ public:
 	
 	void SetHUDCrosshairs(float DeltaTime);
 
+	void SetAiming(bool bIsAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bIsAiming);
+
+	UFUNCTION(Client, Reliable)
+	void ClientResetAiming();
+
 	// 들고 있는 무기 삭제 함수 (태영 추가)
 	void DropWeapon();
 
@@ -45,10 +53,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void SetAiming(bool bIsAiming);
-
-	UFUNCTION(Server, Reliable)
-	void ServerSetAiming(bool bIsAiming);
+	
 private:
 	UPROPERTY()
 	ATFPlayerCharacter* PlayerCharacter;
@@ -102,4 +107,5 @@ private:
 	void ApplyRecoil(float DeltaTime);
 
 	
+	void InitializeVariables();
 };

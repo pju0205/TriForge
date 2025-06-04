@@ -93,8 +93,8 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		const ENetRole LocalRole = TFPlayerCharacter->GetLocalRole();
 		const FString RoleStr = UEnum::GetValueAsString(LocalRole);
 
-		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan,
-			FString::Printf(TEXT("%s %s Role: %s"), *Who, *Control, *RoleStr));
+		/*GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan,
+			FString::Printf(TEXT("%s %s Role: %s"), *Who, *Control, *RoleStr));*/
 	}
 	
 	// 무기 왼손위치를 무기의 LeftHandSocket을 만들어 고정 시키기 위한 함수

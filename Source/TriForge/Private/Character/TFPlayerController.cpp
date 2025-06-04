@@ -311,6 +311,20 @@ void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 	}
 }
 
+// Ammo 0으로 초기화
+void ATFPlayerController::ClientResetAmmo_Implementation()
+{
+	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+	
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->AmmoAmount;
+
+	if (bTFHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), 0);
+		TFHUD->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
 
 // Map 이동해도 유지할 Actor 넣는 함수
 void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)
