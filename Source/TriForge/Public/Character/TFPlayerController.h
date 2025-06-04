@@ -7,6 +7,7 @@
 #include "HUD/TFHUD.h"
 #include "TFPlayerController.generated.h"
 
+enum class ERoundResult : uint8;
 class UTFPlayerHealthComponent;
 class UPlayerHealthBar;
 class UMatchResultPage;
@@ -84,9 +85,6 @@ protected:
 	void HandlePawnChanged(APawn* Old_Pawn, APawn* New_Pawn);
 
 	UPROPERTY()
-	UTFPlayerHealthComponent* BoundHealthComponent;
-
-	UPROPERTY()
 	UPlayerHealthBar* HealthBarWidget; // 블루프린트 UMG 위젯 참조
 public:
 	ATFPlayerController();
@@ -120,6 +118,24 @@ public:
 
 	UPROPERTY(BlueprintAssignable)		// Quit 버튼 설정
 	FOnQuitMenuOpen OnQuitMenuOpen;
+
+	UFUNCTION(Client, Reliable)
+	void ClientShowDrawWidget(ERoundResult Result);
+	
+	UFUNCTION()
+	void ShowDrawWidget(ERoundResult Result);
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> DrawWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> WinWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> LossWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* RoundResultWidget = nullptr;
 private:
 
 	// Quit 버튼 관련
@@ -127,4 +143,6 @@ private:
 	bool bQuitMenuOpen;		// Server
 
 	const FString& GetUsername() const { return Username; }
+	
+	FTimerHandle RoundResultWidgetHideTimerHandle;
 };

@@ -58,6 +58,7 @@ enum class ELobbyStatus : uint8
 	SeamlessTravelling
 };
 
+
 //
 // 타이머에 대한 전체 정보 및 컨트롤 핸들을 묶어놓은 구조체
 //

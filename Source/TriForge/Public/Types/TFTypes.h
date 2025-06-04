@@ -2,7 +2,16 @@
  
 #include "TFTypes.generated.h"
 
-
+//
+// 게임 라운드 개인 승패
+//
+UENUM(BlueprintType)
+enum class ERoundResult : uint8
+{
+	Draw	UMETA(DisplayName = "Draw"),
+	Win		UMETA(DisplayName = "Win"),
+	Loss	UMETA(DisplayName = "Loss")
+};
 
 //
 // 필요한 정보 저장용

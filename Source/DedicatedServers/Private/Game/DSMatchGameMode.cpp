@@ -81,6 +81,15 @@ void ADSMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	{
 		StopCountdownTimer(ForceMatchEndedTimer);
 		MatchStatus = EMatchStatus::SeamlessTravelling;
+		
+		// 전환 직전에 LobbyMode 입력 설정
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get()))
+			{
+				PC->Client_SetToLobbyMode();
+			}
+		}
 		TrySeamlessTravel(LobbyMap);
 	}
 }

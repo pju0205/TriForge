@@ -16,6 +16,7 @@ void UMatchResultPage::NativeConstruct()
 	RateTime = 9;
 	
 	SetVisibility(ESlateVisibility::Hidden);  // 처음엔 숨겨진 상태
+	
 
 	// 초기화 시켜놓기
 	ATFMatchPlayerState* PlayerState = GetPlayerState();
@@ -23,13 +24,7 @@ void UMatchResultPage::NativeConstruct()
 	{
 		PlayerState->OnMatchResultChanged.AddDynamic(this, &UMatchResultPage::UpdateResultData);
 		OnMatchResultChanged(PlayerState->GetMatchResult(), PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
-
-		ADSPlayerController* DSPC = Cast<ADSPlayerController>(GetOwningPlayer());
-		if (IsValid(DSPC))
-		{
-			DSPC->OnOpponentNameReplicated.AddDynamic(this, &UMatchResultPage::SetMatchResultName);
-			SetMatchResultName();
-		}
+		SetMatchResultName();
 	}
 	else
 	{
@@ -44,13 +39,6 @@ void UMatchResultPage::NativeConstruct()
 // 처음 세팅 해놓기 (이름, 상대방이름, 0, 0)
 void UMatchResultPage::SetMatchResultName()
 {
-	ATFPlayerController* TFPlayerController = Cast<ATFPlayerController>(GetOwningPlayer());
-	if (IsValid(TFPlayerController))
-	{
-		LeftName = TFPlayerController->Username;
-		RightName = TFPlayerController->OpponentUsername;
-	}
-
 	// 내 이름
 	if (LeftNameText) LeftNameText->SetText(FText::FromString(TEXT("나")));
 	
@@ -121,13 +109,7 @@ void UMatchResultPage::OnPlayerStateInitialized()
 	{
 		PlayerState->OnMatchResultChanged.AddDynamic(this, &UMatchResultPage::UpdateResultData);
 		OnMatchResultChanged(PlayerState->GetMatchResult(), PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
-
-		ADSPlayerController* DSPC = Cast<ADSPlayerController>(GetOwningPlayer());
-		if (IsValid(DSPC))
-		{
-			DSPC->OnOpponentNameReplicated.AddDynamic(this, &UMatchResultPage::SetMatchResultName);
-			SetMatchResultName();
-		}
+		SetMatchResultName();
 	}
 
 	// Unsubscribe from the OnPlayerStateChanged delegate

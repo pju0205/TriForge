@@ -4,16 +4,18 @@
 #include "Game/TFMatchGameMode.h"
 
 #include "Character/TFPlayerController.h"
+#include "Character/Component/TFPlayerHealthComponent.h"
 #include "Game/TFMatchGameState.h"
 #include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/DSPlayerController.h"
 #include "PlayerState/TFMatchPlayerState.h"
+#include "Types/TFTypes.h"
 #include "Weapon/TFWeapon.h"
 
 ATFMatchGameMode::ATFMatchGameMode()
 {
-	bUseSeamlessTravel = true;
+	bUseSeamlessTravel = true;	// GameMode, GameState, PlayerController, PlayerState는 그대로 유지
 
 	bIsEndedMatch = false;
 }
@@ -21,6 +23,14 @@ ATFMatchGameMode::ATFMatchGameMode()
 void ATFMatchGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ATFMatchGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Map 랜덤성 부여를 위한 값
+	MapRandomStream.Initialize(FDateTime::Now().GetMillisecond());
 }
 
 void ATFMatchGameMode::PostLogin(APlayerController* NewPlayer)
@@ -48,24 +58,12 @@ void ATFMatchGameMode::HandleRoundEnd(APlayerController* Loser, APlayerControlle
 			}
 		}
 	}
-	
-	ATFMatchPlayerState* WinnerPS = Winner ? Cast<ATFMatchPlayerState>(Winner->PlayerState) : nullptr;
-	ATFMatchPlayerState* LoserPS = Loser ? Cast<ATFMatchPlayerState>(Loser->PlayerState) : nullptr;
 
-	if (WinnerPS)
-	{
-		WinnerPS->RoundWins++;		// Local 라운드 횟수 1 증가
-		WinnerPS->AddRoundScore();	// PlayerState 값 증가 (기록용)
-		WinnerPS->AddKill();
-		WinnerPS->AddRoundResult(true);
-	}
-	if (LoserPS)
-	{
-		LoserPS->AddDeath();
-		LoserPS->AddRoundResult(false);
-	}
+	if (Winner) HandleRoundWinner(Winner);
+	if (Loser) HandleRoundLoser(Loser);
 	
-	// Winner 라운드 승리 횟수 확인
+	// 게임 승리 조건 확인
+	ATFMatchPlayerState* WinnerPS = Cast<ATFMatchPlayerState>(Winner ? Winner->PlayerState : nullptr);
 	if (WinnerPS && WinnerPS->RoundWins >= MaxRound)	// 2번 이상 라운드 승리시
 	{
 		HandleMatchWin(Loser, Winner);
@@ -73,9 +71,18 @@ void ATFMatchGameMode::HandleRoundEnd(APlayerController* Loser, APlayerControlle
 	}
 	else
 	{
-		StopCountdownTimer(RoundTimer);
-		MatchStatus = EMatchStatus::PostRound;
-		StartCountdownTimer(PostRoundTimer);
+		ATFPlayerController* TFPCW = Cast<ATFPlayerController>(Winner);
+		ATFPlayerController* TFPCL = Cast<ATFPlayerController>(Loser);
+
+		if (IsValid(TFPCW) && IsValid(TFPCL))
+		{
+			TFPCW->ClientShowDrawWidget(ERoundResult::Win);
+			TFPCL->ClientShowDrawWidget(ERoundResult::Loss);
+			
+			StopCountdownTimer(RoundTimer);
+			MatchStatus = EMatchStatus::PostRound;
+			StartCountdownTimer(PostRoundTimer);
+		}
 	}
 }
 
@@ -143,17 +150,15 @@ void ATFMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	if (Type == ECountdownTimerType::Round)
 	{
 		StopCountdownTimer(RoundTimer);
-		MatchStatus = EMatchStatus::PostRound;
-		StartCountdownTimer(PostRoundTimer);
-		SetClientInputEnabled(false);
+		RoundTimeOutCheck();						// 시간 안에 결정 안나면 실행
 	}
 	if (Type == ECountdownTimerType::PostRound)
 	{
 		StopCountdownTimer(PostRoundTimer);
 		MatchStatus = EMatchStatus::PreRound;
 		SetClientInputEnabled(false);
-		PrepareNextRound();								// 다음 라운드 준비
 		DestroyAllDroppedWeapons();
+		PrepareNextRound();								// 다음 라운드 준비
 	}
 	
 	// Match 관련
@@ -164,6 +169,14 @@ void ATFMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 		PlayerEliminated();
 		NextRandomTravelMap();							// 다음 전투 맵 이동
 	}
+}
+
+void ATFMatchGameMode::OnMatchEnded()
+{
+	Super::OnMatchEnded();
+
+	// 사용한 Map 비우기
+	UsedCombatMapPaths.Empty();
 }
 
 // 다음 라운드 넘어 갈 때 (기존 맵 유지, Pawn만 새로 생성, Timer 새로 시작)
@@ -184,23 +197,45 @@ void ATFMatchGameMode::PlayerEliminated()
 
 void ATFMatchGameMode::NextRandomTravelMap()
 {
-	// 랜덤 맵 선택
-	if (CombatMaps.Num() > 0)
+	if (CombatMaps.Num() == 0)
 	{
-		int32 RandomIndex = FMath::RandRange(0, CombatMaps.Num() - 1);
-		
-		TSoftObjectPtr<UWorld> SelectedMap = CombatMaps[RandomIndex];
-		if (SelectedMap.IsValid() || SelectedMap.ToSoftObjectPath().IsValid())
-		{
-			// 선택된 맵으로 이동
-			TrySeamlessTravel(SelectedMap);
+		UE_LOG(LogTemp, Warning, TEXT("CombatMaps 배열이 비어있음."));
+		return;
+	}
 
-			// Map 이동 로그 출력
-			UE_LOG(LogTemp, Display, TEXT("Map Index: %d, Path: %s"), RandomIndex, *SelectedMap.ToString());
+	// 사용 가능한 맵만 필터링
+	TArray<TSoftObjectPtr<UWorld>> AvailableMaps;
+	for (const TSoftObjectPtr<UWorld>& Map : CombatMaps)
+	{
+		if (!UsedCombatMapPaths.Contains(Map.ToSoftObjectPath()))
+		{
+			AvailableMaps.Add(Map);
 		}
+	}
+	
+	// 모든 맵이 사용되었으면 초기화 (루프 가능)
+	if (AvailableMaps.Num() == 0)
+	{
+		UE_LOG(LogTemp, Display, TEXT("모든 CombatMap을 사용했으므로 목록 초기화"));
+		UsedCombatMapPaths.Empty();
+		AvailableMaps = CombatMaps;
+	}
+
+	// 랜덤 선택
+	int32 RandomIndex = MapRandomStream.RandRange(0, AvailableMaps.Num() - 1);
+	TSoftObjectPtr<UWorld> SelectedMap = AvailableMaps[RandomIndex];
+
+	if (SelectedMap.IsValid() || SelectedMap.ToSoftObjectPath().IsValid())
+	{
+		UsedCombatMapPaths.Add(SelectedMap.ToSoftObjectPath());
+
+		// 맵 이동
+		TrySeamlessTravel(SelectedMap);
+		UE_LOG(LogTemp, Display, TEXT("Map Index: %d, Path: %s"), RandomIndex, *SelectedMap.ToString());
 	}
 }
 
+// Map상에 존재하는 Weapon 삭제하는 함수
 void ATFMatchGameMode::DestroyAllDroppedWeapons()
 {
 	UWorld* World = GetWorld();
@@ -220,37 +255,104 @@ void ATFMatchGameMode::DestroyAllDroppedWeapons()
 	UE_LOG(LogTemp, Log, TEXT("Dropped Weapons Destroyed: %d"), FoundWeapons.Num());
 }
 
-// 제대로 적용 안됨.
-void ATFMatchGameMode::GetGamePlayerName()
+// 승리자 스코어, 위젯 관리
+void ATFMatchGameMode::HandleRoundWinner(APlayerController* Winner)
 {
-	TArray<ADSPlayerController*> Controllers;
-    
+	if (!IsValid(Winner)) return;
+
+	if (ATFMatchPlayerState* WinnerPS = Cast<ATFMatchPlayerState>(Winner->PlayerState))
+	{
+		WinnerPS->RoundWins++;
+		WinnerPS->AddRoundScore();
+		WinnerPS->AddKill();
+		WinnerPS->AddRoundResult(true);
+	}
+}
+
+// 패배자 스코어, 위젯 관리
+void ATFMatchGameMode::HandleRoundLoser(APlayerController* Loser)
+{
+	if (!IsValid(Loser)) return;
+
+	if (ATFMatchPlayerState* LoserPS = Cast<ATFMatchPlayerState>(Loser->PlayerState))
+	{
+		LoserPS->AddDeath();
+		LoserPS->AddRoundResult(false);
+	}
+}
+
+// 무승부 시 둘다 무승부 위젯 띄우기
+void ATFMatchGameMode::HandleDrawRound()
+{
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get());
-		if (PC)
+		ATFPlayerController* PC = Cast<ATFPlayerController>(It->Get());
+		if (IsValid(PC))
 		{
-			Controllers.Add(PC);
-		}
-	}
-
-	// 두 명이 접속한 경우, 서로의 OpponentUsername 설정
-	if (Controllers.Num() == 2)
-	{
-		ADSPlayerController* PC1 = Controllers[0];
-		ADSPlayerController* PC2 = Controllers[1];
-
-		if (PC1 && PC2)
-		{
-			if (PC1->Username != PC2->Username)
-			{
-				PC1->OpponentUsername = PC2->Username;
-				PC2->OpponentUsername = PC1->Username;
-
-				UE_LOG(LogTemp, Warning, TEXT("PC1(%s) Opponent: %s"), *PC1->Username, *PC1->OpponentUsername);
-				UE_LOG(LogTemp, Warning, TEXT("PC2(%s) Opponent: %s"), *PC2->Username, *PC2->OpponentUsername);
-			}
-			// 로그 확인용
+			PC->ClientShowDrawWidget(ERoundResult::Draw);
 		}
 	}
 }
+
+// 라운드 타이머 종료시 실행 (HP 검사 및 승패 결정)
+void ATFMatchGameMode::RoundTimeOutCheck()
+{
+	if (!HasAuthority()) // 추가
+	{
+		UE_LOG(LogTemp, Error, TEXT("서버 아님. RoundTimeOutCheck()"));
+		return;
+	}
+	
+	struct FPlayerHealthInfo
+	{
+		ATFPlayerController* Controller = nullptr;
+		float Health = 0.f;
+	};
+
+	TArray<FPlayerHealthInfo> AlivePlayers;
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ATFPlayerController* TFPC = Cast<ATFPlayerController>(It->Get());
+		if (!IsValid(TFPC) || !TFPC->bPawnAlive) continue;
+
+		APawn* Pawn = TFPC->GetPawn();
+		if (!IsValid(Pawn)) continue;
+
+		// HealthComponent 가져오기
+		UTFPlayerHealthComponent* HealthComp = Pawn->FindComponentByClass<UTFPlayerHealthComponent>();
+		if (!IsValid(HealthComp)) continue;
+
+		FPlayerHealthInfo Info;
+		Info.Controller = TFPC;
+		Info.Health = HealthComp->GetCurrentHealth();  // 혹은 HealthComp->CurrentHealth
+		AlivePlayers.Add(Info);
+	}
+
+	if (AlivePlayers.Num() < 2)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Not enough alive players to compare."));
+		return;
+	}
+
+	// 체력 비교
+	FPlayerHealthInfo& P1 = AlivePlayers[0];
+	FPlayerHealthInfo& P2 = AlivePlayers[1];
+
+	// 체력이 같을 때 Draw => 라운드 한번 더
+	if (P1.Health == P2.Health)
+	{
+		StopCountdownTimer(RoundTimer);
+		MatchStatus = EMatchStatus::PostRound;
+		StartCountdownTimer(PostRoundTimer);
+		HandleDrawRound();
+		return;
+	}
+
+	// 체력이 높은 쪽을 승리 처리
+	ATFPlayerController* Winner = (P1.Health > P2.Health) ? P1.Controller : P2.Controller;
+	ATFPlayerController* Loser  = (P1.Health > P2.Health) ? P2.Controller : P1.Controller;
+
+	HandleRoundEnd(Loser, Winner);
+}
+	

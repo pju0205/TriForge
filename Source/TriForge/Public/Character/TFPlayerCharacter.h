@@ -68,6 +68,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
 	TObjectPtr<UCameraComponent> Camera = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
+	TObjectPtr<UCameraComponent> Camera3p = nullptr;
+
 	// UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	// UTFAnimInstance* TFAnimInstance;
 
@@ -216,6 +219,9 @@ public:
 
 	// 낙사 한번만 받도록 설정한 값
 	bool bIsFallingDamageApplied = false;
+
+	void SwitchToDeathCamera();
+	void ResetToFirstPersonCamera();
 private:
 	// 사망 시 Ragdoll 실행
 	void EnableRagdoll();

@@ -7,7 +7,6 @@
 #include "Types/DSTypes.h"
 #include "DSPlayerController.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOpponentUserNameReplicated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTimerStateChangedDelegate, float, Time, ECountdownTimerType, Type);
 /**
  * 
@@ -49,15 +48,9 @@ public:
  
 	UPROPERTY(BlueprintAssignable)
 	FOnTimerStateChangedDelegate OnTimerStopped;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnOpponentUserNameReplicated OnOpponentNameReplicated;
 	
-	UPROPERTY(BlueprintReadOnly, Replicated)
+	UPROPERTY(BlueprintReadOnly)
 	FString Username;
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OpponentUsername)
-	FString OpponentUsername;
  
 	UPROPERTY(BlueprintReadOnly)
 	FString PlayerSessionId;
@@ -68,11 +61,6 @@ protected:
  
 	UFUNCTION(Client, Reliable)			// Client RPC
 	void Client_Pong(float TimeOfRequest);
-
-	UFUNCTION()
-	void OnRep_OpponentUsername();
-
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
 	
 private:
  

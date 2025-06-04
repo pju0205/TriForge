@@ -36,6 +36,13 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	Camera->SetupAttachment(GetMesh(), FName("head"));
 	Camera->bUsePawnControlRotation = true;
 
+	// 3인칭 카메라 설정
+	Camera3p = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera3p"));
+	Camera3p->SetupAttachment(RootComponent);
+	Camera3p->SetRelativeLocation(FVector(-300.f, 0.f, 150.f)); // 캐릭터 뒤 공중 위치
+	Camera3p->bUsePawnControlRotation = false;
+	Camera3p->SetAutoActivate(false); // 기본은 비활성화
+
 	// Weapon
 	WeaponComponent = CreateDefaultSubobject<UTFWeaponComponent>(TEXT("WeaponComponent"));
 	WeaponComponent->SetIsReplicated(true);
@@ -108,6 +115,8 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 void ATFPlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	ResetToFirstPersonCamera();	// 카메라 1인칭으로 전환
 }
 
 void ATFPlayerCharacter::BeginPlay()
@@ -593,6 +602,9 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 	
 	// Ragdoll 실행
 	EnableRagdoll();
+
+	// 죽었을 때 카메라 전환
+	SwitchToDeathCamera();
 	
 	// 라운드 종료 시키기
 	ATFPlayerController* VictimController = Cast<ATFPlayerController>(GetController());
@@ -638,6 +650,23 @@ void ATFPlayerCharacter::OnDeathStarted(AActor* DyingActor, AActor* DeathInstiga
 
 	// 움직임, 입력 등 비활성화
 	GetCharacterMovement()->DisableMovement();
+}
+
+void ATFPlayerCharacter::SwitchToDeathCamera()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC && Camera3p)
+	{
+		PC->SetViewTargetWithBlend(this, 0.5f); // 부드럽게 전환
+		Camera->Deactivate(); // 1인칭 카메라 끔
+		Camera3p->Activate(); // 3인칭 카메라 켬
+	}
+}
+
+void ATFPlayerCharacter::ResetToFirstPersonCamera()
+{
+	if (Camera3p) Camera3p->Deactivate();
+	if (Camera) Camera->Activate();
 }
 
 void ATFPlayerCharacter::EnableRagdoll()

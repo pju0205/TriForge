@@ -19,6 +19,9 @@ void ULobbyPlayerBox::NativeOnInitialized()
 	if (IsValid(DSGameState->LobbyState))
 	{
 		OnLobbyStateInitialized( DSGameState->LobbyState);
+
+		// 이미 LobbyState가 살아있는 경우, 직접 갱신 강제
+		/*UpdatePlayerInfo(DSGameState->LobbyState);*/
 	}
 	else
 	{
@@ -31,6 +34,12 @@ void ULobbyPlayerBox::OnLobbyStateInitialized(ALobbyState* LobbyState)
 {
 	if (!IsValid(LobbyState)) return;
 
+	// 바인딩 중복 방지
+	LobbyState->OnPlayerInfoAdded.RemoveDynamic(this, &ULobbyPlayerBox::CreateAndAddPlayerLabel);
+	LobbyState->OnPlayerInfoRemoved.RemoveDynamic(this, &ULobbyPlayerBox::OnPlayerRemoved);
+	LobbyState->OnPlayerInfoUpdated.RemoveDynamic(this, &ULobbyPlayerBox::OnPlayerInfoStateUpdated);
+
+	// 바인딩 재설정
 	LobbyState->OnPlayerInfoAdded.AddDynamic(this, &ULobbyPlayerBox::CreateAndAddPlayerLabel);
 	LobbyState->OnPlayerInfoRemoved.AddDynamic(this, &ULobbyPlayerBox::OnPlayerRemoved);
 	LobbyState->OnPlayerInfoUpdated.AddDynamic(this, &ULobbyPlayerBox::OnPlayerInfoStateUpdated);

@@ -17,21 +17,34 @@ class TRIFORGE_API ATFMatchGameMode : public ADSMatchGameMode
 public:
 	ATFMatchGameMode();
 	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
 	
 	void HandleRoundEnd(APlayerController* Loser, APlayerController* Winner);
 	void HandleMatchWin(APlayerController* Loser, APlayerController* Winner);
 
 protected:
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
+	virtual void OnMatchEnded() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
-	
 	virtual void PlayerEliminated();
+
+	// 이동 및 정리 관련
 	void PrepareNextRound();
 	void NextRandomTravelMap();
 	void DestroyAllDroppedWeapons();
 
+	// 승패 관리 관련
+	void HandleRoundWinner(APlayerController* Winner);
+	void HandleRoundLoser(APlayerController* Loser);
+	void HandleDrawRound();
+	void RoundTimeOutCheck();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Maps")
 	TArray<TSoftObjectPtr<UWorld>> CombatMaps;
+
+	// 사용한 맵 목록 (SoftPath 기준으로 비교)
+	UPROPERTY()
+	TSet<FSoftObjectPath> UsedCombatMapPaths;
 
 	// 최대 라운드, 매치 수
 	const int32 MaxRound = 2;
@@ -44,5 +57,6 @@ protected:
 	bool bIsEndedMatch = false;
 
 private:
-	void GetGamePlayerName();	
+	FRandomStream MapRandomStream;
+
 };

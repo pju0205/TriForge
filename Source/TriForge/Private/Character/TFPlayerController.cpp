@@ -15,6 +15,7 @@
 #include "HUD/UI/PlayerHealthBar.h"
 #include "HUD/UI/RoundIndicator.h"
 #include "PlayerState/TFMatchPlayerState.h"
+#include "Types/TFTypes.h"
 
 ATFPlayerController::ATFPlayerController()
 {
@@ -23,9 +24,9 @@ ATFPlayerController::ATFPlayerController()
 }
 
 void ATFPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-	
+{ 
+	Super::BeginPlay(); 
+	 
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (Subsystem)
 	{
@@ -218,6 +219,57 @@ void ATFPlayerController::Slide(const FInputActionValue& InputActionValue)
 // 		}
 // 	}
 // }
+
+
+void ATFPlayerController::ClientShowDrawWidget_Implementation(ERoundResult Result)
+{
+	ShowDrawWidget(Result);
+}
+
+void ATFPlayerController::ShowDrawWidget(ERoundResult Result)
+{
+	if (!IsLocalController()) return;
+	
+	// 기존 위젯이 있으면 제거 및 GC 해제
+	if (IsValid(RoundResultWidget))
+	{
+		RoundResultWidget->RemoveFromParent();
+		RoundResultWidget = nullptr;
+	}
+
+	TSubclassOf<UUserWidget> WidgetClass = nullptr;
+
+	switch (Result)
+	{
+	case ERoundResult::Draw:  WidgetClass = DrawWidgetClass; break;
+	case ERoundResult::Win:   WidgetClass = WinWidgetClass;  break;
+	case ERoundResult::Loss:  WidgetClass = LossWidgetClass; break;
+	}
+
+	if (!WidgetClass || !GetWorld()) return;
+
+	RoundResultWidget = CreateWidget<UUserWidget>(this, WidgetClass);
+	if (IsValid(RoundResultWidget))
+	{
+		RoundResultWidget->AddToViewport();
+		RoundResultWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+
+	// 기존 타이머 취소 및 재설정
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RoundResultWidgetHideTimerHandle);
+
+		TWeakObjectPtr<ATFPlayerController> WeakThis(this);
+		GetWorld()->GetTimerManager().SetTimer(RoundResultWidgetHideTimerHandle, [WeakThis]()
+		{
+			if (WeakThis.IsValid() && IsValid(WeakThis->RoundResultWidget))
+			{
+				WeakThis->RoundResultWidget->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}, 7.f, false);
+	}
+}
 
 void ATFPlayerController::Input_Quit()
 {

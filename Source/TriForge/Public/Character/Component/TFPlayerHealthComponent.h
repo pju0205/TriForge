@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "TFPlayerHealthComponent.generated.h"
 
+class ATFPlayerCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealth_DeathEvent, AActor*, OwningActor, AActor*, Instigator);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealth_AttributeChanged, float, CurrentHealth, float, MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthCompReplicated);
