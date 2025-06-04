@@ -19,24 +19,28 @@ UTFAnimInstance::UTFAnimInstance()
 {
 	TFPlayerCharacter = nullptr;
 	TFCharacterMovement = nullptr;
+	
 	MovementMode = E_MovementMode::OnGorund;
+	MovementModeLastFrame = E_MovementMode::OnGorund;
 	RotationMode = E_RotationMode::Strafe;
+	RotationModeLastFrame = E_RotationMode::Strafe;
 	MovementState = E_MovementState::Idle;
-	
+	MovementStateLastFrame = E_MovementState::Idle;
 	WeaponTypeState = E_EquippedWeaponType::UnEquipped;
-	
 	Gait = E_Gait::Walk;
+	GaitLastFrame = E_Gait::Walk;
+
+	Speed2D = 0.0f;
+	AccelerationAmount = 0.0f;
+	HeayLandSpeedThreshold = 700.0f;
 	bHasAcceleration = false;
 	bHasVelocity = false;
-	AccelerationAmount = 0.0f;
-	Speed2D = 0.0f;
-	HeayLandSpeedThreshold = 700.0f;
 	bSliding = false;
-
+	
+	PreviousDesiredControllerYaw = 0.0f;
 	TrajectoryGenerationDataIdle = FPoseSearchTrajectoryData(0.0, 100.0 ,0.0 );
 	TrajectoryGenerationDataMoving = FPoseSearchTrajectoryData(0.0, 0.0 ,0.0 );
 }
-
 
 void UTFAnimInstance::NativeInitializeAnimation()
 {
@@ -81,7 +85,18 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
 	UpdateStates();
+	
+	if (TFPlayerCharacter)
+	{
+		FString Who = TFPlayerCharacter->HasAuthority() ? TEXT("[SERVER]") : TEXT("[CLIENT]");
+		FString Control = TFPlayerCharacter->IsLocallyControlled() ? TEXT("[Local]") : TEXT("[Remote]");
+		const ENetRole LocalRole = TFPlayerCharacter->GetLocalRole();
+		const FString RoleStr = UEnum::GetValueAsString(LocalRole);
 
+		GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan,
+			FString::Printf(TEXT("%s %s Role: %s"), *Who, *Control, *RoleStr));
+	}
+	
 	// 무기 왼손위치를 무기의 LeftHandSocket을 만들어 고정 시키기 위한 함수
 	// LeftHandSocket Transform을 월드 상에서 구한 후 BoneSpace에서 오른 손에 대한 상대적위치로 변환 후
 	// OutPosition, OutRotation으로 LeftHand를 이동.
@@ -250,10 +265,14 @@ void UTFAnimInstance::UpdateEssentialValues()
 		SetRootTransform();
 		SetAcceleration();
 		SetVelocity();
-		if (CurrentSelectedDatabase)
+		if (CurrentSelectedDatabase && CurrentDatabaseTags.IsEmpty())
 		{
-			CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
+			CurrentDatabaseTags = CurrentSelectedDatabase->Tags;
 		}
+		// if (CurrentSelectedDatabase)
+		// {
+		// 	CurrentDatabaseTags.Append(CurrentSelectedDatabase->Tags);
+		// }
 		
 	}
 }

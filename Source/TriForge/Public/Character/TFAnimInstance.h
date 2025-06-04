@@ -70,22 +70,27 @@ class TRIFORGE_API UTFAnimInstance : public UAnimInstance
 private:
 	float HeayLandSpeedThreshold;
 	
+	void UpdateEssentialValues();
 	void SetRootTransform();
 	void SetAcceleration();
 	void SetVelocity();
-	void UpdateEssentialValues();
 
 	void GenerateTrajectory(float DeltaTime);
 
 	void UpdateStates();
 	
 protected:
+
+	// PlayerCharacter Start ----------------------------
 	UPROPERTY(BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 	ATFPlayerCharacter* TFPlayerCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 	UCharacterMovementComponent* TFCharacterMovement;
+	// ---------------------------- PlayerCharacter End
 
+	
+	// Essential Value Start -------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	FTransform CharacterTransform;
 	
@@ -121,13 +126,16 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	bool bHasVelocity;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	UPoseSearchDatabase* CurrentSelectedDatabase;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
 	TArray<FName> CurrentDatabaseTags;
+	// ------------------------------------------------- Essential Value End
+
 	
+	// Generate Trajectory Start -------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PoseSearch")
 	FPoseSearchTrajectoryData TrajectoryGenerationDataIdle;
 
@@ -146,6 +154,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PoseSearch")
 	FVector FutureVelocity;
 
+	//  ------------------------------------------------- Generate Trajectory End
+
+
+	// Update States Start ----------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_MovementMode MovementMode;
 	
@@ -172,7 +184,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait GaitLastFrame;
-	
+	//  ---------------------------------------------- Update States End
+
+
+	// Using Chooser Table Start ----------------------------------------------------------
 	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
 	bool isMoving();
 	
@@ -193,18 +208,25 @@ protected:
 	
 	UFUNCTION(BlueprintPure, Category = "MomvementAnlaysis", meta = (BlueprintThreadSafe))
 	bool JustLandedHeavy();
+	//  ---------------------------------------------------------- Using Chooser Table End
 	
 public:
 	UTFAnimInstance();
-
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
+
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "EssentialValue")
+	// Using Animation Blueprint Start (Movement) --------------------------------------
+	UFUNCTION(BlueprintImplementableEvent, Category = "EssentialValue") // Using Event Graph
 	void SetOffsetRootNode();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EssentialValue") // Using Event Graph
 	FAnimNodeReference OffsetRootNode;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))  // Using Anim Graph
+	bool bSliding;
+	//  --------------------------------------- Using Animation Blueprint End (Movement)
+
 	
 	E_EquippedWeaponType CheckWeaponType(EWeaponType CurrentWeaponType);
 
@@ -214,10 +236,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	bool bRangedWeapon;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bSliding;
-
-	
 	UPROPERTY()
 	ATFWeapon* EquippedWeapon;
 

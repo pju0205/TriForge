@@ -49,7 +49,6 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
-	
 	WalkSpeed = FVector(400.0f, 375.0f, 350.0f);			// default : 300 275 250
 	SprintSpeed = FVector(1000.0f, 775.0f, 750.0f);			// default : 700 575 550
 	ECurrentGait = E_Gait::Walk;
@@ -61,6 +60,7 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	bIsFallingDamageApplied = false;
 	WallRunState = EWallRunState::None;
 }
+
 
 void ATFPlayerCharacter::Tick(float DeltaTime)
 {
@@ -101,7 +101,7 @@ void ATFPlayerCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(ATFPlayerCharacter, bSprinting);
 	DOREPLIFETIME(ATFPlayerCharacter, bWalking);
 	DOREPLIFETIME(ATFPlayerCharacter, bSliding);
-
+	
 	DOREPLIFETIME_CONDITION(ATFPlayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
@@ -275,7 +275,7 @@ void ATFPlayerCharacter::StartWallRun( const FVector& WallNormal)
 	}
 
 	WallForward.Normalize();
-	GetCharacterMovement()->Velocity = WallForward * 600.f;
+	GetCharacterMovement()->Velocity = WallForward * 600.f; // 벽따라 앞으로 전진
 
 	// 타이머로 벽 끝나면 자동 해제
 	// 0.5초 내에 점프를 눌러야 날아감 (0.1로 줄이면 벽타기 중 점프가 너무 어려워짐)
@@ -325,12 +325,6 @@ void ATFPlayerCharacter::CustomJump()
 		{
 			// 슬라이딩 몽타주 중지
 			AnimInstance->Montage_Stop(0.1f, SlideMontage);
-
-			// 디버그 메시지 (선택 사항)
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Jumped during Slide - Montage Stopped"));
-			}
 		}
 		
 		bSliding = false;
@@ -343,8 +337,6 @@ void ATFPlayerCharacter::CustomJump()
 		Jump();
 	}
 }
-
-
 
 void ATFPlayerCharacter::Landed(const FHitResult& Hit)
 {
@@ -422,8 +414,6 @@ void ATFPlayerCharacter::PlaySlidMontage()
 
 	if (Velocity > 1.0f && IsLocallyControlled())
 	{
-		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(11, 1,FColor::Red, "Character PlaySlidMontage Call");
 		ServerRequestSlide();
 	}
 }
@@ -436,11 +426,7 @@ void ATFPlayerCharacter::ServerRequestSlide_Implementation()
 
 	if (Velocity > 1.0f)
 	{
-		if (GEngine)
-			GEngine->AddOnScreenDebugMessage(12, 1,FColor::Red, "Character ServerRequestSlide_Implementation Call");
-		
 		bSliding = true; // 슬라이딩 상태 시작
-
 		MulticastPlaySlideMontage();
 	}
 }

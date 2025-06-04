@@ -111,14 +111,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PossessedBy(AController* NewController) override;
-	// Walk < - >Sprint Start -------------
 	
+	// Walk < - >Sprint Start -------------
 	void UpdateSprintState(bool isSprint);
 	
 	UFUNCTION(Server, Reliable)
 	
 	void ServerUpdateSprintState(bool isSprint);
-	
 	// ------------- Walk < - >Sprint Start 
 
 
@@ -126,7 +125,6 @@ public:
 
 
 	// Slide Montage Start -------------
-	
 	void PlaySlidMontage();
 	
 	// Slide Request (Client -> Server)
@@ -136,12 +134,10 @@ public:
 	// Play Server Slide (Server -> All Client)
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastPlaySlideMontage();
-	
 	//  ------------- Slide Montage End
 	
 	
 	// Getter Start ------------
-	
 	E_Gait GetGait() const { return ECurrentGait; };
 	
 	bool GetJustLanded() const { return bJustLanded; };
@@ -153,8 +149,8 @@ public:
 	bool GetIsSprinting() const { return bSprinting; }
 
 	bool GetIsSWaking() const { return bWalking; }
-	
 	// ------------- Getter End
+	
 //Weapon
 private:
 	// 데미지 함수
