@@ -5,6 +5,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Character/TFAnimInstance.h"
+#include "Sound/SoundWave.h"
+#include "Components/AudioComponent.h"
 #include "Camera/CameraComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Character/TFPlayerController.h"
@@ -56,7 +58,7 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
-	WalkSpeed = FVector(400.0f, 375.0f, 350.0f);			// default : 300 275 250
+	WalkSpeed = FVector(300.0f, 275.0f, 250.0f);			// default : 300 275 250
 	SprintSpeed = FVector(1000.0f, 775.0f, 750.0f);			// default : 700 575 550
 	ECurrentGait = E_Gait::Walk;
 	bSprinting = false;
@@ -66,6 +68,7 @@ ATFPlayerCharacter::ATFPlayerCharacter()
 	SlideMontage = nullptr;
 	bIsFallingDamageApplied = false;
 	WallRunState = EWallRunState::None;
+	bIsAttacking = false;
 }
 
 
@@ -140,7 +143,7 @@ void ATFPlayerCharacter::BeginPlay()
 // Gait 값을 업데이트하고 이를 사용하여 캐릭터 이동 컴포넌트의 최대 이동 속도를 설정하는 데 사용
 void ATFPlayerCharacter::GetDesiredGait()
 {
-	if (bSprinting)
+	if (bSprinting && !bIsAttacking)
 	{
 		ECurrentGait = E_Gait::Sprint;
 	}
@@ -319,7 +322,7 @@ void ATFPlayerCharacter::CustomJump()
 		LaunchCharacter(JumpDirection * 900.f, true, true);
 
 		// 디버깅 라인
-		DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + JumpDirection * 300.0f, FColor::Red, false, 5.5f, 0, 2.0f);
+		// DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + JumpDirection * 300.0f, FColor::Red, false, 5.5f, 0, 2.0f);
 
 		StopWallRun();
 	}
@@ -337,6 +340,9 @@ void ATFPlayerCharacter::CustomJump()
 		}
 		
 		bSliding = false;
+
+		MulticastStopSlideSound(); // 슬라이디 사운드 정지
+		
 		Jump();
 	}
 
@@ -447,12 +453,42 @@ void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
 		
 		float Duration = PlayAnimMontage(SlideMontage);
 
+		// 사운드 시작
+		MulticastStartSlideSound();
+		
 		// 슬라이딩 종료 예약
 		FTimerHandle SlideEndTimerHandle;
 		GetWorldTimerManager().SetTimer(SlideEndTimerHandle, [this]()
 		{
 			bSliding = false;
+			
+			// 슬라이딩 사운드 정지
+			MulticastStopSlideSound();
 		}, Duration, false);
+	}
+}
+void ATFPlayerCharacter::MulticastStartSlideSound_Implementation() // 슬라이딩 사운드 시작
+{
+	SlideAudioComponent = UGameplayStatics::SpawnSoundAttached(
+		SlideSoundWave,
+		GetRootComponent(),
+		NAME_None,
+		FVector::ZeroVector,
+		EAttachLocation::KeepRelativeOffset,
+		false
+	);
+
+	if (SlideAudioComponent)
+	{
+		SlideAudioComponent->bAutoDestroy = false;
+	}
+}
+
+void ATFPlayerCharacter::MulticastStopSlideSound_Implementation() // 슬라이딩 사운드 정지
+{
+	if (SlideAudioComponent && SlideAudioComponent->IsPlaying())
+	{
+		SlideAudioComponent->Stop();
 	}
 }
 // -------------- Slide Montage End
@@ -552,6 +588,8 @@ void ATFPlayerCharacter::AttackButtonPressed()
 {
 	if (WeaponComponent)
 	{
+		bIsAttacking = true;
+		ECurrentGait = E_Gait::Walk;
 		WeaponComponent->AttackButtonPressed(true);
 	}
 }
@@ -560,6 +598,7 @@ void ATFPlayerCharacter::AttackButtonReleased()
 {
 	if (WeaponComponent)
 	{
+		bIsAttacking = false;
 		WeaponComponent->AttackButtonPressed(false);
 	}
 }

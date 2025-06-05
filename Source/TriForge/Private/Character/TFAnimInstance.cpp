@@ -29,6 +29,7 @@ UTFAnimInstance::UTFAnimInstance()
 	WeaponTypeState = E_EquippedWeaponType::UnEquipped;
 	Gait = E_Gait::Walk;
 	GaitLastFrame = E_Gait::Walk;
+	WallRunState = EWallRunState::None;
 
 	Speed2D = 0.0f;
 	AccelerationAmount = 0.0f;
@@ -76,11 +77,12 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	
 	bWeaponEquipped = TFPlayerCharacter->IsWeaponEquipped();
 	EquippedWeapon = TFPlayerCharacter->GetEquippedWeapon();
+	WallRunState = TFPlayerCharacter->GetWallRunState();
+	bSliding = TFPlayerCharacter->GetIsSliding();
 	if (bWeaponEquipped)
 	{
 		bRangedWeapon = EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon;
 	}
-	bSliding = TFPlayerCharacter->GetIsSliding();
 	
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
@@ -129,7 +131,7 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		// 	FString::Printf(TEXT("Tag Count: %d"), CurrentSelectedDatabase->Tags.Num())
 		// );
 		
-		GEngine->AddOnScreenDebugMessage(200, 1.5f, FColor::Red, FString::Printf(TEXT("Database: %s"), *CurrentSelectedDatabase->GetName()));
+		// GEngine->AddOnScreenDebugMessage(200, 1.5f, FColor::Red, FString::Printf(TEXT("Database: %s"), *CurrentSelectedDatabase->GetName()));
 
 		for (const auto& Tag : CurrentSelectedDatabase->Tags)
 		{

@@ -184,6 +184,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "States")
 	E_Gait GaitLastFrame;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	EWallRunState WallRunState;
 	//  ---------------------------------------------- Update States End
 
 

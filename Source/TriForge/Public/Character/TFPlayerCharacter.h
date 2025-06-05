@@ -18,6 +18,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UCurveFloat;
 class UAnimMontage;
+class USoundWave;
 // class UTFAnimInstance;
 
 UENUM(BlueprintType)
@@ -61,6 +62,15 @@ private:
 	void StopWallRun();
 	void CheckWallRun();
 	// ---------------------------  Wall Run End
+
+
+	// Slide Start --------------------------------
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStartSlideSound();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStopSlideSound();
+	// -------------------------------- Slide End
 	
 protected:
 	virtual void BeginPlay() override;
@@ -104,6 +114,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* SlideMontage;
 
+	UPROPERTY()
+	UAudioComponent* SlideAudioComponent;
+	
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundWave* SlideSoundWave;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 	EWallRunState WallRunState;
 
 	FTimerHandle WallRunTimerHandle;
@@ -152,7 +169,14 @@ public:
 	bool GetIsSprinting() const { return bSprinting; }
 
 	bool GetIsSWaking() const { return bWalking; }
+
+	EWallRunState GetWallRunState() const { return WallRunState; };
 	// ------------- Getter End
+
+	
+	// Setter Start ----------------------
+	void SetGait(E_Gait SetValue) { ECurrentGait = SetValue; };
+	// ---------------------- Setter End
 	
 //Weapon
 private:
@@ -182,6 +206,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScope(bool bShowScope);
+
+	bool bIsAttacking;
 
 private:
 	UPROPERTY(VisibleAnywhere)
