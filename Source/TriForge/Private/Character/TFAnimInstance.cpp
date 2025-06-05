@@ -29,7 +29,7 @@ UTFAnimInstance::UTFAnimInstance()
 	WeaponTypeState = E_EquippedWeaponType::UnEquipped;
 	Gait = E_Gait::Walk;
 	GaitLastFrame = E_Gait::Walk;
-	WallRunState = EWallRunState::None;
+	WallRunState = E_WallRunState::None;
 
 	Speed2D = 0.0f;
 	AccelerationAmount = 0.0f;
@@ -79,6 +79,8 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	EquippedWeapon = TFPlayerCharacter->GetEquippedWeapon();
 	WallRunState = TFPlayerCharacter->GetWallRunState();
 	bSliding = TFPlayerCharacter->GetIsSliding();
+	bWallRun = TFPlayerCharacter->GetIsWallRun();
+	
 	if (bWeaponEquipped)
 	{
 		bRangedWeapon = EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon;
@@ -87,6 +89,7 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
 	UpdateStates();
+
 	
 	if (TFPlayerCharacter)
 	{
@@ -363,11 +366,12 @@ void UTFAnimInstance::UpdateStates()
 		case EMovementMode::MOVE_NavWalking:
 				MovementMode = E_MovementMode::OnGorund;
 			break;
-
+		
 		case EMovementMode::MOVE_Falling:
-			MovementMode = E_MovementMode::InAir;
+			if (WallRunState != E_WallRunState::None) MovementMode = E_MovementMode::OnGorund;
+			else if (WallRunState == E_WallRunState::None) MovementMode = E_MovementMode::InAir;
 			break;
-
+		
 		default:
 			break;
 		}

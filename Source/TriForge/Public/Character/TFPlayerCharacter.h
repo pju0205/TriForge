@@ -29,7 +29,7 @@ enum class E_Gait : uint8
 };
 
 UENUM(BlueprintType)
-enum class EWallRunState : uint8
+enum class E_WallRunState : uint8
 {
 	None,
 	LeftWall,
@@ -58,7 +58,8 @@ private:
 
 	
 	// Wall Run Start ---------------------------
-	void StartWallRun(const FVector& WallNormal);
+	// void StartWallRun(const FVector& WallNormal);
+	void StartWallRun(const FVector& WallNormal, E_WallRunState NewState);
 	void StopWallRun();
 	void CheckWallRun();
 	// ---------------------------  Wall Run End
@@ -121,9 +122,12 @@ protected:
 	USoundWave* SlideSoundWave;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
-	EWallRunState WallRunState;
+	E_WallRunState WallRunState;
 
 	FTimerHandle WallRunTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bWallRun;
 
 
 public:
@@ -158,25 +162,22 @@ public:
 	
 	
 	// Getter Start ------------
-	E_Gait GetGait() const { return ECurrentGait; };
+	E_Gait GetGait() const { return ECurrentGait; }
 	
-	bool GetJustLanded() const { return bJustLanded; };
+	bool GetJustLanded() const { return bJustLanded; }
 	
-	FVector GetLandVelocity() { return LandVelocity; };
+	FVector GetLandVelocity() { return LandVelocity; }
 
-	bool GetIsSliding() const { return bSliding; };
+	bool GetIsSliding() const { return bSliding; }
 
 	bool GetIsSprinting() const { return bSprinting; }
 
 	bool GetIsSWaking() const { return bWalking; }
 
-	EWallRunState GetWallRunState() const { return WallRunState; };
-	// ------------- Getter End
+	bool GetIsWallRun() const {return bWallRun; }
 
-	
-	// Setter Start ----------------------
-	void SetGait(E_Gait SetValue) { ECurrentGait = SetValue; };
-	// ---------------------- Setter End
+	E_WallRunState GetWallRunState() const { return WallRunState; }
+	// ------------- Getter End
 	
 //Weapon
 private:

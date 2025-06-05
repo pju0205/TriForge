@@ -186,7 +186,7 @@ protected:
 	E_Gait GaitLastFrame;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
-	EWallRunState WallRunState;
+	E_WallRunState WallRunState;
 	//  ---------------------------------------------- Update States End
 
 
@@ -228,6 +228,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))  // Using Anim Graph
 	bool bSliding;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))  // Using Anim Graph
+	bool bWallRun;
 	//  --------------------------------------- Using Animation Blueprint End (Movement)
 
 	
