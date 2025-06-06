@@ -23,7 +23,7 @@ void UMatchResultPage::NativeConstruct()
 	if (IsValid(PlayerState))
 	{
 		PlayerState->OnMatchResultChanged.AddDynamic(this, &UMatchResultPage::UpdateResultData);
-		OnMatchResultChanged(PlayerState->GetMatchResult(), PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
+		OnMatchScoreChanged(PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
 		SetMatchResultName();
 	}
 	else
@@ -46,18 +46,12 @@ void UMatchResultPage::SetMatchResultName()
 	if (RightNameText) RightNameText->SetText(FText::FromString(TEXT("상대방")));
 }
 
-void UMatchResultPage::OnMatchResultChanged(bool bIsWinner, int32 LeftScore, int32 RightScore)
+void UMatchResultPage::OnMatchScoreChanged(int32 LeftScore, int32 RightScore)
 {
 	if (IsValid(LeftScoreText) && IsValid(RightScoreText))
 	{
-		if (bIsWinner)
-		{
-			LeftScoreText->SetText(FText::AsNumber(LeftScore));
-		}
-		else
-		{
-			RightScoreText->SetText(FText::AsNumber(RightScore));
-		}
+		LeftScoreText->SetText(FText::AsNumber(LeftScore));
+		RightScoreText->SetText(FText::AsNumber(RightScore));
 	}
 }
 
@@ -80,7 +74,8 @@ void UMatchResultPage::UpdateResultData(bool bIsWinner, int32 LeftScore, int32 R
 		ResultText->SetColorAndOpacity(FSlateColor(ResultColor));	// 승리 : 초록색, 패배 : 빨간색
 	}
 
-	OnMatchResultChanged(bIsWinner, LeftScore, RightScore);
+	// MatchScore 표시하기
+	OnMatchScoreChanged(LeftScore, RightScore);
 
 	// 위젯 표시
 	SetVisibility(ESlateVisibility::Visible);
@@ -108,7 +103,7 @@ void UMatchResultPage::OnPlayerStateInitialized()
 	if (IsValid(PlayerState))
 	{
 		PlayerState->OnMatchResultChanged.AddDynamic(this, &UMatchResultPage::UpdateResultData);
-		OnMatchResultChanged(PlayerState->GetMatchResult(), PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
+		OnMatchScoreChanged(PlayerState->MyMatchWins, PlayerState->OpponentMatchWins);
 		SetMatchResultName();
 	}
 

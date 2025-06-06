@@ -56,6 +56,13 @@ void ADSPlayerController::BeginPlay()
 	}*/
 }
 
+void ADSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADSPlayerController, Username);
+}
+
 // Game 진입 시 Input 설정
 void ADSPlayerController::Client_SetToGameMode_Implementation()
 {
@@ -73,10 +80,10 @@ void ADSPlayerController::Client_SetToLobbyMode_Implementation()
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
-
-	FInputModeUIOnly InputMode;
-	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	InputMode.SetWidgetToFocus(nullptr); // UI 포커스 줄 수 있으면 넣기
+	
+	FInputModeGameOnly InputMode;
+	/*InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);*/
+	/*InputMode.SetWidgetToFocus(nullptr); // UI 포커스 줄 수 있으면 넣기*/
 	SetInputMode(InputMode);
 }
 

@@ -7,15 +7,20 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Character/Component/TFPlayerHealthComponent.h"
-#include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Game/DSGameState.h"
+#include "Game/TFGameMode.h"
+#include "Game/DSLobbyGameMode.h"
+#include "Game/TFMatchGameState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/TFHUD.h"
 #include "HUD/TFOverlay.h"
+#include "HUD/UI/Chatting.h"
 #include "HUD/UI/PlayerHealthBar.h"
-#include "HUD/UI/RoundIndicator.h"
 #include "PlayerState/TFMatchPlayerState.h"
 #include "Types/TFTypes.h"
+#include "UI/Lobby/LobbyHUD.h"
+#include "UI/Lobby/LobbyOverlay.h"
 
 ATFPlayerController::ATFPlayerController()
 {
@@ -85,6 +90,8 @@ void ATFPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATFPlayerController::SprintStart);
 	EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATFPlayerController::SprintEnd);
 	EnhancedInputComponent->BindAction(QuitAction, ETriggerEvent::Started, this, &ATFPlayerController::Input_Quit);	// Quit 버튼
+	EnhancedInputComponent->BindAction(ChatAction, ETriggerEvent::Started, this, &ATFPlayerController::Input_Chat);	// Chat 버튼
+	EnhancedInputComponent->BindAction(HideChatAction, ETriggerEvent::Started, this, &ATFPlayerController::Input_HideChat);	// Chat Hide 버튼
 
 
 	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ATFPlayerController::AimingStarted);	
@@ -288,6 +295,103 @@ void ATFPlayerController::Input_Quit()
 	}
 }
 
+void ATFPlayerController::Input_Chat()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[ATFPlayerController] Input_Chat() Call"));
+
+	AGameStateBase* GameState = GetWorld()->GetGameState();
+
+	if (!GameState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[ATFPlayerController] Input_Chat(): GameState is null."));
+		return;
+	}
+    
+	if (GameState->IsA(ADSGameState::StaticClass()))
+	{
+		LobbyHUD = Cast<ALobbyHUD>(GetHUD());
+
+		bool bLobbyHUDValid = LobbyHUD && LobbyHUD->LobbyOverlay && LobbyHUD->LobbyOverlay->ChatPanel;
+        
+		if (bLobbyHUDValid)
+		{
+			LobbyHUD->LobbyOverlay->ChatPanel->ActivateChatText();
+			UE_LOG(LogTemp, Warning, TEXT("[ATFPlayerController] Input_Chat(): LobbyOverlay Chat Activated"));
+			return;
+		}
+	}
+	else if (GameState->IsA(ATFMatchGameState::StaticClass()))
+	{
+		TFHUD = Cast<ATFHUD>(GetHUD());
+
+		bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->ChatPanel;
+    
+		if (bTFHUDValid)
+		{
+			TFHUD->CharacterOverlay->ChatPanel->ActivateChatText();
+			UE_LOG(LogTemp, Warning, TEXT("[ATFPlayerController] Input_Chat(): TFHUD Chat Activated"));
+			return;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("[ATFPlayerController] Input_Chat(): No valid HUD or ChatPanel found."));
+}
+
+void ATFPlayerController::Input_HideChat()
+{
+	TFHUD = Cast<ATFHUD>(GetHUD());
+	
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->ChatPanel;
+	
+	if (bTFHUDValid)
+	{
+		TFHUD->CharacterOverlay->ChatPanel->ToggleChatVisibility();
+	}
+}
+
+void ATFPlayerController::ServerSendChatMessage_Implementation(const FString& msg)
+{
+	AGameModeBase* GameMode = GetWorld()->GetAuthGameMode();
+	if (!GameMode) return;
+
+	if (ATFGameMode* MatchGameMode = Cast<ATFGameMode>(GameMode))
+	{
+		MatchGameMode->SendChatMessage(msg);
+	}
+	else if (ADSLobbyGameMode* LobbyGameMode = Cast<ADSLobbyGameMode>(GameMode))
+	{
+		LobbyGameMode->SendChatMessage(msg);
+	}
+}
+
+void ATFPlayerController::ClientAddChatMessage_Implementation(const FString& msg)
+{
+	AGameStateBase* GameState = GetWorld()->GetGameState();
+
+	if (GameState->IsA(ADSGameState::StaticClass()))
+	{
+		if (ALobbyHUD* LH = Cast<ALobbyHUD>(GetHUD()))
+		{
+			if (LH->LobbyOverlay && LH->LobbyOverlay->ChatPanel)
+			{
+				LH->LobbyOverlay->ChatPanel->AddChatMessage(msg);
+				return;
+			}
+		}
+	}
+	else if (GameState->IsA(ATFMatchGameState::StaticClass()))
+	{
+		if (ATFHUD* TH = Cast<ATFHUD>(GetHUD()))
+		{
+			if (TH->CharacterOverlay && TH->CharacterOverlay->ChatPanel)
+			{
+				TH->CharacterOverlay->ChatPanel->AddChatMessage(msg);
+				return;
+			}
+		}
+	}
+}
+
 void ATFPlayerController::AimingStarted(const struct FInputActionValue& AimActionValue)
 {
 	if (APawn* ControlledPawn = GetPawn<APawn>())
@@ -350,7 +454,7 @@ void ATFPlayerController::WeaponAttackReleased(const struct FInputActionValue& I
 
 void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 {
-	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+	TFHUD = Cast<ATFHUD>(GetHUD()); // 항상 최신 HUD 가져오기
 	
 	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->AmmoAmount;
 
@@ -364,7 +468,7 @@ void ATFPlayerController::SetHUDAmmo(int32 Ammo)
 // Ammo 0으로 초기화
 void ATFPlayerController::ClientResetAmmo_Implementation()
 {
-	TFHUD = TFHUD == nullptr ? Cast<ATFHUD>(GetHUD()) : TFHUD;
+	TFHUD = Cast<ATFHUD>(GetHUD()); // 항상 최신 HUD 가져오기
 	
 	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->AmmoAmount;
 

@@ -15,6 +15,8 @@ void ATFHUD::BeginPlay()
 	AddCharacterOverlay();
 
 	CharacterOverlay->PlayerHealthBar->OnHealthCompInitialized();
+
+	bReplicates = true;
 }
 
 void ATFHUD::AddCharacterOverlay()

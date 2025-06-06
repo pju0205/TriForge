@@ -2,6 +2,8 @@
 
 
 #include "Game/DSLobbyGameMode.h"
+
+#include "Character/TFPlayerController.h"
 #include "Game/DSGameInstanceSubsystem.h"
 #include "DedicatedServers/DedicatedServers.h"
 #include "Game/DSGameState.h"
@@ -260,6 +262,18 @@ void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
     }
 }
 
+
+void ADSLobbyGameMode::SendChatMessage(const FString& msg)
+{
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        ATFPlayerController* Controller = Cast<ATFPlayerController>(It->Get());
+        if (Controller)
+        {
+            Controller->ClientAddChatMessage(msg);
+        }
+    }
+}
 
 void ADSLobbyGameMode::InitGameLift()
 {

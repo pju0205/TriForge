@@ -14,7 +14,7 @@ using UnrealBuildTool;
             "GameLiftServerSDK",
             "GameplayTags",
             "HTTP",
-            "NetCore"
+            "NetCore", "TriForge"
         });
  
  		PrivateDependencyModuleNames.AddRange(new string[] 

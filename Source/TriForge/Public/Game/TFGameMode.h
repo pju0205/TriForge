@@ -25,6 +25,9 @@ public:
 	
 	UPROPERTY()
 	TMap<APlayerController*, FTimerHandle> Timers;
+
+	UFUNCTION()
+	void SendChatMessage(const FString& msg);
 	
 protected:
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;

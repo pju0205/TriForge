@@ -7,6 +7,7 @@
 #include "HUD/TFHUD.h"
 #include "TFPlayerController.generated.h"
 
+class ALobbyHUD;
 enum class ERoundResult : uint8;
 class UTFPlayerHealthComponent;
 class UPlayerHealthBar;
@@ -45,6 +46,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Input") // Quit 버튼 설정
 	TObjectPtr<UInputAction> QuitAction;
+
+	UPROPERTY(EditAnywhere, Category="Input") // Chat 버튼 설정
+	TObjectPtr<UInputAction> ChatAction;
+
+	UPROPERTY(EditAnywhere, Category="Input") // Chat 버튼 설정
+	TObjectPtr<UInputAction> HideChatAction;
 
 	UPROPERTY(EditAnywhere, Category="Input") 
 	TObjectPtr<UInputAction> AimAction;
@@ -111,6 +118,9 @@ public:
 	ATFHUD* TFHUD;
 
 	UPROPERTY()
+	ALobbyHUD* LobbyHUD;
+	
+	UPROPERTY()
 	UPlayerHealthBar* HealthBar;
 
 	UPROPERTY()
@@ -134,15 +144,32 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LossWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> ChatPanelClass;
+
 	UPROPERTY()
 	UUserWidget* RoundResultWidget = nullptr;
+
+	UPROPERTY()
+	UUserWidget* ChatPanelWidget = nullptr;
 private:
 
 	// Quit 버튼 관련
 	void Input_Quit();		// Server
 	bool bQuitMenuOpen;		// Server
-
+	
 	const FString& GetUsername() const { return Username; }
 	
 	FTimerHandle RoundResultWidgetHideTimerHandle;
+
+// Chat 관련
+public:
+	void Input_Chat();
+	void Input_HideChat();
+	
+	UFUNCTION(Server, Reliable)
+	void ServerSendChatMessage(const FString& msg);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddChatMessage(const FString& msg);
 };

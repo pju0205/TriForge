@@ -86,6 +86,18 @@ AActor* ATFGameMode::ChoosePlayerStart_Implementation(AController* Player)
 	return Super::ChoosePlayerStart_Implementation(Player);
 }
 
+void ATFGameMode::SendChatMessage(const FString& msg)
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ATFPlayerController* Controller = Cast<ATFPlayerController>(It->Get());
+		if (Controller)
+		{
+			Controller->ClientAddChatMessage(msg);
+		}
+	}
+}
+
 void ATFGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 {
 	Super::OnCountdownTimerFinished(Type);
@@ -96,7 +108,6 @@ void ATFGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 		PlayerEliminated();
 	}
 }
-
 
 // 게임 완전히 끝났을 때
 void ATFGameMode::OnMatchEnded()

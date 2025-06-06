@@ -25,7 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMatchResultName();
 
-	void OnMatchResultChanged(bool bIsWinner, int32 LeftScore, int32 RightScore);
+	void OnMatchScoreChanged(int32 LeftScore, int32 RightScore);
 
 	UFUNCTION()
 	void HideResultPage();

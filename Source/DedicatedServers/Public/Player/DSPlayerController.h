@@ -23,6 +23,8 @@ public:
 	virtual void PostSeamlessTravel() override;
 	virtual void BeginPlay() override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
 	UFUNCTION(Client, Reliable)
 	void Client_TimerUpdated(float CountdownTimeLeft, ECountdownTimerType Type) const;
  
@@ -33,10 +35,10 @@ public:
 	void Client_SetInputEnabled(bool bEnabled);
 
 	// Lobby, Game Input Mode 관련
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Client, Reliable, BlueprintCallable)
 	void Client_SetToLobbyMode();
 
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Client, Reliable, BlueprintCallable)
 	void Client_SetToGameMode();
 
 	// Ready 관련
@@ -49,7 +51,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnTimerStateChangedDelegate OnTimerStopped;
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	FString Username;
  
 	UPROPERTY(BlueprintReadOnly)

@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TFOverlay.generated.h"
 
+class UChatting;
 class UPlayerHealthBar;
 class UMatchResultPage;
 class URoundIndicator;
@@ -30,4 +31,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UMatchResultPage* MatchResultWidget;
+
+	UPROPERTY(meta = (BindWidget))
+	UChatting* ChatPanel;
 };

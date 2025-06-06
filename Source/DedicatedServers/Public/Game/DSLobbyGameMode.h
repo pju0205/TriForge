@@ -23,6 +23,9 @@ public:
 	void CheckAndStartLobbyCountdown();
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	UFUNCTION()
+	void SendChatMessage(const FString& msg);
+
 protected:
 	virtual void BeginPlay() override;
     
