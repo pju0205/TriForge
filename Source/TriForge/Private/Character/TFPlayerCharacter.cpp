@@ -130,19 +130,27 @@ void ATFPlayerCharacter::BeginPlay()
 
 // Update Movement Start ------------------------------------------------------------------------------------------------------
 // Gait 값을 업데이트하고 이를 사용하여 캐릭터 이동 컴포넌트의 최대 이동 속도를 설정하는 데 사용
+// void ATFPlayerCharacter::GetDesiredGait()
+// {
+// 	// 기본적으로 걷기
+// 	ECurrentGait = E_Gait::Walk;
+//
+// 	// 달릴 수 있는 조건을 모두 만족하는 경우에만 스프린트
+// 	if (bSprinting && !bIsAttacking)
+// 	{
+// 		ECurrentGait = E_Gait::Sprint;
+// 	}
+// }
 void ATFPlayerCharacter::GetDesiredGait()
 {
-	if (bSprinting && !bIsAttacking)
+	if (bSprinting)
 	{
-		if (bIsAttacking == false) ECurrentGait = E_Gait::Sprint;
-		else if (bIsAttacking == true) ECurrentGait = E_Gait::Walk;
+		// if (!bIsAttacking)
+		ECurrentGait = E_Gait::Sprint;
 	}
 	else
 	{
-		if (bWalking)
-		{
-			ECurrentGait = E_Gait::Walk;
-		}
+		ECurrentGait = E_Gait::Walk;
 	}
 }
 
@@ -577,8 +585,8 @@ void ATFPlayerCharacter::AttackButtonPressed()
 {
 	if (WeaponComponent)
 	{
-		bIsAttacking = true;
-		ECurrentGait = E_Gait::Walk;
+		// bIsAttacking = true;
+		// ECurrentGait = E_Gait::Walk;
 		WeaponComponent->AttackButtonPressed(true);
 	}
 }
