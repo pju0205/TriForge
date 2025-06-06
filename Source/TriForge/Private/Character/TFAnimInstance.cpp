@@ -89,18 +89,6 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	UpdateEssentialValues();
 	GenerateTrajectory(DeltaTime);
 	UpdateStates();
-
-	
-	if (TFPlayerCharacter)
-	{
-		FString Who = TFPlayerCharacter->HasAuthority() ? TEXT("[SERVER]") : TEXT("[CLIENT]");
-		FString Control = TFPlayerCharacter->IsLocallyControlled() ? TEXT("[Local]") : TEXT("[Remote]");
-		const ENetRole LocalRole = TFPlayerCharacter->GetLocalRole();
-		const FString RoleStr = UEnum::GetValueAsString(LocalRole);
-
-		/*GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan,
-			FString::Printf(TEXT("%s %s Role: %s"), *Who, *Control, *RoleStr));*/
-	}
 	
 	// 무기 왼손위치를 무기의 LeftHandSocket을 만들어 고정 시키기 위한 함수
 	// LeftHandSocket Transform을 월드 상에서 구한 후 BoneSpace에서 오른 손에 대한 상대적위치로 변환 후
@@ -126,28 +114,6 @@ void UTFAnimInstance::NativeUpdateAnimation(float DeltaTime)
 				RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - Hit.ImpactPoint));
 		}*/
 	}
-
-	if (CurrentSelectedDatabase != nullptr)
-	{
-		// GEngine->AddOnScreenDebugMessage(
-		// 	1, 1.5f, FColor::Yellow,
-		// 	FString::Printf(TEXT("Tag Count: %d"), CurrentSelectedDatabase->Tags.Num())
-		// );
-		
-		// GEngine->AddOnScreenDebugMessage(200, 1.5f, FColor::Red, FString::Printf(TEXT("Database: %s"), *CurrentSelectedDatabase->GetName()));
-
-		for (const auto& Tag : CurrentSelectedDatabase->Tags)
-		{
-			// GEngine->AddOnScreenDebugMessage(
-			// 	3, // -1이면 새로운 메시지로 출력
-			// 	1.5f,
-			// 	FColor::Blue,
-			// 	FString::Printf(TEXT("Database: %s | Tag: %s"), *CurrentSelectedDatabase->GetName(), *Tag.ToString())
-			// );
-		}
-	}
-
-	
 }
 
 void UTFAnimInstance::SetRootTransform()
@@ -179,39 +145,6 @@ void UTFAnimInstance::SetRootTransform()
 		{
 			RootTransform = LocalRootTransform;
 		}
-
-		// // 디버깅 메시지 출력
-		// if (GEngine)
-		// {
-		// 	const FRotator CharacterRotation = CharacterTransform.Rotator();
-		// 	const FRotator OffsetRotation_ = OffsetRootNodeTransform.Rotator();
-		// 	const FRotator FinalRootRotation = RootTransform.Rotator();
-		//
-		// 	const FString ControlType = TFPlayerCharacter->IsLocallyControlled() ? TEXT("[Local]") : TEXT("[Remote]");
-		// 	const FString OwnerName = TFPlayerCharacter->GetName();
-		//
-		// 	GEngine->AddOnScreenDebugMessage(700, 3.f, FColor::Cyan,
-		// 		FString::Printf(TEXT("%s %s | CharacterRotation: Pitch=%.1f Yaw=%.1f Roll=%.1f"),
-		// 			*ControlType, *OwnerName,
-		// 			CharacterRotation.Pitch, CharacterRotation.Yaw, CharacterRotation.Roll));
-		//
-		// 	GEngine->AddOnScreenDebugMessage(701, 3.f, FColor::Yellow,
-		// 		FString::Printf(TEXT("%s %s | OffsetRotation:   Pitch=%.1f Yaw=%.1f Roll=%.1f"),
-		// 			*ControlType, *OwnerName,
-		// 			OffsetRotation_.Pitch, OffsetRotation_.Yaw, OffsetRotation_.Roll));
-		//
-		// 	GEngine->AddOnScreenDebugMessage(702, 3.f, FColor::Green,
-		// 		FString::Printf(TEXT("%s %s | FinalRootRotation: Pitch=%.1f Yaw=%.1f Roll=%.1f"),
-		// 			*ControlType, *OwnerName,
-		// 			FinalRootRotation.Pitch, FinalRootRotation.Yaw, FinalRootRotation.Roll));
-		//
-		// 	// ReplicatedRootTransform 비교 디버깅
-		// 	const FRotator ReplicatedRootRotation = TFPlayerCharacter->ReplicatedRootTransform.Rotator();
-		// 	GEngine->AddOnScreenDebugMessage(703, 3.f, FColor::Magenta,
-		// 		FString::Printf(TEXT("%s %s | ReplicatedRootRotation: Pitch=%.1f Yaw=%.1f Roll=%.1f"),
-		// 			*ControlType, *OwnerName,
-		// 			ReplicatedRootRotation.Pitch, ReplicatedRootRotation.Yaw, ReplicatedRootRotation.Roll));
-		// }
 	}
 	else
 	{
@@ -358,7 +291,6 @@ void UTFAnimInstance::UpdateStates()
 		
 		MovementModeLastFrame = MovementMode;
 		EMovementMode CurrentMovementMode = TFCharacterMovement->MovementMode;
-		/*UE_LOG(LogTemp, Warning, TEXT("bSprinting: %d, bWalking: %d, Gait: %d"), TFPlayerCharacter->GetIsSprinting(), TFPlayerCharacter->GetIsSWaking(), TFPlayerCharacter->GetGait());*/
 		switch(CurrentMovementMode)
 		{
 		case EMovementMode::MOVE_None:
@@ -454,12 +386,8 @@ bool UTFAnimInstance::isMoving()
 	if (UKismetMathLibrary::NotEqual_VectorVector(Velocity, FVector(0.0f, 0.0f, 0.0f), 0.1f) &&
 	UKismetMathLibrary::NotEqual_VectorVector(FutureVelocity, FVector(0.0f, 0.0f, 0.0f), 0.1f))
 	{
-		// if (GEngine)
-		// 	GEngine->AddOnScreenDebugMessage(40, 1, FColor::Yellow, "Moving true");
 		return true;	
 	}
-	// if (GEngine)
-	// 	GEngine->AddOnScreenDebugMessage(40, 1, FColor::Yellow, "Moving False");
 	return false;
 }
 
@@ -472,10 +400,6 @@ bool UTFAnimInstance::isStarting()
 	{
 		bisStarting = true;
 	}
-	
-	// GEngine->AddOnScreenDebugMessage(4, 1, FColor::Green,bisMoving ? TEXT("bisMoving : true") : TEXT("bisMoving : false"));
-	// GEngine->AddOnScreenDebugMessage(5, 1, FColor::Green,bHasPivotTag ? TEXT("bHasPivotTag : true") : TEXT("bHasPivotTag : false"));
-	// GEngine->AddOnScreenDebugMessage(6, 1, FColor::Green,bisStarting ? TEXT("bisStarting : true") : TEXT("bisStarting : false"));
 	return bisMoving && bHasPivotTag && bisStarting;
 }
 
@@ -534,19 +458,6 @@ bool UTFAnimInstance::ShouldTurnInPlace()
 	{
 		bTurnInPlace = true;
 	}
-	
-	if (GEngine)
-	{
-		// if (bTurnInPlace)	
-		// 	GEngine->AddOnScreenDebugMessage(39, 1, FColor::Blue, "Turn In Place True");
-		// else
-		// {
-		// 	GEngine->AddOnScreenDebugMessage(39, 1, FColor::Blue, "Turn In Place False");
-		// }
-	}
-
-	// GEngine->AddOnScreenDebugMessage(41, 1, FColor::Cyan,
-	// FString::Printf(TEXT("RootYawDelta: %.2f"), RootYawDelta));
 	
 	return bTurnInPlace;
 }

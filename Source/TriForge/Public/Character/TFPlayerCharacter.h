@@ -41,37 +41,52 @@ class TRIFORGE_API ATFPlayerCharacter : public ATFCharacter
 {
 	GENERATED_BODY()
 
+
 private:
-	// Movement Start --------------------------
+	
+	// Movement Function Start ----------------------------------------------------
 	void GetDesiredGait();
 	float CalculateMaxSpeed(float& StrafeSpeedMap);
 	void UpdateMovement();
-	// -------------------------- Movement End
+	// ---------------------------------------------------- Movement Function End
 
 
-	// Land Start ---------------------------------
-	// 착지 시점에 처리해되어햘 코드
-	virtual void Landed(const FHitResult& Hit) override;
+	// Land Function Start ----------------------------------------------------------------------
+	virtual void Landed(const FHitResult& Hit) override; 	// 착지 시점에 처리해되어햘 코드
+	
 	UFUNCTION()
 	void OnDelayComplete();
-	// --------------------------------- Land End
+	// ---------------------------------------------------------------------- Land Function End
 
 	
-	// Wall Run Start ---------------------------
-	// void StartWallRun(const FVector& WallNormal);
+	// Wall Run Function Start ---------------------------------------------------------
 	void StartWallRun(const FVector& WallNormal, E_WallRunState NewState);
 	void StopWallRun();
 	void CheckWallRun();
-	// ---------------------------  Wall Run End
+	// ---------------------------------------------------------  Wall Run Function End
 
-
-	// Slide Start --------------------------------
+	
+	UFUNCTION(Server, Reliable)
+	void ServerCustomJump(); // 점프 상태 서버에 전달
+	
+	
+	// Slide Function Start -------------------------------------------------
+	UFUNCTION(Server, Reliable)
+	void ServerRequestSlide(); // Slide Request (Client -> Server)
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySlideMontage(); // Play Server Slide (Server -> All Client)
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStopSlideEffects();
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastStartSlideSound();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastStopSlideSound();
-	// -------------------------------- Slide End
+	// ------------------------------------------------- Slide Function End
+	
 	
 protected:
 	virtual void BeginPlay() override;
@@ -81,9 +96,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowedClasses = "true"))
 	TObjectPtr<UCameraComponent> Camera3p = nullptr;
-
-	// UPROPERTY(BlueprintReadOnly, Category = "Animation")
-	// UTFAnimInstance* TFAnimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	E_Gait ECurrentGait;
@@ -112,15 +124,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 	FVector LandVelocity;
 
+	
+	// Slide Value Start --------------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* SlideMontage;
+	
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* SlideSoundWave;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundAttenuation* SlideAttenuationSettings; // 핵심
 
 	UPROPERTY()
 	UAudioComponent* SlideAudioComponent;
-	
-	UPROPERTY(EditAnywhere, Category = "Audio")
-	USoundWave* SlideSoundWave;
+	//  -------------------------------------------------------------------------- Slide Value End
 
+
+	// Wall Run Value Start --------------------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 	E_WallRunState WallRunState;
 
@@ -128,40 +148,36 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bWallRun;
+	// --------------------------------------------------------------------------Wall Run Value End
 
-
+	
 public:
 	ATFPlayerCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PossessedBy(AController* NewController) override;
+
 	
-	// Walk < - >Sprint Start -------------
+	// Walk And Sprint Function Start ----------------------------------------------------------------------
 	void UpdateSprintState(bool isSprint);
 	
 	UFUNCTION(Server, Reliable)
 	
 	void ServerUpdateSprintState(bool isSprint);
-	// ------------- Walk < - >Sprint Start 
+	// ---------------------------------------------------------------------- Walk And Sprint Function End
 
 
-	void CustomJump();
-
-
-	// Slide Montage Start -------------
-	void PlaySlidMontage();
+	// Controller Callable Start ---------------------------------------------------------------------------
+	// void UpdateSprintState(bool isSprint); // SprintStart & SprintEnd
 	
-	// Slide Request (Client -> Server)
-	UFUNCTION(Server, Reliable)
-	void ServerRequestSlide();
-
-	// Play Server Slide (Server -> All Client)
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastPlaySlideMontage();
-	//  ------------- Slide Montage End
+	void CustomJump(); // Jump
+	
+	void PlaySlidMontage(); // Slide
+	// --------------------------------------------------------------------------- Controller Callable End
 	
 	
-	// Getter Start ------------
+	
+	// Getter Start --------------------------------------------------------------------
 	E_Gait GetGait() const { return ECurrentGait; }
 	
 	bool GetJustLanded() const { return bJustLanded; }
@@ -177,7 +193,8 @@ public:
 	bool GetIsWallRun() const {return bWallRun; }
 
 	E_WallRunState GetWallRunState() const { return WallRunState; }
-	// ------------- Getter End
+	// -------------------------------------------------------------------- Getter End
+
 	
 //Weapon
 private:

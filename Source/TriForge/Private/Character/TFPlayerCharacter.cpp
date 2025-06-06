@@ -3,8 +3,6 @@
 
 #include "Character/TFPlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Character/TFAnimInstance.h"
 #include "Sound/SoundWave.h"
 #include "Components/AudioComponent.h"
 #include "Camera/CameraComponent.h"
@@ -17,8 +15,6 @@
 #include "Curves/CurveFloat.h"
 #include "Engine/DamageEvents.h"
 #include "Game/TFGameMode.h"
-#include "HUD/TFHUD.h"
-#include "HUD/UI/PlayerHealthBar.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TriForge/TriForge.h"
@@ -83,14 +79,6 @@ void ATFPlayerCharacter::Tick(float DeltaTime)
 	{
 		if (WallRunState == E_WallRunState::None)  // 현재 벽타기를 하고 있지 않다면 벽타기 체크 하기 (벽타기 중에 체크하면 계속해서 현재 타고있는 벽이 탐지되어서 튕기기 점프가 안됨)
 			CheckWallRun(); // 벽 감지 로직 실행
-		
-		if (GetLastMovementInputVector().IsNearlyZero()) // (슬라이딩) 점프 관련 -> 슬라이딩 점프 혹은 기본 점프 시 방향키 떼면 속도 감소
-		{
-			FVector Velocity = GetCharacterMovement()->Velocity;
-			FVector Horizontal = FVector(Velocity.X, Velocity.Y, 0.f);
-			FVector Slowed = FMath::VInterpTo(Horizontal, FVector::ZeroVector, DeltaTime, 2.0f);
-			GetCharacterMovement()->Velocity = FVector(Slowed.X, Slowed.Y, Velocity.Z);
-		}
 	}
 
 	const float KillZ = -1000.f; // Kill 되는 높이
@@ -140,13 +128,14 @@ void ATFPlayerCharacter::BeginPlay()
 }
 
 
-// Update Movement Start -----------------------------
+// Update Movement Start ------------------------------------------------------------------------------------------------------
 // Gait 값을 업데이트하고 이를 사용하여 캐릭터 이동 컴포넌트의 최대 이동 속도를 설정하는 데 사용
 void ATFPlayerCharacter::GetDesiredGait()
 {
 	if (bSprinting && !bIsAttacking)
 	{
-		ECurrentGait = E_Gait::Sprint;
+		if (bIsAttacking == false) ECurrentGait = E_Gait::Sprint;
+		else if (bIsAttacking == true) ECurrentGait = E_Gait::Walk;
 	}
 	else
 	{
@@ -157,8 +146,7 @@ void ATFPlayerCharacter::GetDesiredGait()
 	}
 }
 
-// 이동 방향에 따라 다른 속도로 설정 (뒤로 걸으면 속도가 느림)
-float ATFPlayerCharacter::CalculateMaxSpeed(float& StrafeSpeedMap)
+float ATFPlayerCharacter::CalculateMaxSpeed(float& StrafeSpeedMap) // 이동 방향에 따라 다른 속도로 설정 (뒤로 걸으면 속도가 느림)
 {
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	float MovementDirection = UKismetAnimationLibrary::CalculateDirection(MovementComponent->Velocity, GetActorRotation());
@@ -194,13 +182,12 @@ void ATFPlayerCharacter::UpdateMovement()
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 	MovementComponent->MaxWalkSpeed = CurrentSpeed;
 }
-//  ----------------------------- Update Movement End
+// ------------------------------------------------------------------------------------------------------ Update Movement End
 
 
-// Wall Run Start -------------------------------------
+// Wall Run Start -------------------------------------------------------------------------------------------
 void ATFPlayerCharacter::CheckWallRun()
 {
-	
 	const float TraceDistance = 60.f; // 벽 탐지 거리
 	const FVector ActorLocation = GetActorLocation();
 	const FVector RightVector = GetActorRightVector();
@@ -228,7 +215,7 @@ void ATFPlayerCharacter::CheckWallRun()
 		FVector Start = ActorLocation;
 		FVector End = Start + RightVector * TraceDistance;
 
-		// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.1f, 0, 2.0f);
+		// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.1f, 0, 2.0f); // 디버깅 라인
 
 		bRightHit = GetWorld()->LineTraceSingleByChannel(
 			HitRight, Start, End, ECC_Visibility, Params
@@ -249,28 +236,20 @@ void ATFPlayerCharacter::CheckWallRun()
 
 	if (bLeftHit) // 왼쪽 벽 탐지 성공 시
 	{
-		// WallRunState = EWallRunState::LeftWall;
-		
 		// 디버깅 코드
 		// if (GEngine)
 		// {
 		// 	GEngine->AddOnScreenDebugMessage(101, 1.5f, FColor::Cyan, FString::Printf(TEXT("WallRunState = %s"), *UEnum::GetValueAsString(WallRunState)));
 		// }
-		
-		// StartWallRun(HitLeft.ImpactNormal);
 		StartWallRun(HitLeft.ImpactNormal, E_WallRunState::LeftWall);
 	} 
 	else if (bRightHit)  // 오른쪽 벽 탐지 성공 시
 	{
-		// WallRunState = EWallRunState::RightWall;
-		
 		// 디버깅 코드
 		// if (GEngine)
 		// {
 		// 	GEngine->AddOnScreenDebugMessage(100, 1.5f, FColor::Cyan, FString::Printf(TEXT("WallRunState = %s"), *UEnum::GetValueAsString(WallRunState)));
 		// }
-		
-		// StartWallRun(HitRight.ImpactNormal);
 		StartWallRun(HitRight.ImpactNormal, E_WallRunState::RightWall);
 	}
 }
@@ -279,7 +258,7 @@ void ATFPlayerCharacter::StartWallRun(const FVector& WallNormal, E_WallRunState 
 	bWallRun = true;
 	WallRunState = NewState;
 
-	GetCharacterMovement()->GravityScale = 0.f;
+	GetCharacterMovement()->GravityScale = 0.4f; // 서서히 떨어지게 
 
 	FVector WallForward;
 	if (WallRunState == E_WallRunState::LeftWall)
@@ -297,91 +276,65 @@ void ATFPlayerCharacter::StartWallRun(const FVector& WallNormal, E_WallRunState 
 	GetWorldTimerManager().SetTimer(WallRunTimerHandle, this, &ATFPlayerCharacter::StopWallRun, 0.5f, false);
 }
 
-//
-// void ATFPlayerCharacter::StartWallRun( const FVector& WallNormal)
-// {
-// 	GetCharacterMovement()->GravityScale = 0.f; // 중력 제거
-// 	
-// 	FVector WallForward;
-//
-// 	if (WallRunState == EWallRunState::LeftWall)
-// 	{
-// 		WallForward = FVector::CrossProduct(WallNormal, FVector::UpVector); // 벽 오른쪽 방향
-// 	}
-// 	else if (WallRunState == EWallRunState::RightWall)
-// 	{
-// 		WallForward = FVector::CrossProduct(FVector::UpVector, WallNormal); // 벽 왼쪽 방향
-// 	}
-//
-// 	WallForward.Normalize();
-// 	GetCharacterMovement()->Velocity = WallForward * 600.f; // 벽따라 앞으로 전진
-//
-// 	// 타이머로 벽 끝나면 자동 해제
-// 	// 0.5초 내에 점프를 눌러야 날아감 (0.1로 줄이면 벽타기 중 점프가 너무 어려워짐)
-// 	GetWorldTimerManager().SetTimer(WallRunTimerHandle, this, &ATFPlayerCharacter::StopWallRun, 0.5f, false);
-// }
-
 void ATFPlayerCharacter::StopWallRun()
 {
 	bWallRun = false;
 	WallRunState = E_WallRunState::None; // 벽타기 상태 None으로 변경
 	GetCharacterMovement()->GravityScale = 1.f; // 중력 복원
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("StopWallRun called"));
 }
-//  ------------------------------------- Wall Run End
+// ------------------------------------------------------------------------------------------- Wall Run End
 
 
-// Jump an Lande Start -------------------------
-// ChooserTable에서 사용할 데이터를 계산하기 위함
-// TFAnimInstance Class에서 JustLandedLight, JustLandedHeavy 함수에서 bJustLanded 데이터를 사용함
+// Jump Start -------------------------------------------------------------------------------
 void ATFPlayerCharacter::CustomJump()
 {
-	// 벽타기 중 점프 시
+	if (IsLocallyControlled())
+	{
+		Jump(); // 로컬에서도 실행 → 애님 상태 변경 유도
+		ServerCustomJump(); // 서버에서 실제 점프 로직 처리
+	}
+}
+
+void ATFPlayerCharacter::ServerCustomJump_Implementation()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	
+	if (bSliding) // 슬라이딩 중 점프 처리
+	{
+		bSliding = false;
+
+		MulticastStopSlideEffects(); // 애니메이션 정지 동기화
+		MulticastStopSlideSound(); // 사운드 정지 동기화
+		
+		Jump();
+		return;
+	}
 	// 내가 바라보고 있는 방향으로 점프
 	if (WallRunState != E_WallRunState::None)
 	{
 		// 내가 바라보는 방향 (카메라 기준)
 		FRotator ControlRotation = GetControlRotation();
 		FVector ForwardDir = ControlRotation.Vector(); // = GetForwardVector()
-
+	
 		// 튕겨나갈 방향: 전방 + 위쪽
 		FVector JumpDirection = ForwardDir + FVector::UpVector;
 		JumpDirection.Normalize();
-
+	
 		LaunchCharacter(JumpDirection * 900.f, true, true);
-
+	
 		// 디버깅 라인
 		// DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + JumpDirection * 300.0f, FColor::Red, false, 5.5f, 0, 2.0f);
-
+	
 		StopWallRun();
 	}
-	
-	// 슬라이딩 중 점프시
-	// 슬라이딩 종료 -> 점프 애니메이션 출력을 위함
-	if (bSliding)
-	{
-		// 현재 재생 중인 몽타주 확인
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance && AnimInstance->Montage_IsPlaying(SlideMontage))
-		{
-			// 슬라이딩 몽타주 중지
-			AnimInstance->Montage_Stop(0.1f, SlideMontage);
-		}
-		
-		bSliding = false;
-
-		MulticastStopSlideSound(); // 슬라이디 사운드 정지
-		
-		Jump();
-	}
-
-	// 기본 점프 시
-	else
-	{
-		Jump();
-	}
+	Jump();
 }
+// ------------------------------------------------------------------------------- Jump End
 
+
+// Land Start ---------------------------------------------------------------------------------
+// ChooserTable에서 사용할 데이터를 계산하기 위함
+// TFAnimInstance Class에서 JustLandedLight, JustLandedHeavy 함수에서 bJustLanded 데이터를 사용함
 void ATFPlayerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
@@ -407,25 +360,12 @@ void ATFPlayerCharacter::OnDelayComplete()
 	// 0.3초 후에 Just Landed를 false로 설정
 	bJustLanded = false;
 }
-// ------------------------- Jump an Lande End
+// --------------------------------------------------------------------------------- Land End
 
 
-// Walk and Sprint Start --------------------------
+// Walk and Sprint Start -------------------------------------------------------------------
 void ATFPlayerCharacter::UpdateSprintState(bool bSprint)
 {
-
-	/*	if (HasAuthority()) // 나는 서버이고, 내 캐릭터니까 바로 상태 갱신
-		 {
-			bSprinting = bSprint;
-			bWalking = !bSprint;
-		}
-		else if (IsLocallyControlled()) // 클라이언트일 경우 → 서버에 요청
-		{
-			/ServerUpdateSprintState(bSprint);
-		}
-		=> 서버인 플레이어가 없는 데디게이트 서버일 때는 사용 X */
-
-
 	// 로컬 입력 받는 클라이언트에서만 서버에 요청하도록 함
 	// 일종의 안정 장치. (내가 내 캐릭터만 조작 할 수 있도록 함)
 	if (IsLocallyControlled())
@@ -446,17 +386,13 @@ void ATFPlayerCharacter::ServerUpdateSprintState_Implementation(bool bSprint)
 		bWalking = !bSprint;
 	}
 }
-// -------------------------- Walk and Sprint End
+// ------------------------------------------------------------------- Walk and Sprint End
 
 
-// Slide Montage Start -------------------
+// Slide Montage Start ------------------------------------------------------------------------
 void ATFPlayerCharacter::PlaySlidMontage()
 {
-	// 조건을 만족할 때만 서버에 요청
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
-	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
-
-	if (Velocity > 1.0f && IsLocallyControlled())
+	if (IsLocallyControlled())
 	{
 		ServerRequestSlide();
 	}
@@ -464,14 +400,13 @@ void ATFPlayerCharacter::PlaySlidMontage()
 
 void ATFPlayerCharacter::ServerRequestSlide_Implementation()
 {
-	// Velocity 체크 - 서버에서도 안전하게 조건 확인
-	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement(); // Velocity 체크 - 서버에서도 안전하게 조건 확인
 	float Velocity = UKismetMathLibrary::VSize(MovementComponent->Velocity);
 
 	if (Velocity > 1.0f)
 	{
-		bSliding = true; // 슬라이딩 상태 시작
-		MulticastPlaySlideMontage();
+		bSliding = true;
+		MulticastPlaySlideMontage(); // 슬라이딩 시작
 	}
 }
 
@@ -479,37 +414,61 @@ void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
 {
 	if (SlideMontage && GetMesh())
 	{
-		
 		float Duration = PlayAnimMontage(SlideMontage);
-
-		// 사운드 시작
-		MulticastStartSlideSound();
 		
-		// 슬라이딩 종료 예약
-		FTimerHandle SlideEndTimerHandle;
+		MulticastStartSlideSound(); // 사운드 시작
+		
+		FTimerHandle SlideEndTimerHandle;	// 슬라이딩 종료 예약
 		GetWorldTimerManager().SetTimer(SlideEndTimerHandle, [this]()
 		{
 			bSliding = false;
 			
-			// 슬라이딩 사운드 정지
-			MulticastStopSlideSound();
+			MulticastStopSlideSound(); // 슬라이딩 사운드 정지
 		}, Duration, false);
 	}
 }
+
 void ATFPlayerCharacter::MulticastStartSlideSound_Implementation() // 슬라이딩 사운드 시작
 {
-	SlideAudioComponent = UGameplayStatics::SpawnSoundAttached(
-		SlideSoundWave,
-		GetRootComponent(),
-		NAME_None,
-		FVector::ZeroVector,
-		EAttachLocation::KeepRelativeOffset,
-		false
-	);
-
-	if (SlideAudioComponent)
+	if (SlideSoundWave)
 	{
-		SlideAudioComponent->bAutoDestroy = false;
+		if (SlideAudioComponent && SlideAudioComponent->IsPlaying()) // 이전 사운드 있으면 정지
+		{
+			SlideAudioComponent->Stop();
+			SlideAudioComponent = nullptr;
+		}
+		
+		SlideAudioComponent = UGameplayStatics::SpawnSoundAttached(
+			SlideSoundWave,              // 사운드
+			GetRootComponent(),          // 캐릭터 루트에 붙임
+			NAME_None,                   // 소켓 없음
+			FVector::ZeroVector,         // 위치 오프셋 없음
+			EAttachLocation::KeepRelativeOffset,
+			true,                        // 루트가 사라지면 사운드도 종료
+			1.0f,                        // 볼륨
+			1.0f,                        // 피치
+			0.f,                         // 시작 시간
+			SlideAttenuationSettings     // 거리 감쇠 적용
+		);
+
+		if (SlideAudioComponent)
+		{
+			SlideAudioComponent->bAutoDestroy = false;
+		}
+	}
+}
+
+void ATFPlayerCharacter::MulticastStopSlideEffects_Implementation() // 슬라이딩 애니메이션 정지
+{
+	if (SlideMontage && GetMesh())
+	{
+		bSliding = false;
+		
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && AnimInstance->Montage_IsPlaying(SlideMontage))
+		{
+			AnimInstance->Montage_Stop(0.1f, SlideMontage);
+		}
 	}
 }
 
@@ -518,9 +477,10 @@ void ATFPlayerCharacter::MulticastStopSlideSound_Implementation() // 슬라이�
 	if (SlideAudioComponent && SlideAudioComponent->IsPlaying())
 	{
 		SlideAudioComponent->Stop();
+		SlideAudioComponent = nullptr;
 	}
 }
-// -------------- Slide Montage End
+// ------------------------------------------------------------------------ Slide Montage End
 
 
 // 데미지 처리 함수
