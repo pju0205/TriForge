@@ -28,6 +28,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 15.f;
+
+	float HeadShotDamage;
 public:	
 	virtual void Tick(float DeltaTime) override;
 

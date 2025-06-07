@@ -33,6 +33,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	float Damage = 10.f;
 
+	float HeadShotDamage;
+
 	UFUNCTION()
 	void BeginTrace();
 	UFUNCTION()

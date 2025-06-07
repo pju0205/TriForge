@@ -15,6 +15,14 @@ ATFHitScanWeapon::ATFHitScanWeapon()
 {
 	// 임시로 타입 지정하여 캐릭터 애니메이션 보기
 	SetWeaponType(EWeaponType::Ewt_Pistol);
+	
+}
+
+void ATFHitScanWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HeadShotDamage = Damage * 1.5f;
 }
 
 void ATFHitScanWeapon::Attack()
@@ -79,9 +87,11 @@ void ATFHitScanWeapon::ServerAttack_Implementation(const FHitResult& Hit)
 		ATFPlayerCharacter* DamagedCharacter = Cast<ATFPlayerCharacter>(Hit.GetActor());
 		if (DamagedCharacter)
 		{
+			const float CalculatedDamage = Hit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+			
 			UGameplayStatics::ApplyDamage(
 				DamagedCharacter,
-				Damage,
+				CalculatedDamage,
 				InstigatorController,
 				this,
 				UDamageType::StaticClass()
@@ -163,8 +173,8 @@ void ATFHitScanWeapon::BeamEffects_Implementation(const FHitResult& Hit)
 
 FVector ATFHitScanWeapon::TraceWithScatter(const FVector& TraceStart, const FVector& HitTarget)
 {
-	FVector ToTargetNormailized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormailized * DistanceToSphere;
+	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
 	FVector RandVector = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
 	FVector EndLocation = SphereCenter + RandVector;
 	FVector ToEndLocation = EndLocation - TraceStart;

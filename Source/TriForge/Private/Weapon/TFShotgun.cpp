@@ -23,7 +23,10 @@ void ATFShotgun::Attack()
 		FVector Start = SocketTransform.GetLocation();
 		FVector End;
 
+		// 대미지 계산을 위해 TMap<ATFPlayerCharacter*, uint32> HitMap을 이용
+		// 탄 하나당 ApplyDamage가 아닌 맞은 탄의 개수를 세어 Damage * Count로 Total Damage 계산
 		HitMap.Empty();
+		HeadShotHitMap.Empty();
 		
 		if (HitResult.bBlockingHit)
 		{
@@ -40,7 +43,7 @@ void ATFShotgun::Attack()
 	ServerAttackEffects();
 }
 
-void ATFShotgun::ServerShotgunAttack_Implementation(ATFPlayerCharacter* DamagedCharacter, uint32 Times)
+void ATFShotgun::ServerShotgunAttack_Implementation(ATFPlayerCharacter* DamagedCharacter, float TotalDamage)
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
@@ -49,7 +52,7 @@ void ATFShotgun::ServerShotgunAttack_Implementation(ATFPlayerCharacter* DamagedC
 	{
 		UGameplayStatics::ApplyDamage(
 			DamagedCharacter,
-			Damage * Times,
+			TotalDamage,
 			InstigatorController,
 			this,
 			UDamageType::StaticClass()
@@ -103,25 +106,51 @@ void ATFShotgun::CountingHit(const FVector& Start, const FVector& End)
 		ATFPlayerCharacter* TFPlayerCharacter = Cast<ATFPlayerCharacter>(ShotgunHit.GetActor());
 		if (TFPlayerCharacter)
 		{
-			if (HitMap.Contains(TFPlayerCharacter))
+			const bool bHeadShot = ShotgunHit.BoneName.ToString() == FString("head");
+			// HeadShot이면 HeadShotHitMap에 아니면 HitMap에 저장
+			if (bHeadShot)
 			{
-				HitMap[TFPlayerCharacter]++;
+				if (HeadShotHitMap.Contains(TFPlayerCharacter)) HeadShotHitMap[TFPlayerCharacter]++;
+				else HeadShotHitMap.Emplace(TFPlayerCharacter, 1);
 			}
 			else
 			{
-				HitMap.Emplace(TFPlayerCharacter, 1);
+				if (HitMap.Contains(TFPlayerCharacter)) HitMap[TFPlayerCharacter]++;
+				else HitMap.Emplace(TFPlayerCharacter, 1);
 			}
+			
 		}
 	}
-	
+
+	// 기존에는 어떤 캐릭터가 몇번 대미지를 받아야하는지 ServerShotgunAttack()으로 보냈다면
+	// 변경 후에는 어떤 캐릭터가 대미지를 총합 얼마를 줘야 하는지 미리 계산해서 보낸다.
+	TMap<ATFPlayerCharacter*, float> DamageMap;
 	for (auto Pair : HitMap)
 	{
 		if (Pair.Key)
 		{
-			ServerShotgunAttack(Pair.Key, Pair.Value);
+			DamageMap.Emplace(Pair.Key, Pair.Value * Damage);
+		}
+	}
+	
+	for (auto HeadShotPair : HeadShotHitMap)
+	{
+		if (HeadShotPair.Key)
+		{
+			// DamageMap에 캐릭터가 중복이면 해당 인덱스의 값 += 헤드샷 대미지 * 맞은 횟수 
+			if (DamageMap.Contains(HeadShotPair.Key)) DamageMap[HeadShotPair.Key] += HeadShotPair.Value* HeadShotDamage;
+			else DamageMap.Emplace(HeadShotPair.Key, HeadShotPair.Value * HeadShotDamage);
 			
+		}
+	}
+	for (auto DamagePair : DamageMap)
+	{
+		if (DamagePair.Key)
+		{
+			ServerShotgunAttack(DamagePair.Key, DamagePair.Value);
 		}
 	}
 	
 	HitMap.Empty();
+	HeadShotHitMap.Empty();
 }

@@ -77,7 +77,7 @@ void UTFWeaponComponent::SetAiming(bool bIsAiming)
 	if (PlayerCharacter == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
-	if (bIsAiming)
+	if (bIsAiming && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
 	{
 		EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
 		PlayerCharacter->GetMesh()->SetVisibility(false);

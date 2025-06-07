@@ -19,7 +19,7 @@ public:
 	virtual void Attack() override;
 
 	UFUNCTION(Server, Reliable)
-	void ServerShotgunAttack(ATFPlayerCharacter* DamagedCharacter, uint32 Times);
+	void ServerShotgunAttack(ATFPlayerCharacter* DamagedCharacter, float TotalDamage);
 
 	UFUNCTION(Server, Reliable)
 	void ServerAttackEffects();
@@ -33,10 +33,14 @@ public:
 private:
 	// 산탄으로 나갈 탄알 개수
 	UPROPERTY(EditAnywhere, Category = "Settings")
-	uint32 NumberOfFrangible = 10;
+	uint32 NumberOfFrangible = 35;
 	
 	void CountingHit(const FVector& Start, const FVector& End);
 
+	UPROPERTY()
 	TMap<ATFPlayerCharacter* , uint32> HitMap;
+
+	UPROPERTY()
+	TMap<ATFPlayerCharacter* , uint32> HeadShotHitMap;
 
 };

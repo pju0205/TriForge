@@ -30,6 +30,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	float Damage = 20.f;
+
+	float HeadShotDamage;
 	
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	UParticleSystem* ImpactParticles;
@@ -46,6 +48,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	USoundCue* ImpactSound;
 protected:
+	virtual void BeginPlay() override;
+	
 	FVector TraceWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 
 private:

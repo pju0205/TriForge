@@ -27,7 +27,8 @@ ATFMeleeWeapon::ATFMeleeWeapon()
 void ATFMeleeWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	HeadShotDamage = Damage * 1.5f;
 }
 
 void ATFMeleeWeapon::Attack()
@@ -113,7 +114,8 @@ void ATFMeleeWeapon::ServerAttack_Implementation(const FHitResult& HitResult)
 				AController* OwnerController = OwnerCharacter->Controller;
 				if (OwnerController)
 				{
-					UGameplayStatics::ApplyDamage(DamagedActor, Damage, OwnerController, this, UDamageType::StaticClass());
+					float CalculatedDamage = HitResult.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+					UGameplayStatics::ApplyDamage(DamagedActor, CalculatedDamage, OwnerController, this, UDamageType::StaticClass());
 				}
 			}
 		}
