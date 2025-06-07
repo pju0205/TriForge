@@ -55,10 +55,10 @@ struct FChooserTableIn
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bisStarting;
+	bool bisStarting = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bisPivoting;
+	bool bisPivoting = false;
 };
 
 
