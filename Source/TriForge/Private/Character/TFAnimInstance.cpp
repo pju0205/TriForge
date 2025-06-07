@@ -283,66 +283,65 @@ void UTFAnimInstance::GenerateTrajectory(float DeltaTime)
 		FutureVelocity = (FirstOutTrajectorySample.Position - SecondsOutTrajectorySample.Position) * 10.0f;
 	}
 }
-
 void UTFAnimInstance::UpdateStates()
 {
-	if (TFCharacterMovement)
+	if (TFCharacterMovement && TFPlayerCharacter)
 	{
-		
 		MovementModeLastFrame = MovementMode;
-		EMovementMode CurrentMovementMode = TFCharacterMovement->MovementMode;
-		switch(CurrentMovementMode)
+		MovementStateLastFrame = MovementState;
+		RotationModeLastFrame = RotationMode;
+		GaitLastFrame = Gait;
+
+		WallRunState = TFPlayerCharacter->GetWallRunState();
+		bWallRun = TFPlayerCharacter->GetIsWallRun();
+		bSliding = TFPlayerCharacter->GetIsSliding();
+
+		// ✅ 벽타기 중이면 강제로 MovementMode / State / Gait 고정
+		if (WallRunState != E_WallRunState::None)
 		{
-		case EMovementMode::MOVE_None:
-		case EMovementMode::MOVE_Walking:
-		case EMovementMode::MOVE_NavWalking:
-				MovementMode = E_MovementMode::OnGorund;
-			break;
-		
-		case EMovementMode::MOVE_Falling:
-			if (WallRunState != E_WallRunState::None) MovementMode = E_MovementMode::OnGorund;
-			else if (WallRunState == E_WallRunState::None) MovementMode = E_MovementMode::InAir;
-			break;
-		
-		default:
-			break;
+			MovementMode = E_MovementMode::OnGorund; // WallRun은 벽에 붙어있으므로 InAir 아님
+			MovementState = E_MovementState::Moving;
+			Gait = E_Gait::Walk; // 또는 별도 Gait 만들기 (예: WallRun)
+		}
+		else
+		{
+			// 기본 MovementMode 처리
+			switch (TFCharacterMovement->MovementMode)
+			{
+				case EMovementMode::MOVE_None:
+				case EMovementMode::MOVE_Walking:
+				case EMovementMode::MOVE_NavWalking:
+					MovementMode = E_MovementMode::OnGorund;
+					break;
+				case EMovementMode::MOVE_Falling:
+					MovementMode = E_MovementMode::InAir;
+					break;
+				default:
+					MovementMode = E_MovementMode::OnGorund;
+					break;
+			}
+
+			// 기본 MovementState 처리
+			MovementState = isMoving() ? E_MovementState::Moving : E_MovementState::Idle;
+
+			// 기본 Gait 처리
+			Gait = TFPlayerCharacter->GetGait();
 		}
 
-		RotationModeLastFrame = RotationMode;
+		// 회전 방식 처리
 		if (TFCharacterMovement->bOrientRotationToMovement)
 		{
 			RotationMode = E_RotationMode::OrientToMovement;
 		}
-		else if (!TFCharacterMovement->bOrientRotationToMovement)
+		else
 		{
 			RotationMode = E_RotationMode::Strafe;
 		}
-	
-		MovementStateLastFrame = MovementState;
-		bool bisMoving = isMoving();
-		if (bisMoving)
-		{
-			MovementState = E_MovementState::Moving;
-		}
-		else
-		{
-			MovementState = E_MovementState::Idle;
-		}
 
-		GaitLastFrame = Gait;
-		if (TFPlayerCharacter->GetGait() == E_Gait::Walk)
+		// 무기 타입 처리
+		if (bWeaponEquipped && EquippedWeapon)
 		{
-			Gait = E_Gait::Walk;
-		}
-		else if (TFPlayerCharacter->GetGait() == E_Gait::Sprint)
-		{
-			Gait = E_Gait::Sprint;
-		}
-		
-		if (bWeaponEquipped)
-		{
-			EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-			WeaponTypeState = CheckWeaponType(WeaponType);
+			WeaponTypeState = CheckWeaponType(EquippedWeapon->GetWeaponType());
 		}
 		else
 		{
