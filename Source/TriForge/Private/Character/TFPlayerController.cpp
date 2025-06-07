@@ -32,7 +32,7 @@ ATFPlayerController::ATFPlayerController()
 
 void ATFPlayerController::BeginPlay()
 { 
-	Super::BeginPlay(); 
+	Super::BeginPlay();
 	 
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
 	if (Subsystem)

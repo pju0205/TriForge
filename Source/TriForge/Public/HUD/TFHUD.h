@@ -38,6 +38,9 @@ public:
 	UPROPERTY()
 	UTFOverlay* CharacterOverlay;
 
+	UFUNCTION()
+	UTFOverlay* GetCharacterOverlay() const { return CharacterOverlay; }
+
 	void AddCharacterOverlay();
 
 protected:

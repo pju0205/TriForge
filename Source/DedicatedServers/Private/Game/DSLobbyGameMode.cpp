@@ -258,7 +258,7 @@ void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
                 PC->Client_SetToGameMode();
             }
         }
-        TrySeamlessTravel(MapToTravelTo);       // 전투 맵으로 이동
+        NextRandomTravelMap();       // 전투 맵으로 이동
     }
 }
 

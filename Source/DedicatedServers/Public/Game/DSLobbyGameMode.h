@@ -43,7 +43,7 @@ protected:
 	// 최소 인원 설정
 	UPROPERTY(EditDefaultsOnly)
 	int32 MinPlayers;
-
+	
 	// 이동 할 맵 설정
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> MapToTravelTo;

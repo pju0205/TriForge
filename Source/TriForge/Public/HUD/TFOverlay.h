@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TFOverlay.generated.h"
 
+class UBloodEffect;
 class UImage;
 class UChatting;
 class UPlayerHealthBar;
@@ -21,7 +22,7 @@ class TRIFORGE_API UTFOverlay : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(meta =(BindWidget))
+	UPROPERTY(meta = (BindWidget))
 	UPlayerHealthBar* PlayerHealthBar;
 
 	UPROPERTY(meta = (BindWidget))
@@ -38,4 +39,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UChatting* ChatPanel;
+
+	UPROPERTY(meta = (BindWidget))
+	UBloodEffect* BloodEffect;
 };

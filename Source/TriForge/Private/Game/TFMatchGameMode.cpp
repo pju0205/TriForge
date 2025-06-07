@@ -25,14 +25,6 @@ void ATFMatchGameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ATFMatchGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// Map 랜덤성 부여를 위한 값
-	MapRandomStream.Initialize(FDateTime::Now().GetMillisecond());
-}
-
 void ATFMatchGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
@@ -193,46 +185,6 @@ void ATFMatchGameMode::PrepareNextRound()
 void ATFMatchGameMode::PlayerEliminated()
 {
 	
-}
-
-void ATFMatchGameMode::NextRandomTravelMap()
-{
-	if (CombatMaps.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CombatMaps 배열이 비어있음."));
-		return;
-	}
-
-	// 사용 가능한 맵만 필터링
-	TArray<TSoftObjectPtr<UWorld>> AvailableMaps;
-	for (const TSoftObjectPtr<UWorld>& Map : CombatMaps)
-	{
-		if (!UsedCombatMapPaths.Contains(Map.ToSoftObjectPath()))
-		{
-			AvailableMaps.Add(Map);
-		}
-	}
-	
-	// 모든 맵이 사용되었으면 초기화 (루프 가능)
-	if (AvailableMaps.Num() == 0)
-	{
-		UE_LOG(LogTemp, Display, TEXT("모든 CombatMap을 사용했으므로 목록 초기화"));
-		UsedCombatMapPaths.Empty();
-		AvailableMaps = CombatMaps;
-	}
-
-	// 랜덤 선택
-	int32 RandomIndex = MapRandomStream.RandRange(0, AvailableMaps.Num() - 1);
-	TSoftObjectPtr<UWorld> SelectedMap = AvailableMaps[RandomIndex];
-
-	if (SelectedMap.IsValid() || SelectedMap.ToSoftObjectPath().IsValid())
-	{
-		UsedCombatMapPaths.Add(SelectedMap.ToSoftObjectPath());
-
-		// 맵 이동
-		TrySeamlessTravel(SelectedMap);
-		UE_LOG(LogTemp, Display, TEXT("Map Index: %d, Path: %s"), RandomIndex, *SelectedMap.ToString());
-	}
 }
 
 // Map상에 존재하는 Weapon 삭제하는 함수

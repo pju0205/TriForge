@@ -15,6 +15,8 @@
 #include "Curves/CurveFloat.h"
 #include "Engine/DamageEvents.h"
 #include "Game/TFGameMode.h"
+#include "HUD/TFOverlay.h"
+#include "HUD/UI/BloodEffect.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "TriForge/TriForge.h"
@@ -426,14 +428,25 @@ void ATFPlayerCharacter::MulticastPlaySlideMontage_Implementation()
 		
 		MulticastStartSlideSound(); // 사운드 시작
 		
-		FTimerHandle SlideEndTimerHandle;	// 슬라이딩 종료 예약
-		GetWorldTimerManager().SetTimer(SlideEndTimerHandle, [this]()
-		{
-			bSliding = false;
-			
-			MulticastStopSlideSound(); // 슬라이딩 사운드 정지
-		}, Duration, false);
+		GetWorldTimerManager().ClearTimer(SlideEndTimerHandle);
+		
+		// 안전하게 멤버 함수 바인딩
+		GetWorldTimerManager().SetTimer(
+			SlideEndTimerHandle,
+			this,
+			&ATFPlayerCharacter::OnSlideMontageEnded,		// 슬라이딩 종료 및 Sound 관련 함수
+			Duration,
+			false
+		);
 	}
+}
+
+void ATFPlayerCharacter::OnSlideMontageEnded()
+{
+	if (!IsValid(this)) return;
+
+	bSliding = false;
+	MulticastStopSlideSound();
 }
 
 void ATFPlayerCharacter::MulticastStartSlideSound_Implementation() // 슬라이딩 사운드 시작
@@ -482,10 +495,15 @@ void ATFPlayerCharacter::MulticastStopSlideEffects_Implementation() // 슬라이
 
 void ATFPlayerCharacter::MulticastStopSlideSound_Implementation() // 슬라이딩 사운드 정지
 {
-	if (SlideAudioComponent && SlideAudioComponent->IsPlaying())
+	//  IsValidLowLevelFast = 포인터가 실제 유효 메모리를 가리키는지 검사
+	//  IsRegistered = 씬 컴포넌트로서 등록된 상태인지 확인
+	if (SlideAudioComponent && SlideAudioComponent->IsValidLowLevelFast() && SlideAudioComponent->IsRegistered())
 	{
-		SlideAudioComponent->Stop();
-		SlideAudioComponent = nullptr;
+		if (SlideAudioComponent->IsPlaying())
+		{
+			SlideAudioComponent->Stop();
+			SlideAudioComponent = nullptr;
+		}
 	}
 }
 // ------------------------------------------------------------------------ Slide Montage End
@@ -500,7 +518,28 @@ void ATFPlayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const
 
 	AActor* DamageInstigator = InstigatedBy ? InstigatedBy->GetPawn() : nullptr;
 
+	// DamageInstigator가 나 자신인지
+	if (DamageInstigator == this)
+	{
+		return; // 자신이 자신한테 가한 피해는 무시
+	}
+
 	HealthComponent->CalcDamage(Damage, DamageInstigator);
+	
+	if (HasAuthority())
+	{
+		ClientPlayDamageEffect();		// 서버에서 클라이언트에게 RPC 호출
+		
+		if (DamagedActor)
+		{
+			ATFPlayerCharacter* Victim = Cast<ATFPlayerCharacter>(DamagedActor);
+			if (Victim)
+			{
+				FVector VictimLocation = Victim->GetActorLocation();
+				Victim->MulticastPlayHitSound(VictimLocation);
+			}
+		}
+	}
 }
 
 void ATFPlayerCharacter::PostInitializeComponents()
@@ -721,4 +760,55 @@ void ATFPlayerCharacter::EnableRagdoll()
 	FName PelvisBone = TEXT("pelvis"); // 스켈레톤에 따라 다를 수 있음
 	FVector Impulse = FVector(0.f, 0.f, 0.f);
 	MeshComp->AddImpulseToAllBodiesBelow(Impulse, PelvisBone, true);
+}
+
+void ATFPlayerCharacter::MulticastPlayHitSound_Implementation(FVector Location)
+{
+	if (HitReactionSounds.Num() > 0)
+	{
+		int32 Index = FMath::RandRange(0, HitReactionSounds.Num() - 1);
+		USoundBase* SelectedSound = HitReactionSounds[Index];
+
+		if (SelectedSound)
+		{
+			UAudioComponent* AudioComp = UGameplayStatics::SpawnSoundAtLocation(
+				this,                  // WorldContext
+				SelectedSound,         // 사운드
+				Location,              // 재생할 위치
+				FRotator::ZeroRotator, // 방향
+				0.5f,                  // 볼륨
+				1.0f,                  // 피치
+				0.0f,                  // 시작 시간
+				SoundAttenuation	   // 거리 감쇠
+			);
+
+			// 선택적으로 Attenuation 설정 적용 (있다면)
+			if (AudioComp && SoundAttenuation)
+			{
+				AudioComp->AttenuationSettings = SoundAttenuation;
+			}
+		}
+	}
+}
+
+void ATFPlayerCharacter::ClientPlayDamageEffect_Implementation()
+{
+	PlayDamageEffect();
+}
+
+void ATFPlayerCharacter::PlayDamageEffect()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	// TFHUD로 캐스팅
+	ATFHUD* TFHUD = Cast<ATFHUD>(PC->GetHUD());
+	if (!TFHUD) return;
+
+	// TFHUD에서 Overlay 가져오기
+	UTFOverlay* Overlay = TFHUD->GetCharacterOverlay(); // GetCharacterOverlay()는 커스텀 함수여야 함
+	if (!Overlay || !Overlay->BloodEffect) return;
+
+	// BloodEffect 애니메이션 재생
+	Overlay->BloodEffect->PlayDamageAnimation();
 }

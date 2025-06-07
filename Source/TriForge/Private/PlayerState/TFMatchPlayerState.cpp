@@ -142,7 +142,10 @@ void ATFMatchPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ATFMatchPlayerState, MatchResults);
 	DOREPLIFETIME(ATFMatchPlayerState, RoundResults);
+	DOREPLIFETIME(ATFMatchPlayerState, MyMatchWins);
+	DOREPLIFETIME(ATFMatchPlayerState, OpponentMatchWins);
 }
 
 void ATFMatchPlayerState::OnRep_MatchResults(bool bWon)

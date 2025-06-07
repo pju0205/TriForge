@@ -32,7 +32,6 @@ void UTFPlayerHealthComponent::CalcDamage(float Amount, AActor* Instigator)
 	CurrentHealth = FMath::Clamp(CurrentHealth - Amount, 0.0f, MaxHealth);
 
 	UE_LOG(LogTemp, Warning, TEXT("CalcDamage called: OldHealth=%f, NewHealth=%f"), OldHealth, CurrentHealth);
-
 	
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 	

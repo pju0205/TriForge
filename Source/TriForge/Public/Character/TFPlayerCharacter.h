@@ -85,6 +85,9 @@ private:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastStopSlideSound();
+
+	FTimerHandle SlideEndTimerHandle;	// 서버에서 튕김 지역변수 타이머 만들면
+	void OnSlideMontageEnded();
 	// ------------------------------------------------- Slide Function End
 	
 	
@@ -264,9 +267,25 @@ public:
 	// 낙사 한번만 받도록 설정한 값
 	bool bIsFallingDamageApplied = false;
 
+	// 죽었을 때 카메라 관련
 	void SwitchToDeathCamera();
 	void ResetToFirstPersonCamera();
 private:
 	// 사망 시 Ragdoll 실행
 	void EnableRagdoll();
+
+	// 맞을 때 소리 배열
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	TArray<USoundBase*> HitReactionSounds;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundAttenuation* SoundAttenuation;
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayHitSound(FVector Location);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientPlayDamageEffect();
+
+	void PlayDamageEffect();
 };
