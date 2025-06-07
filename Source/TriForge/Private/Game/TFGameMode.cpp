@@ -44,6 +44,7 @@ void ATFGameMode::PlayerEliminated()
 				if (TFPlayerController)
 				{
 					TFPlayerController->ClientResetAmmo();
+					TFPlayerController->ClientResetWeaponImage();
 				}
 
 				// Reset, Destroy 이전에 있어야함.

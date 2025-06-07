@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Character/Component/TFPlayerHealthComponent.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Game/DSGameState.h"
 #include "Game/TFGameMode.h"
@@ -21,6 +22,7 @@
 #include "Types/TFTypes.h"
 #include "UI/Lobby/LobbyHUD.h"
 #include "UI/Lobby/LobbyOverlay.h"
+#include "Weapon/TFWeaponComponent.h"
 
 ATFPlayerController::ATFPlayerController()
 {
@@ -479,6 +481,34 @@ void ATFPlayerController::ClientResetAmmo_Implementation()
 	}
 }
 
+void ATFPlayerController::SetHUDWeaponImage(UTexture2D* WeaponImage)
+{
+	TFHUD = Cast<ATFHUD>(GetHUD());
+
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->WeaponImage;
+
+	if (bTFHUDValid)
+	{
+		TFHUD->CharacterOverlay->WeaponImage->SetBrushFromTexture(WeaponImage);
+	}
+}
+
+void ATFPlayerController::ClientResetWeaponImage_Implementation()
+{
+	TFHUD = Cast<ATFHUD>(GetHUD());
+
+	bool bTFHUDValid = TFHUD && TFHUD->CharacterOverlay && TFHUD->CharacterOverlay->WeaponImage;
+
+	if (bTFHUDValid)
+	{
+		ATFPlayerCharacter* PlayerCharacter = Cast<ATFPlayerCharacter>(GetCharacter());
+		if (PlayerCharacter)
+		{
+			UTexture2D* WeaponImage =  PlayerCharacter->GetWeaponComponent()->GetDefaultWeaponImage();
+			TFHUD->CharacterOverlay->WeaponImage->SetBrushFromTexture(WeaponImage);
+		}
+	}
+}
 
 // Map 이동해도 유지할 Actor 넣는 함수
 void ATFPlayerController::GetSeamlessTravelActorList(bool bToEntry, TArray<AActor*>& ActorList)

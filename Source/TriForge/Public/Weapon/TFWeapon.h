@@ -65,6 +65,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Crosshairs")
 	UTexture2D* CrosshairsBottom;
 
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	UTexture2D* WeaponIcon;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -145,6 +148,8 @@ public:
 	void PlayDropSound();
 	
 	void ShowPickupWidget(bool bShow);
+
+	void ShowWeaponIcon();
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WeaponProperties")
 	USkeletalMeshComponent* WeaponMesh;

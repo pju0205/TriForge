@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "TFOverlay.generated.h"
 
+class UImage;
 class UChatting;
 class UPlayerHealthBar;
 class UMatchResultPage;
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* AmmoAmount;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* WeaponImage;
 
 	UPROPERTY(meta = (BindWidget))
 	URoundIndicator* RoundIndicator;

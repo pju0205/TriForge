@@ -77,6 +77,16 @@ void UTFWeaponComponent::SetAiming(bool bIsAiming)
 	if (PlayerCharacter == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
+	if (bIsAiming)
+	{
+		EquippedWeapon->GetWeaponMesh()->SetVisibility(false);
+		PlayerCharacter->GetMesh()->SetVisibility(false);
+	}
+	else
+	{
+		EquippedWeapon->GetWeaponMesh()->SetVisibility(true);
+		PlayerCharacter->GetMesh()->SetVisibility(true);
+	}
 	if (PlayerCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::Ewt_SniperRifle)
 	{
 		PlayerCharacter->ShowSniperScope(bIsAiming);
@@ -122,22 +132,6 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 		EquippedWeapon->Dropped();
 
 		InitializeVariables();
-		/*bCanAttack = true;
-		CurrentFOV = DefaultFOV;
-		if (bAiming == true)
-		{
-			SetAiming(false);
-		}
-		
-		if (PlayerCharacter && PlayerCharacter->GetCamera())
-		{
-			PlayerCharacter->GetCamera()->SetFieldOfView(DefaultFOV);
-		}
-		
-		if (PlayerController)
-		{
-			PlayerController->SetHUDAmmo(0);
-		}*/
 		
 		EquippedWeapon = nullptr;
 	}
@@ -157,7 +151,9 @@ void UTFWeaponComponent::EquipWeapon(ATFWeapon* WeaponToEquip)
 	}
 	
 	EquippedWeapon->SetOwner(PlayerCharacter);
-
+	
+	EquippedWeapon->ShowWeaponIcon();
+	
 	// 만약 무기가 원거리 무기라면 HUD에 잔탄 수 보이게 하기
 	if (EquippedWeapon->GetWeaponClass() == EWeaponClass::Ewc_RangedWeapon)
 	{
@@ -347,6 +343,7 @@ void UTFWeaponComponent::InitializeVariables()
 	if (PlayerController)
 	{
 		PlayerController->SetHUDAmmo(0);
+		PlayerController->SetHUDWeaponImage(DefaultWeaponImage);
 	}
 }
 

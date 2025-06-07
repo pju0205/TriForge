@@ -108,6 +108,12 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientResetAmmo();
 
+	UFUNCTION()
+	void SetHUDWeaponImage(UTexture2D* WeaponImage);
+
+	UFUNCTION(Client, Reliable)
+	void ClientResetWeaponImage();
+
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerStateReplicated OnPlayerStateReplicated;
 

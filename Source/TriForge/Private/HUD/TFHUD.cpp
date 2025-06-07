@@ -4,6 +4,7 @@
 #include "HUD/TFHUD.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Components/Image.h"
 #include "HUD/TFOverlay.h"
 #include "HUD/UI/MatchResultPage.h"
 #include "HUD/UI/PlayerHealthBar.h"
@@ -15,7 +16,7 @@ void ATFHUD::BeginPlay()
 	AddCharacterOverlay();
 
 	CharacterOverlay->PlayerHealthBar->OnHealthCompInitialized();
-
+	
 	bReplicates = true;
 }
 

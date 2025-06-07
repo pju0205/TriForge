@@ -48,6 +48,8 @@ public:
 
 	UPROPERTY(Transient, Replicated)
 	TArray<ATFWeapon*> Inventory;
+
+	FORCEINLINE UTexture2D* GetDefaultWeaponImage() const {return DefaultWeaponImage;}
 	
 
 protected:
@@ -108,4 +110,7 @@ private:
 
 	
 	void InitializeVariables();
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	UTexture2D* DefaultWeaponImage;
 };

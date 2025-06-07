@@ -3,6 +3,7 @@
 #include "Weapon/TFWeapon.h"
 
 #include "Character/TFPlayerCharacter.h"
+#include "Character/TFPlayerController.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -204,6 +205,20 @@ void ATFWeapon::ShowPickupWidget(bool bShow)
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShow);
+	}
+}
+
+void ATFWeapon::ShowWeaponIcon()
+{
+	ATFPlayerCharacter* TFPlayerCharacter = Cast<ATFPlayerCharacter>(GetOwner());
+	if (TFPlayerCharacter)
+	{
+		ATFPlayerController* TFPlayerController = Cast<ATFPlayerController>(TFPlayerCharacter->GetController());
+		if (TFPlayerController && WeaponIcon)
+		{
+			TFPlayerController->SetHUDWeaponImage(WeaponIcon);
+		}
+		
 	}
 }
 
