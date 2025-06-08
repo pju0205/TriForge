@@ -256,6 +256,7 @@ void ADSLobbyGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
             if (ADSPlayerController* PC = Cast<ADSPlayerController>(It->Get()))
             {
                 PC->Client_SetToGameMode();
+                PC->Client_SetInputEnabled(false);
             }
         }
         NextRandomTravelMap();       // 전투 맵으로 이동

@@ -158,6 +158,7 @@ void ATFMatchGameMode::OnCountdownTimerFinished(ECountdownTimerType Type)
 	{
 		StopCountdownTimer(PostMatchTimer);
 		MatchStatus = EMatchStatus::SeamlessTravelling;
+		SetClientInputEnabled(false);
 		PlayerEliminated();
 		NextRandomTravelMap();							// 다음 전투 맵 이동
 	}

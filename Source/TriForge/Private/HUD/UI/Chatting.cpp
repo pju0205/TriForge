@@ -63,6 +63,16 @@ void UChatting::OnTextCommitted(const FText& Text, ETextCommit::Type CommitMetho
 				DeactiveChatText(PlayerController);
 			}
 		}
+		else
+		{
+			ATFPlayerController* PlayerController = Cast<ATFPlayerController>(GetWorld()->GetFirstPlayerController());
+			if (PlayerController)
+			{
+				//메시지를 뿌리고 나서는 채팅창 비활성화
+				DeactiveChatText(PlayerController);
+			}
+			
+		}
 	}
 }
 

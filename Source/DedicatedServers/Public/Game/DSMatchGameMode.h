@@ -31,11 +31,11 @@ protected:
 	virtual void OnCountdownTimerFinished(ECountdownTimerType Type) override;
 
 	virtual void BeginPlay() override;
-	void SetClientInputEnabled(bool bEnabled);
 	void EndMatchForPlayerStates();
 	virtual void OnMatchEnded();
 	void StopAllCountdownTimers();
 	void UpdateLeaderboard(const TArray<FString>& LeaderboardNames);
+	void SetClientInputEnabled(bool bEnabled);
 	
 	UPROPERTY(EditDefaultsOnly)
 	FCountdownTimerHandle PreRoundTimer;

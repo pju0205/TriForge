@@ -49,11 +49,6 @@ void ADSPlayerController::PostSeamlessTravel()
 void ADSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
- 
-	if (GetNetMode() == NM_Standalone)
-	{
-		DisableInput(this);
-	}
 }
 
 void ADSPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -82,8 +77,8 @@ void ADSPlayerController::Client_SetToLobbyMode_Implementation()
 	bEnableMouseOverEvents = true;
 	
 	FInputModeGameOnly InputMode;
-	/*InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);*/
-	/*InputMode.SetWidgetToFocus(nullptr); // UI 포커스 줄 수 있으면 넣기*/
+	/*InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InputMode.SetWidgetToFocus(nullptr); // UI 포커스 줄 수 있으면 넣기*/
 	SetInputMode(InputMode);
 }
 
