@@ -5,6 +5,10 @@
 > **⚔️ 다양한 무기 시스템과 정교한 네트워크 동기화 구현**
 
 ---
+### 👥 Team Information
+- **팀 구성:** 이민수, 박지우, 최태영 (3인)
+- **개발 기간:** 2025.03 ~ 2025.06
+
 
 ### 📺 Project Preview
 [![Triforge 시연 영상](https://img.youtube.com/vi/lo1SQH9PyY0/0.jpg)](https://www.youtube.com/watch?v=lo1SQH9PyY0)
