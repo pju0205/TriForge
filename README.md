@@ -12,6 +12,7 @@
 
 ### 📺 Project Preview
 [![Triforge 시연 영상](https://img.youtube.com/vi/lo1SQH9PyY0/0.jpg)](https://www.youtube.com/watch?v=lo1SQH9PyY0)
+<br>
 *이미지를 클릭하면 유튜브 영상으로 이동합니다.*
 
 ---
